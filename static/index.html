@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Music Player</title>
+</head>
+<body>
+  <h1>Music Player</h1>
+
+  <input type="text" id="searchInput" placeholder="Search..." />
+  <button id="searchAndDownloadButton">Search</button>
+
+  <input type="text" id="youtubeId" placeholder="Enter YouTube ID" />
+  <button id="playBtn">Play</button>
+
+  <audio id="audioPlayer" controls style="display:none; margin-top: 20px;">
+    Your browser does not support the audio element.
+  </audio>
+
+  <h1>Music Library</h1>
+  <table id="music-table">
+    <thead id="table-head"></thead>
+    <tbody id="table-body"></tbody>
+  </table>
+
+  <script type="module" src="/static/js/main.js" defer></script>
+</body>
+</html>
