@@ -1,8 +1,4 @@
-//returns all tracks
-export async function fetchAllTracks() {
-    const response = await fetch("/tracks");
-    return response.json();
-}
+import { SELECTORS, $ } from "./dom.js"
 
 //searches for a track
 export async function searchDbTracks(q) {
@@ -48,7 +44,7 @@ export async function downloadTrack(track) {
 export function playTrack(track) {
     const youtube_id = track.youtube_id
 
-    const audioPlayer = document.getElementById("audioPlayer");
+    const audioPlayer = $(SELECTORS.ID_AUDIO_PLAYER);
     audioPlayer.src = `/play?youtube_id=${youtube_id}`;
     audioPlayer.style.display = "block";
     

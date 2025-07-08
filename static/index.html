@@ -13,20 +13,17 @@
 
 	<h1>Music Player</h1>
 
-	<input type="text" id="searchInput" placeholder="Search..." />
-	<button id="searchAndDownloadButton">Search</button>
+	<input type="text" id="search-input" placeholder="Search..." />
+	<button id="search-and-download-button">Search</button>
 
-	<input type="text" id="youtubeId" placeholder="Enter YouTube ID" />
-	<button id="playBtn">Play</button>
-
-	<audio id="audioPlayer" controls style="display:none; margin-top: 20px;">
+	<audio id="audio-player" controls style="display:none; margin-top: 20px;">
 		Your browser does not support the audio element.
 	</audio>
 
-	<h1>Music Library</h1>
-	<table id="music-table">
-		<thead id="table-head"></thead>
-		<tbody id="table-body"></tbody>
+	<h3>Music Library</h3>
+	<table id="library-table">
+		<thead id="library-head"></thead>
+		<tbody id="library-body"></tbody>
 	</table>
 
 	<script type="module" src="/static/js/main.js" defer></script>

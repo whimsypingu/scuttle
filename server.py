@@ -1,14 +1,13 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
-from routers import search, play, tracks, download
+from routers import search, play, download
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(search.router)
 app.include_router(play.router)
-app.include_router(tracks.router)
 app.include_router(download.router)
 
 #serve index.html
