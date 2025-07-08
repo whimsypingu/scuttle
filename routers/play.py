@@ -1,25 +1,23 @@
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
-import os
 
-from globals import *
+from utils.audio import get_audio_path, get_audio_size
 
 router = APIRouter()
 
 
 @router.get("/play")
 async def play_track(request: Request, youtube_id: str):
-    filename = f"{youtube_id}.mp3"
-    file_path = os.path.join(DOWNLOAD_DIR, filename)
+    file_path = get_audio_path(youtube_id)
 
-    if not os.path.exists(file_path):
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="Audio file not found")
     
-    file_size = os.path.getsize(file_path)
+    file_size = get_audio_size(youtube_id)
     range_header = request.headers.get("range")
 
-
-    if range_header:
+    if range_header: 
         #parse the Range header: e.g. bytes=0-1023
         range_value = range_header.strip().lower()
         if not range_value.startswith("bytes="):
@@ -40,8 +38,8 @@ async def play_track(request: Request, youtube_id: str):
         length = end - start + 1
 
         #streaming in chunks
-        def iter_file_range(path, start_byte, length_bytes):
-            with open(path, "rb") as f:
+        def iter_file_range(path: Path, start_byte: int, length_bytes: int):
+            with path.open("rb") as f:
                 f.seek(start_byte)
                 bytes_read = 0
                 chunk_size = 1024 * 1024  #1mb chunks
@@ -73,8 +71,8 @@ async def play_track(request: Request, youtube_id: str):
             "Accept-Ranges": "bytes",
             "Content-Type": "audio/mpeg",
         }
-        def iter_file(path):
-            with open(path, "rb") as f:
+        def iter_file(path: Path):
+            with path.open("rb") as f:
                 while chunk := f.read(1024*1024):
                     yield chunk
 

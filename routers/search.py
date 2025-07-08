@@ -2,12 +2,13 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from typing import Optional
 
-from utils.db import search_db, cache_track_db
+from utils.db import search_db, insert_track_db, cache_track_db
 from utils.yt import search_yt
-from data_structures import *
-from globals import *
+from data_structures import SearchRequest
+import globals as G
 
 router = APIRouter()
+
 
 @router.get("/search/db")
 def search_db_tracks(q: Optional[str] = Query(None)):
@@ -22,13 +23,13 @@ def search_db_tracks(q: Optional[str] = Query(None)):
     """
     #local db search
     db_results = search_db(q)
-    db_results_converted = [track.to_dict() for track in db_results]
+    db_results_converted = [track.model_dump() for track in db_results]
 
     return JSONResponse(content=db_results_converted)
 
 
 @router.post("/search/full")
-def search_full_tracks(q: Optional[str] = Query(None)):
+def search_full_tracks(req: SearchRequest):
     """
     Perform a full search for tracks, combining local database and YouTube (via yt-dlp).
 
@@ -38,25 +39,30 @@ def search_full_tracks(q: Optional[str] = Query(None)):
     Returns:
         JSONResponse: A combined list of matching tracks from both local storage and YouTube.
     """
+    q = req.q
+
     #local db search
     db_results = search_db(q)
-
-    #on empty string do not query yt search
     if not q:
         return JSONResponse(content=db_results)
 
     #online yt search
-    yt_results = search_yt(q, limit=3, timeout=60)
+    yt_results = search_yt(q, limit=G.SEARCH_LIMIT_DEFAULT, timeout=G.SEARCH_TIMEOUT_DEFAULT)
     
     #add to tracks and cache table (safe insert, skips if exists in tracks and updates timestamp in cache)
     for track in yt_results:
+        insert_track_db(track)
         cache_track_db(track)
 
     combined_results = db_results + yt_results
-    combined_results_converted = [track.to_dict() for track in combined_results]
+    combined_results_converted = [track.model_dump() for track in combined_results]
 
     return JSONResponse(content=combined_results_converted)
 
+
+
+
+#UNFINISHED
 
 @router.post("/search/select")
 def search_select_track(q: Optional[str] = Query(None)):
@@ -65,6 +71,5 @@ def search_select_track(q: Optional[str] = Query(None)):
         return JSONResponse(content={"error": "Query too short, must be longer than 5 characters"}, status_code=400)
 
     #online yt search
-    yt_results = search_yt(q, limit=3, timeout=60)
+    yt_results = search_yt(q, limit=G.SEARCH_LIMIT_DEFAULT, timeout=G.SEARCH_TIMEOUT_DEFAULT)
 
-    

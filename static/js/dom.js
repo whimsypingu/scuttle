@@ -8,8 +8,5 @@ export function $(id) {
 //DOM ID constants
 export const DOM_IDS = {
 	SEARCH_INPUT: "searchInput",
-	SEARCH_AND_DOWNLOAD_BUTTON: "searchAndDownloadButton",
-	PLAY_BUTTON: "playBtn",
-	YOUTUBE_ID_INPUT: "youtubeId",
-	TABLE_BODY: "table-body",
+	SEARCH_AND_DOWNLOAD_BUTTON: "searchAndDownloadButton"
 };

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
-from routers import search, play, tracks
+from routers import search, play, tracks, download
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -9,6 +9,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(search.router)
 app.include_router(play.router)
 app.include_router(tracks.router)
+app.include_router(download.router)
 
 #serve index.html
 @app.get("/", response_class=HTMLResponse)

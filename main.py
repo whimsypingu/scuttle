@@ -1,3 +1,4 @@
+import logging
 from globals import *
 from utils import *
 
@@ -8,6 +9,12 @@ import time
 import os
 from dotenv import load_dotenv
 from pyngrok import ngrok, exception
+
+
+logging.basicConfig(
+    level=logging.INFO,  # Set minimum level to INFO to see logger.info messages
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 
 def start_server():
