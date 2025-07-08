@@ -7,24 +7,44 @@
 	<link rel="stylesheet" href="/static/css/loading.css">
 </head>
 <body>
+	<!-- Loading Spinner -->
 	<div id="loading-spinner" style="display: none;">
 		<div class="spinner"></div>
 	</div>
 
-	<h1>Music Player</h1>
+	<!-- Page Title -->
+	<header>
+		<h1>Music Player</h1>
+	</header>
 
-	<input type="text" id="search-input" placeholder="Search..." />
-	<button id="search-and-download-button">Search</button>
+	<!-- Search Bar -->
+	<section id="search-section">
+		<input type="text" id="search-input" placeholder="Search..." />
+		<button id="search-and-download-button">Search</button>
+	</section>
 
-	<audio id="audio-player" controls style="display:none; margin-top: 20px;">
-		Your browser does not support the audio element.
-	</audio>
+	<!-- Audio Player -->
+	<section id="player-section">
+		<audio id="audio-player" controls style="display:none; margin-top: 20px;">
+			Your browser does not support the audio element.
+		</audio>
+	</section>
 
-	<h3>Music Library</h3>
-	<table id="library-table">
-		<thead id="library-head"></thead>
-		<tbody id="library-body"></tbody>
-	</table>
+	<!-- Music Library -->
+	<section id="library-section">
+		<h3>Music Library</h3>
+		<table id="library-table">
+			<thead id="library-head"></thead>
+			<tbody id="library-body"></tbody>
+		</table>
+	</section>
+
+	<!-- Music Queue -->
+	<section id="queue-container">
+		<h3>Music Queue</h3>
+		<ul id="queue-list"></ul>
+		<button id="toggle-queue-button">Hide Queue</button>
+	</section>
 
 	<script type="module" src="/static/js/main.js" defer></script>
 </body>

@@ -36,24 +36,8 @@ async function onSearchEnter(e) {
 	}	
 }
 
-async function onClickLibraryPlayButton(track) {
-	try {
-		showLoading();
-		const res = await downloadTrack(track);
-		console.log("Download status:", res.status);
 
-		playTrack(track)
-	} catch (err) {
-		console.error("Failed to download or play track:", err);
-	} finally {
-		hideLoading();
-	}
-}
-
-async function onClickLibraryQueueButton(track) {
-	
-}
-
+//clicking the library body will check for this
 async function onClickLibraryBody(e) {
 	if (e.target.tagName !== "BUTTON") return;
 
@@ -70,7 +54,35 @@ async function onClickLibraryBody(e) {
 	}
 }
 
+async function onClickLibraryPlayButton(track) {
+	try {
+		showLoading();
+		const res = await downloadTrack(track);
+		console.log("Download status:", res.status);
 
+		playTrack(track)
+	} catch (err) {
+		console.error("Failed to download or play track:", err);
+	} finally {
+		hideLoading();
+	}
+}
+
+async function onClickLibraryQueueButton(track) {
+	try {
+		showLoading();
+		console.log("Queueing status:");
+
+
+	} catch (err) {
+		console.error("Failed to queue track:", err);
+	} finally {
+		hideLoading();
+	}
+}
+
+
+//sets up all events
 export function setupEventListeners() {
 
 	//typing triggers dropdown

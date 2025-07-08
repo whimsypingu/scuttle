@@ -40,8 +40,9 @@ export function renderTracks(tracks) {
 		headRow.appendChild(th);
 	});
 
-	//extra header for play button column
+	//extra header for play button column and queue button column
 	headRow.appendChild(createElem("th", { textContent: "Play" }));
+	headRow.appendChild(createElem("th", { textContent: "Queue" }));
 
 	libraryHead.appendChild(headRow);
 
@@ -54,16 +55,26 @@ export function renderTracks(tracks) {
 		row.appendChild(td);
 		});
 
-		//play button per row
+		//play and queue buttons per track/row
+		const trackDataset = prepareDataset(track)
+
 		const playButton = createElem("button", {
 			textContent: "Play",
 			class: SELECTORS.CLASS_LIBRARY_PLAY_BUTTON,
-			dataset: prepareDataset(track),
+			dataset: trackDataset,
 			type: "button", //good practice for buttons inside forms
     	});
-
     	const playTd = createElem("td", {}, [playButton]);
     	row.appendChild(playTd);
+
+		const queueButton = createElem("button", {
+			textContent: "Queue",
+			class: SELECTORS.CLASS_LIBRARY_QUEUE_BUTTON,
+			dataset: trackDataset,
+			type: "button",
+		});
+		const queueTd = createElem("td", {}, [queueButton]);
+		row.appendChild(queueTd);
 
     	libraryBody.appendChild(row);
   	});
