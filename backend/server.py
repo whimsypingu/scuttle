@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 
-from backend.routers import search, play, download, queue
+from backend.routers import queue_router, play_router, download_router, search_router
 
 from backend.data_structures import QueueManager
 import backend.globals as G
@@ -17,8 +17,9 @@ async def lifespan(app: FastAPI):
     #initialize backend and user facing queues
     queue_manager = app.state.queue_manager = QueueManager()
 
-    queue_manager.get_or_create(G.DOWNLOAD_QUEUE)
-    queue_manager.get_or_create(G.TRACK_QUEUE)
+    queue_manager.create(G.SEARCH_QUEUE_NAME)
+    queue_manager.create(G.DOWNLOAD_QUEUE_NAME)
+    queue_manager.create(G.PLAY_QUEUE_NAME)
     
     yield #app runs
 
@@ -29,10 +30,10 @@ app = FastAPI(lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app.include_router(search.router)
-app.include_router(play.router)
-app.include_router(download.router)
-app.include_router(queue.router)
+app.include_router(search_router.router)
+app.include_router(queue_router.router)
+app.include_router(download_router.router)
+app.include_router(play_router.router)
 
 #serve index.html
 @app.get("/", response_class=HTMLResponse)

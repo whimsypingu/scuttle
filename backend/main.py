@@ -71,9 +71,9 @@ def main():
         shutdown(server_proc, tunnel)
 
 if __name__ == "__main__":
-    main()
+    #main()
 
-    #start_server()
+    start_server()
 
 '''
 delete_db()

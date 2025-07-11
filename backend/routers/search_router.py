@@ -10,8 +10,8 @@ import backend.globals as G
 router = APIRouter(prefix="/search")
 
 
-@router.get("/db")
-def search_db_tracks(q: Optional[str] = Query(None)):
+@router.get("/")
+def search_track(q: Optional[str] = Query(None)):
     """
     Search for tracks in the local database by title or uploader.
 
@@ -29,7 +29,7 @@ def search_db_tracks(q: Optional[str] = Query(None)):
 
 
 @router.post("/full")
-def search_full_tracks(body: SearchRequest):
+def search_track_full(body: SearchRequest):
     """
     Perform a full search for tracks, combining local database and YouTube (via yt-dlp).
 

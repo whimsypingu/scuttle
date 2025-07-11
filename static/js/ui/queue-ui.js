@@ -7,7 +7,10 @@ export function renderQueueList(tracks) {
     const queueList = $(SELECTORS.queue.ids.LIST);
     queueList.innerHTML = "";
 
-    if (!tracks?.length) return;
+    if (!tracks?.length) {
+        queueList.innerHTML = "<li>No tracks available</li>";
+        return;
+    }
 
     //build rows
     tracks.forEach(track => {

@@ -11,3 +11,6 @@ class DownloadRequest(BaseModel):
 
 class QueueRequest(BaseModel):
     track: Track
+
+class PlayRequest(BaseModel):
+    track: Track

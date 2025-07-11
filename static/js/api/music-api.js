@@ -1,5 +1,7 @@
 //static/js/api/music-api.js
 
+//DEPRECATED
+
 import { SELECTORS, $ } from "../dom/index.js"
 
 //searches for a track

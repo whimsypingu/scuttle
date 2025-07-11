@@ -1,6 +1,6 @@
 //static/js/events/search-events.js
 
-import { searchDbTracks, searchFullTracks } from "../api/index.js";
+import { searchTrack, searchTrackFull } from "../api/index.js";
 import { renderLibraryList, showLoading, hideLoading } from "../ui/index.js";
 
 //typing triggers recent searches
@@ -8,7 +8,7 @@ export async function onSearchInput(e) {
 	const q = e.target.value.trim();
 	console.log("Search query:", q); // <== should log each time anything is typed
 
-	const tracks = await searchDbTracks(q);
+	const tracks = await searchTrack(q);
 	console.log("Results:", tracks)
 
 	renderLibraryList(results);
@@ -26,7 +26,7 @@ export async function onSearchEnter(e) {
 
 	try {
 		showLoading();
-		const tracks = await searchFullTracks(q);
+		const tracks = await searchTrackFull(q);
 		console.log("Results:", tracks)
 
 		renderLibraryList(tracks);

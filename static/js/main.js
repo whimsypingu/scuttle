@@ -1,15 +1,14 @@
-import { searchDbTracks, getQueue } from "./api/music-api.js";
-import { renderLibraryList } from "./ui/library-ui.js";
-import { renderQueueList } from "./ui/queue-ui.js";
+import { searchTrack, queueContents } from "./api/index.js";
+import { renderLibraryList, renderQueueList } from "./ui/index.js";
 
 import { setupEventListeners } from "./setup.js";
 
 async function init() {
-	const libraryTracks = await searchDbTracks("");
-	renderLibraryList(libraryTracks);
+	const libraryTrackContent = await searchTrack("");
+	renderLibraryList(libraryTrackContent);
 
-	const queueTracks = await getQueue("default");
-	renderQueueList(queueTracks);
+	const queueTrackContent = await queueContents("default");
+	renderQueueList(queueTrackContent);
 
 	setupEventListeners();
 }

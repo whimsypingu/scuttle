@@ -1,8 +1,9 @@
 from pathlib import Path
 
 #logic
-DOWNLOAD_QUEUE = "download_queue"
-TRACK_QUEUE = "track_queue"
+SEARCH_QUEUE_NAME = "search_queue"
+DOWNLOAD_QUEUE_NAME = "download_queue"
+PLAY_QUEUE_NAME = "play_queue"
 
 #database
 DATA_DIR = Path("data")
@@ -14,11 +15,12 @@ DB_CACHE_TABLENAME = "cache"
 
 YOUTUBE_VIDEO_URL = "https://www.youtube.com/watch?v={}"
 
-#ytdlp extraction query arguments
+#ytdlp extraction query arguments and core audio formatting
 AUDIO_FORMAT_FILTER = "bestaudio[ext=m4a]/bestaudio/best"
 AUDIO_FORMAT = "mp3"
 AUDIO_QUALITY = "192K"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+STREAM_CHUNK_SIZE = 1024 * 1024 #1MB
 
 #ytdlp search and download handling arguments
 SEARCH_LIMIT_DEFAULT = 3
