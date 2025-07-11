@@ -1,13 +1,13 @@
 //static/js/api/queue-api.js
 //corresponds to /backend/routers/queue-router.py
 
-export async function queueTrack(track) {
+export async function queueTrack(track, play = false) {
     const response = await fetch(`/queue`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ track })
+        body: JSON.stringify({ track, play }) //see /backend/data_structures/schemas.py
     });
 
     if (!response.ok) {

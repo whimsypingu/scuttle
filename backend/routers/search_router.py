@@ -10,7 +10,7 @@ import backend.globals as G
 router = APIRouter(prefix="/search")
 
 
-@router.get("/")
+@router.get("")
 def search_track(q: Optional[str] = Query(None)):
     """
     Search for tracks in the local database by title or uploader.

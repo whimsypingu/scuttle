@@ -25,7 +25,10 @@ export async function onClickLibraryList(e) {
 async function onClickLibraryPlayButton(track) {
     try {
         showLoading();
-        const blob = await playTrack(track);
+        const { queueTrackContent: queueTrackContent } = await queueTrack(track, true);
+        renderQueueList(queueTrackContent);
+
+        const blob = await playTrack();
         const url = URL.createObjectURL(blob);
 
         const audioElement = $(SELECTORS.audio.ids.PLAYER);
@@ -48,7 +51,7 @@ async function onClickLibraryPlayButton(track) {
 async function onClickLibraryQueueButton(track) {
     try {
         showLoading();
-        const { content: queueTrackContent } = await queueTrack(track);
+        const { queueTrackContent: queueTrackContent } = await queueTrack(track);
         renderQueueList(queueTrackContent);
     } catch (err) {
         console.error("Failed to queue track:", err);
