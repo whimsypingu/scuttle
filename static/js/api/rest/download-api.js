@@ -1,4 +1,4 @@
-//static/js/api/download-api.js
+//static/js/api/rest/download-api.js
 //corresponds to /backend/routers/download-router.py
 
 export async function downloadTrack(track) {

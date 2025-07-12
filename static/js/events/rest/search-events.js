@@ -1,7 +1,7 @@
-//static/js/events/search-events.js
+//static/js/events/rest/search-events.js
 
-import { searchTrack, searchTrackFull } from "../api/index.js";
-import { renderLibraryList, showLoading, hideLoading } from "../ui/index.js";
+import { searchTrack, searchTrackFull } from "../../api/index.js";
+import { renderLibraryList, showLoading, hideLoading } from "../../ui/index.js";
 
 //typing triggers recent searches
 export async function onSearchInput(e) {
@@ -11,7 +11,7 @@ export async function onSearchInput(e) {
 	const tracks = await searchTrack(q);
 	console.log("Results:", tracks)
 
-	renderLibraryList(results);
+	renderLibraryList(tracks);
 }
 
 //enter triggers full search

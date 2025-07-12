@@ -1,4 +1,4 @@
-//static/js/api/queue-api.js
+//static/js/api/rest/queue-api.js
 //corresponds to /backend/routers/queue-router.py
 
 export async function queueTrack(track, play = false) {
@@ -14,7 +14,7 @@ export async function queueTrack(track, play = false) {
         throw new Error(`Failed to add to play queue: ${response.status}`);
     }
 
-    console.log("/static/js/api/queue-api/queueTrack status:", response.status)
+    console.log("/static/js/api/rest/queue-api/queueTrack status:", response.status)
     return response.json(); //access just mutated queue content through .content
 }
 
@@ -25,6 +25,6 @@ export async function queueContents() {
         throw new Error(`Failed to get play queue contents: ${response.status}`);
     }
 
-    console.log("/static/js/api/queue-api/queueContents status:", response.status)
+    console.log("/static/js/api/rest/queue-api/queueContents status:", response.status)
     return response.json(); //access content through .content
 }

@@ -1,12 +1,12 @@
-//static/js/events/queue-events.js
+//static/js/events/rest/library-events.js
 
-import { $, SELECTORS } from "../dom/index.js";
-import { playTrack, queueTrack } from "../api/index.js";
-import { renderQueueList, showLoading, hideLoading } from "../ui/index.js";
-import { parseTrackFromDataset } from "../utils/index.js"
+import { $, SELECTORS } from "../../dom/index.js";
+import { playTrack, queueTrack } from "../../api/index.js";
+import { showLoading, hideLoading, renderQueueList } from "../../ui/index.js";
+import { parseTrackFromDataset } from "../../utils/index.js"
 
-//clicking the queue list will check for this
-export async function onClickQueueList(e) {
+//clicking the library list will check for this
+export async function onClickLibraryList(e) {
     if (e.target.tagName !== "BUTTON") return;
 
     const track = parseTrackFromDataset(e.target.dataset);
@@ -14,19 +14,19 @@ export async function onClickQueueList(e) {
         console.error("Missing track data attributes in dataset");
         return;
     }
-  
+
     if (e.target.classList.contains(SELECTORS.actions.classes.PLAY_BUTTON)) {
-        await onClickPlayButton(track);
+        await onClickLibraryPlayButton(track);
     } else if (e.target.classList.contains(SELECTORS.actions.classes.QUEUE_BUTTON)) {
-        await onClickQueueButton(track);
+        await onClickLibraryQueueButton(track);
     }
 }
 
-async function onClickPlayButton(track) {
+async function onClickLibraryPlayButton(track) {
     try {
         showLoading();
         const { queueTrackContent: queueTrackContent } = await queueTrack(track, true);
-        renderQueueList(queueTrackContent);
+        //renderQueueList(queueTrackContent);
 
         const blob = await playTrack();
         const url = URL.createObjectURL(blob);
@@ -48,7 +48,7 @@ async function onClickPlayButton(track) {
 }
 
 
-async function onClickQueueButton(track) {
+async function onClickLibraryQueueButton(track) {
     try {
         showLoading();
         const { queueTrackContent: queueTrackContent } = await queueTrack(track);
@@ -59,4 +59,3 @@ async function onClickQueueButton(track) {
         hideLoading();
     }
 }
-

@@ -5,8 +5,9 @@ import logging
 from typing import List
 from pathlib import Path
 
-from backend.core.filter import select_best_track
-from backend.core.audio import get_audio_path, get_audio_size
+from .filter import select_best_track
+from .audio import get_audio_path, get_audio_size
+
 from backend.exceptions import NoSearchResultsError, DownloadFailedError, SearchFailedError
 from backend.data_structures import Track
 import backend.globals as G

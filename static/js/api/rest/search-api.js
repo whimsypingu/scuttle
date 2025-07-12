@@ -1,4 +1,4 @@
-//static/js/api/search-api.js
+//static/js/api/rest/search-api.js
 //corresponds to /backend/routers/search-router.py
 
 export async function searchTrack(q) {

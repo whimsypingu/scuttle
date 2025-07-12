@@ -1,15 +1,29 @@
 import { searchTrack, queueContents } from "./api/index.js";
 import { renderLibraryList, renderQueueList } from "./ui/index.js";
 
-import { setupEventListeners } from "./setup.js";
+import { setupEventListeners, setupWebSocket } from "./setup.js";
 
 async function init() {
-	const libraryTrackContent = await searchTrack("");
-	renderLibraryList(libraryTrackContent);
+	//start websocket connection and listener
+	setupWebSocket();
 
-	const queueTrackContent = await queueContents("default");
-	renderQueueList(queueTrackContent);
 
+	/*
+	try {
+		//render library content
+		const libraryTrackContent = await searchTrack("");
+		renderLibraryList(libraryTrackContent);
+
+		//render default queue content
+		const queueTrackContent = await queueContents("default");
+		renderQueueList(queueTrackContent);
+	} catch (error) {
+		console.error("Failed to fetch initial data:", error);
+	}
+	*/
+
+
+	//setup ui event listeners
 	setupEventListeners();
 }
 

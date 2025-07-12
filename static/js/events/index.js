@@ -1,3 +1,3 @@
-export { onClickLibraryList } from "./library-events.js";
-export { onClickQueueList } from "./queue-events.js";
-export { onSearchInput, onSearchEnter } from "./search-events.js";
+export { onClickLibraryList } from "./rest/library-events.js";
+export { onClickQueueList } from "./rest/queue-events.js";
+export { onSearchInput, onSearchEnter } from "./rest/search-events.js";

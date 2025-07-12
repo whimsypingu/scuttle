@@ -1,4 +1,4 @@
-//static/js/api/play-api.js
+//static/js/api/rest/play-api.js
 //corresponds to /backend/routers/play-router.py
 
 export async function playTrack() {
