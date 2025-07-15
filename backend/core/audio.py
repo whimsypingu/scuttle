@@ -16,11 +16,13 @@ def get_audio_size(track: Track) -> int:
     return get_audio_path(track).stat().st_size
 
 
-def stream_audio(req: Request, play_queue: TrackQueue, download_queue: TrackQueue) -> StreamingResponse:
+def stream_audio(req: Request, track: Track) -> StreamingResponse:
     #automatically attempts to stream the first song in the play_queue
-    track = play_queue.peek()
-    if not track or not is_downloaded(track):
-        raise HTTPException(status_code=404, detail="No downloadable track ready to stream.")
+    if not track:
+        raise HTTPException(status_code=404, detail="No track provided.")
+    
+    if not is_downloaded(track):
+        raise HTTPException(status_code=404, detail="Track not downloaded.")
 
     file_path = get_audio_path(track)
     file_size = get_audio_size(track)

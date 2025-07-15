@@ -1,17 +1,45 @@
 //static/js/events/websocket/websocket-events.js
 
-import { renderQueueList } from "../../ui/index.js";
+import { renderLibraryList, renderQueueList } from "../../ui/index.js";
 
+//handles websocket messages
 export function handleWebSocketMessage(message) {
-    const { action, name, queue } = message;
 
-    console.log("WebSocket message received:", message)
+    //defense
+    if (!message || typeof message.context !== "string") {
+        console.warn("Invalid WebSocket message format:", message);
+        return;
+    }
 
-    switch (action) {
-        case "add":;
-            renderQueueList(queue);
-            break;
-        default: 
-            console.warn("Unhandled WebSocket action:", action);
+    //debug
+    console.log("WebSocket message received:", message);
+
+    //handler logic
+    const context = message.context;
+    const data = message.data;
+
+    const handlers = {
+        "play_queue.on_add": handlePlayQueueOnAdd,
+        "play_queue.on_remove": handlePlayQueueOnRemove
+    };
+
+    const handler = handlers[context];
+    if (handler) {
+        handler(data);
+    } else {
+        console.warn("Unhandled Websocket context:", context);
     }
 }
+
+function handlePlayQueueOnAdd(data) {
+    renderQueueList(data.content);
+    return;
+}
+
+
+function handlePlayQueueOnRemove(data) {
+    renderQueueList(data.content);
+    return;
+}
+
+

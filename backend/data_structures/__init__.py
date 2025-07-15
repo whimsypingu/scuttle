@@ -1,4 +1,5 @@
-from .schemas import PlayRequest, QueueRequest, SearchRequest, DownloadRequest, WebsocketMessage
+from .schemas.rest_schemas import PlayRequest, QueueRequest, PlayNowRequest, QueueRemoveRequest, SearchRequest, DownloadRequest
+from .schemas.websocket_schemas import AddToQueueMessage, RemoveFromQueueMessage
 
 from .track import Track
 from .track_node import TrackNode

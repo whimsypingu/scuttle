@@ -1,10 +1,12 @@
+from __future__ import annotations
 import asyncio
-from typing import Optional
+from typing import Optional, Callable
 
 from .track import Track
 from .track_node import TrackNode
 from .websocket_manager import WebsocketManager
-from .schemas import WebsocketMessage
+
+from backend.globals import Trigger
 
 class TrackQueue:
     def __init__(
@@ -22,6 +24,10 @@ class TrackQueue:
 
         self._lock = asyncio.Lock() #prevent race conditions because broadcasting is async and head and tail edits
 
+        self._triggers = {} #dict[Trigger, Callable]
+            
+
+
     def __iter__(self):
         """Allows iteration over the queue yielding Track objects."""
         curr = self.head
@@ -34,6 +40,11 @@ class TrackQueue:
         titles = [track.title for track in self]
         return " -> ".join(titles) if titles else "Queue is empty"
 
+
+    def set_triggers(self, triggers: dict[Trigger, Callable]):
+        for trigger, fn in triggers.items():
+            if isinstance(trigger, Trigger) and callable(fn):
+                self._triggers[trigger] = fn
 
     #internal helpers
     async def _add_track(self, track: Track):
@@ -48,13 +59,12 @@ class TrackQueue:
         """
         self.youtube_id_counts[track.youtube_id] = self.youtube_id_counts.get(track.youtube_id, 0) + 1
         self.size += 1
-        if self.websocket_manager:
-            message = WebsocketMessage(
-                action="add", 
-                name=self.name, 
-                queue=self.to_json() #required for data type and to prevent circular import of TrackQueue
-            ).to_json()
-            await self.websocket_manager.broadcast(message)
+        if self.websocket_manager and (Trigger.ON_ADD in self._triggers):
+            try:
+                message = self._triggers[Trigger.ON_ADD](self, track)
+                await self.websocket_manager.broadcast(message)
+            except Exception as e:
+                print(f"Error in ON_ADD trigger: {e}")
         return
 
     async def _remove_track(self, track: Track):
@@ -73,13 +83,12 @@ class TrackQueue:
                 del self.youtube_id_counts[track.youtube_id]
             self.size -= 1
 
-            if self.websocket_manager:
-                message = WebsocketMessage(
-                    action="remove", 
-                    name=self.name, 
-                    queue=self.to_json()
-                ).to_json()
-                await self.websocket_manager.broadcast(message)
+            if self.websocket_manager and (Trigger.ON_REMOVE in self._triggers):
+                try:
+                    message = self._triggers[Trigger.ON_REMOVE](self, track)
+                    await self.websocket_manager.broadcast(message)
+                except Exception as e:
+                    print(f"Error in ON_REMOVE trigger: {e}")
         return
 
 
@@ -92,6 +101,15 @@ class TrackQueue:
             List[dict]: List of tracks serialized as dicts.
         """
         return [track.to_json() for track in self]
+
+    def get_name(self):
+        """
+        Get the name of this queue.
+
+        Returns:
+            str: name of this queue.
+        """
+        return self.name
 
     def get_size(self):
         """
@@ -124,6 +142,25 @@ class TrackQueue:
         if not self.head:
             return None
         return self.head.track
+
+    def peek_at(self, index: int):
+        """
+        Get the track at the given index without removing it.
+
+        Args:
+            index (int): The index to peek at.
+
+        Returns:
+            Optional[Track]: The track at the given index, or None if out of bounds.
+        """
+        if index < 0 or index >= self.size:
+            return None
+        
+        curr = self.head
+        for _ in range(index):
+            curr = curr.next
+
+        return curr.track if curr else None
 
 
     #modify queue contents

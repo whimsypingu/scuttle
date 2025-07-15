@@ -3,11 +3,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routers import queue_router, play_router, download_router, search_router, websocket_router
 
-from backend.data_structures import QueueManager, WebsocketManager
+from backend.data_structures import QueueManager, WebsocketManager, AddToQueueMessage, RemoveFromQueueMessage
 import backend.globals as G
+
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,19 +21,33 @@ async def lifespan(app: FastAPI):
     #initialize websocket manager
     websocket_manager = app.state.websocket_manager = WebsocketManager()
 
-    #initialize backend and user facing queues
+    #initialize backend
     queue_manager = app.state.queue_manager = QueueManager()
 
     queue_manager.create(G.SEARCH_QUEUE_NAME)
     queue_manager.create(G.DOWNLOAD_QUEUE_NAME)
-    queue_manager.create(G.PLAY_QUEUE_NAME, websocket_manager)
-    
+
+    #user facing queue
+    play_queue = queue_manager.create(G.PLAY_QUEUE_NAME, websocket_manager)
+    play_queue.set_triggers({
+        G.Trigger.ON_ADD: AddToQueueMessage.build,
+        G.Trigger.ON_REMOVE: RemoveFromQueueMessage.build
+    })
+
     yield #app runs
 
     print("Shutting down...")
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # or your ngrok URL for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

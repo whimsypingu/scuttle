@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import StreamingResponse
 
-from backend.core.audio import stream_audio
+from backend.core.audio import is_downloaded, stream_audio
 import backend.globals as G
 
 router = APIRouter(prefix="/play")
@@ -15,7 +15,19 @@ async def play_track(req: Request) -> StreamingResponse:
     play_queue = queue_manager.get(G.PLAY_QUEUE_NAME)
     download_queue = queue_manager.get(G.DOWNLOAD_QUEUE_NAME)
 
-    return stream_audio(req=req, play_queue=play_queue, download_queue=download_queue) #should peek the play_queue and return a fastapi.StreamingResponse of the peeked song
+    track = play_queue.peek()
+    
+    #check queue is not empty
+    if not track:
+        raise HTTPException(status_code=204, detail="No tracks to play")
+    
+    #check track is ready
+    if not is_downloaded(track):
+        if not download_queue.contains(track):
+            await download_queue.push(track)
+        raise HTTPException(status_code=503, detail="Track is downloading, try again shortly")
+
+    return stream_audio(req=req, track=track) #should peek the play_queue and return a fastapi.StreamingResponse of the peeked song
 
     
 

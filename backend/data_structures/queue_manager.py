@@ -19,12 +19,13 @@ class QueueManager:
             websocket_manager (WebsocketManager): The WebsocketManager to attach to the queue.
 
         Returns:
-            bool: True if the queue was created, False if it already exists.
+            TrackQueuee | None: The queue if a new one was made successfully, else None.
         """
         if queue_name not in self._queues:
-            self._queues[queue_name] = TrackQueue(queue_name, websocket_manager)
-            return True
-        return False
+            new_queue = TrackQueue(queue_name, websocket_manager)
+            self._queues[queue_name] = new_queue
+            return new_queue
+        return None
 
     def get(self, queue_name: str):
         """

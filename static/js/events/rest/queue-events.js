@@ -1,9 +1,10 @@
 //static/js/events/rest/queue-events.js
 
 import { $, SELECTORS } from "../../dom/index.js";
-import { playTrack, queueTrack } from "../../api/index.js";
+import { playTrack, queueTrack, queueNowTrack } from "../../api/index.js";
 import { showLoading, hideLoading } from "../../ui/index.js";
 import { parseTrackFromDataset } from "../../utils/index.js"
+import { setAndPlayBlob } from "../../core/audio-player.js";
 
 //clicking the queue list will check for this
 export async function onClickQueueList(e) {
@@ -25,21 +26,12 @@ export async function onClickQueueList(e) {
 async function onClickPlayButton(track) {
     try {
         showLoading();
-        const { queueTrackContent: queueTrackContent } = await queueTrack(track, true);
-        //renderQueueList(queueTrackContent);
+        await queueNowTrack(track);
 
         const blob = await playTrack();
-        const url = URL.createObjectURL(blob);
-
         const audioElement = $(SELECTORS.audio.ids.PLAYER);
-        //stop memory leaks
-        if (audioElement.src.startsWith("blob:")) {
-            URL.revokeObjectURL(audioElement.src);
-        }
 
-        audioElement.src = url;
-        audioElement.play();
-
+        await setAndPlayBlob(audioElement, blob);
     } catch (err) {
         console.error("Failed to play track:", err);
     } finally {
@@ -51,8 +43,7 @@ async function onClickPlayButton(track) {
 async function onClickQueueButton(track) {
     try {
         showLoading();
-        const { queueTrackContent: queueTrackContent } = await queueTrack(track);
-        //renderQueueList(queueTrackContent);
+        await queueTrack(track);
     } catch (err) {
         console.error("Failed to queue track:", err);
     } finally {

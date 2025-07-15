@@ -1,28 +1,22 @@
 //static/js/api/websocket/websocket-api.js
 
-import { handleWebSocketMessage } from "../../events/websocket/websocket-events.js";
-
 let socket = null;
 
-export function initWebSocket(url) {
+//sets up websocket
+export function initWebSocket() {
     if (socket) {
-        console.warn("Websocket is already initialized");
+        console.warn("WebSocket already initialized");
         return;
-    };
+    }
 
-    socket = new WebSocket("ws://localhost:8000/websocket");
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws"; //use wss if https, otherwise ws for http
+    const host = window.location.host; // includes hostname + port
+    const webSocketUrl = `${protocol}://${host}/websocket`;
+
+    socket = new WebSocket(webSocketUrl); //"ws://localhost:8000/websocket");
 
     socket.onopen = () => {
         console.log("WebSocket connection established.");
-    };
-
-    socket.onmessage = (messageEvent) => {
-        try {
-            const message = JSON.parse(messageEvent.data);
-            handleWebSocketMessage(message);
-        } catch (err) {
-            console.error("Failed to parse WebSocket message:", err);
-        }
     };
 
     socket.onclose = () => {
@@ -33,4 +27,6 @@ export function initWebSocket(url) {
     socket.onerror = (err) => {
         console.error("WebSocket error:", err);
     };
+
+    return socket;
 }

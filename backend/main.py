@@ -1,6 +1,6 @@
 import logging
-
 import subprocess
+import threading
 import signal
 import sys
 import time
@@ -9,53 +9,87 @@ from dotenv import load_dotenv
 from pyngrok import ngrok, exception
 
 
+# === Logging Setup ===
 logging.basicConfig(
-    level=logging.INFO,  # Set minimum level to INFO to see logger.info messages
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
+logger = logging.getLogger(__name__)
 
 
+# === Constants ===
+PORT = 8000
+
+
+# === Start Uvicorn Server ===
 def start_server():
-    return subprocess.Popen([sys.executable, "-m", "uvicorn", "backend.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"])
+    logger.info("Starting FastAPI server...")
+    return subprocess.Popen(
+        [sys.executable, "-m", "uvicorn", "backend.server:app", "--host", "0.0.0.0", "--port", str(PORT), "--reload"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        universal_newlines=True
+    )
 
-def start_ngrok(port):
+
+# === Stream Server Logs in Background ===
+def stream_logs(process):
+    for line in iter(process.stdout.readline, ""):
+        print(line, end="")
+
+
+# === Start Ngrok Tunnel ===
+def start_ngrok():
+    logger.info("Starting ngrok tunnel...")
     ngrok_auth_token = os.getenv("NGROK_AUTH_TOKEN")
     if not ngrok_auth_token:
         raise ValueError("NGROK_AUTH_TOKEN not found in environment variables. Please set it in your .env file.")
 
     ngrok.set_auth_token(ngrok_auth_token)
-    tunnel = ngrok.connect(port)
-    print("Ngrok tunnel URL:", tunnel.public_url)
+    tunnel = ngrok.connect(PORT)
+    logger.info(f"Ngrok tunnel URL: {tunnel.public_url}")
+
+    with open("ngrok_url.txt", "w") as f:
+        f.write(tunnel.public_url)
+
     return tunnel
 
-def shutdown(server_proc, tunnel):
-    print("Shutting down...")
 
-    # Try to disconnect ngrok tunnel if it exists
+# === Graceful Shutdown ===
+def shutdown(server_proc, tunnel):
+    logger.info("Shutting down...")
+
     if tunnel:
         try:
             ngrok.disconnect(tunnel.public_url)
-            print("Ngrok tunnel disconnected.")
+            logger.info("Ngrok tunnel disconnected.")
         except exception.PyngrokNgrokURLError as e:
-            print(f"Warning: Could not disconnect ngrok tunnel: {e}")
+            logger.warning(f"Could not disconnect ngrok tunnel: {e}")
 
-    # Kill ngrok process if it’s running
     try:
         ngrok.kill()
-        print("Ngrok process killed.")
+        logger.info("Ngrok process killed.")
     except Exception as e:
-        print(f"Warning: Could not kill ngrok process: {e}")
+        logger.warning(f"Could not kill ngrok process: {e}")
 
-    # Terminate your server process gracefully
     if server_proc:
         server_proc.terminate()
         server_proc.wait()
-        print("Server process terminated.")
+        logger.info("Server process terminated.")
 
+
+# === Main Entrypoint ===
 def main():
     load_dotenv()
     server_proc = start_server()
-    tunnel = start_ngrok(8000)
+
+    # Start a thread to stream logs
+    threading.Thread(target=stream_logs, args=(server_proc,), daemon=True).start()
+
+    # Give the server a moment to start before opening ngrok
+    time.sleep(4)
+    tunnel = start_ngrok()
 
     def signal_handler(sig, frame):
         shutdown(server_proc, tunnel)
@@ -70,42 +104,6 @@ def main():
     except KeyboardInterrupt:
         shutdown(server_proc, tunnel)
 
+
 if __name__ == "__main__":
-    #main()
-
-    start_server()
-
-'''
-delete_db()
-print()
-
-init_db()
-print()
-
-view_db()
-print()
-
-t = Track(
-    "0LMwgWFzDjU", "tree among shrubs", "men i trust", 100
-)
-
-add_track_to_db(t)
-print()
-
-view_db()
-
-
-
-
-    t = Track(
-        "uQgI1XNtwrw", "lose control", "jj lin", 101
-    )
-    t2 = Track(
-        "DnZ2xE8DhwY", "broken record", "gsoul", 102
-    )
-    add_track_to_db(t)
-    add_track_to_db(t2)
-
-    print()
-    view_db()
-'''
+    main()

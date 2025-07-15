@@ -1,10 +1,10 @@
-import { searchTrack, queueContents } from "./api/index.js";
-import { renderLibraryList, renderQueueList } from "./ui/index.js";
+//import { searchTrack, queueContents } from "./api/index.js";
+//import { renderLibraryList, renderQueueList } from "./ui/index.js";
 
-import { setupEventListeners, setupWebSocket } from "./setup.js";
+import { setupDomEventListeners, setupWebSocket } from "./events/index.js";
 
 async function init() {
-	//start websocket connection and listener
+	//start websocket connection and handler
 	setupWebSocket();
 
 
@@ -24,7 +24,7 @@ async function init() {
 
 
 	//setup ui event listeners
-	setupEventListeners();
+	setupDomEventListeners();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
