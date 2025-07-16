@@ -6,3 +6,4 @@ from .track_node import TrackNode
 from .track_queue import TrackQueue
 from .websocket_manager import WebsocketManager
 from .queue_manager import QueueManager
+from .event_bus import EventBus

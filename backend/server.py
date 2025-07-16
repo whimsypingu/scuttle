@@ -7,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routers import queue_router, play_router, download_router, search_router, websocket_router
 
-from backend.data_structures import QueueManager, WebsocketManager, AddToQueueMessage, RemoveFromQueueMessage
+from backend.data_structures import QueueManager, WebsocketManager, EventBus
+
+from backend.core.event_handler import register_event_handlers
 import backend.globals as G
 
 
@@ -18,21 +20,21 @@ async def lifespan(app: FastAPI):
 
     print("Starting...")
 
-    #initialize websocket manager
-    websocket_manager = app.state.websocket_manager = WebsocketManager()
-
     #initialize backend
     queue_manager = app.state.queue_manager = QueueManager()
 
     queue_manager.create(G.SEARCH_QUEUE_NAME)
     queue_manager.create(G.DOWNLOAD_QUEUE_NAME)
+    queue_manager.create(G.PLAY_QUEUE_NAME)
+    
+    #initialize websocket manager
+    websocket_manager = app.state.websocket_manager = WebsocketManager()
 
-    #user facing queue
-    play_queue = queue_manager.create(G.PLAY_QUEUE_NAME, websocket_manager)
-    play_queue.set_triggers({
-        G.Trigger.ON_ADD: AddToQueueMessage.build,
-        G.Trigger.ON_REMOVE: RemoveFromQueueMessage.build
-    })
+    #initialize eventbus
+    event_bus = app.state.event_bus = EventBus()
+    
+    #triggers
+    register_event_handlers(event_bus=event_bus, websocket_manager=websocket_manager)
 
     yield #app runs
 

@@ -1,21 +1,18 @@
 from __future__ import annotations
 import asyncio
-from typing import Optional, Callable
+from typing import Optional
 
-from .track import Track
-from .track_node import TrackNode
-from .websocket_manager import WebsocketManager
-
-from backend.globals import Trigger
+from .track import Track, TrackNode
+from .events import Event, EventTopic, EventBus
 
 class TrackQueue:
     def __init__(
         self, 
         name: Optional[str] = None, 
-        websocket_manager: Optional[WebsocketManager] = None
+        event_bus: Optional[EventBus] = None,
     ):
         self.name = name
-        self.websocket_manager = websocket_manager
+        self.event_bus = event_bus
 
         self.head = None
         self.tail = None
@@ -23,8 +20,6 @@ class TrackQueue:
         self.size = 0
 
         self._lock = asyncio.Lock() #prevent race conditions because broadcasting is async and head and tail edits
-
-        self._triggers = {} #dict[Trigger, Callable]
             
 
 
@@ -41,12 +36,17 @@ class TrackQueue:
         return " -> ".join(titles) if titles else "Queue is empty"
 
 
-    def set_triggers(self, triggers: dict[Trigger, Callable]):
-        for trigger, fn in triggers.items():
-            if isinstance(trigger, Trigger) and callable(fn):
-                self._triggers[trigger] = fn
-
     #internal helpers
+    async def _emit_event(self, topic: EventTopic, payload: Optional[dict] = None):
+        if self.event_bus:
+            event = Event(
+                topic=topic, 
+                payload={"source": self, **(payload or {})} #ensures source field points to self
+            )
+            await self.event_bus.publish(event)
+        return
+            
+
     async def _add_track(self, track: Track):
         """
         Update counters and broadcast when a track is added.
@@ -59,12 +59,12 @@ class TrackQueue:
         """
         self.youtube_id_counts[track.youtube_id] = self.youtube_id_counts.get(track.youtube_id, 0) + 1
         self.size += 1
-        if self.websocket_manager and (Trigger.ON_ADD in self._triggers):
-            try:
-                message = self._triggers[Trigger.ON_ADD](self, track)
-                await self.websocket_manager.broadcast(message)
-            except Exception as e:
-                print(f"Error in ON_ADD trigger: {e}")
+        self._emit_event(
+            topic=EventTopic.TRACK_ADDED,
+            payload={
+                "track": track
+            }
+        )
         return
 
     async def _remove_track(self, track: Track):
@@ -83,12 +83,12 @@ class TrackQueue:
                 del self.youtube_id_counts[track.youtube_id]
             self.size -= 1
 
-            if self.websocket_manager and (Trigger.ON_REMOVE in self._triggers):
-                try:
-                    message = self._triggers[Trigger.ON_REMOVE](self, track)
-                    await self.websocket_manager.broadcast(message)
-                except Exception as e:
-                    print(f"Error in ON_REMOVE trigger: {e}")
+            self._emit_event(
+                topic=EventTopic.TRACK_REMOVED,
+                payload={
+                    "track": track
+                }
+            )
         return
 
 

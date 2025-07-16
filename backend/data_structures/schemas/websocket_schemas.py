@@ -1,51 +1,30 @@
 from pydantic import BaseModel, field_validator
-from typing import Optional, List, Literal
-
-from ..track import Track
-from ..track_queue import TrackQueue
-
-from backend.globals import Trigger
-
+from typing import Iterable, Mapping
 
 #shared base class
 class WebsocketMessage(BaseModel):
     context: str
     data: dict
     
+    def _clean(self, value):
+        #recursively called to clean out the contents and prepare in json format
+        if hasattr(value, "to_json") and callable(value.to_json): #try custom to_json() first
+            return self._clean(value.to_json())
+        
+        elif isinstance(value, BaseModel): #pydantic
+            return self._clean(value.model_dump())
+        
+        elif isinstance(value, Mapping): #dicts
+            return {self._clean(k): self._clean(v) for k, v in value.items()}
+        
+        elif isinstance(value, Iterable) and not isinstance(value, (str, bytes)): #lists
+            return [self._clean(item) for item in value]
+
+        else:
+            return value
+
     def to_json(self):
-        return self.model_dump()
-
-#websocket message and builder function
-class AddToQueueMessage(WebsocketMessage):
-    @classmethod
-    def build(cls, track_queue: TrackQueue, track: Track):
-        """
-        Constructs and returns an AddMessage from a given TrackQueue and the Track being added.
-        """
-        next = track_queue.peek_at(1)
-        context = f"{track_queue.get_name()}.{Trigger.ON_ADD.value}"
-        return cls(
-            context=context,
-            data={
-                "content": track_queue.to_json(),
-                "next": next.to_json() if next else None,
-                "track": track.to_json()
-            }
-        ).to_json()
-
-class RemoveFromQueueMessage(WebsocketMessage):
-    @classmethod
-    def build(cls, track_queue: TrackQueue, track: Track):
-        """
-        Constructs and returns a RemoveMessage from a given TrackQueue and the Track being added.
-        """
-        next = track_queue.peek_at(1)
-        context = f"{track_queue.get_name()}.{Trigger.ON_REMOVE.value}"
-        return cls(
-            context=context,
-            data={
-                "content": track_queue.to_json(),
-                "next": next.to_json() if next else None,
-                "track": track.to_json()
-            }
-        ).to_json()
+        return {
+            "context": self.context,
+            "data": self._clean(self.data)
+        }

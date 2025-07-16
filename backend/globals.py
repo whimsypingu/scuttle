@@ -6,11 +6,6 @@ SEARCH_QUEUE_NAME = "search_queue"
 DOWNLOAD_QUEUE_NAME = "download_queue"
 PLAY_QUEUE_NAME = "play_queue"
 
-class Trigger(str, Enum):
-    ON_ADD = "on_add"
-    ON_REMOVE = "on_remove"
-
-
 #database
 DATA_DIR = Path("data")
 DB_FILE = DATA_DIR / "music.db"
