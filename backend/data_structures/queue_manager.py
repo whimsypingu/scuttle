@@ -1,6 +1,7 @@
 from typing import Optional
 from .websocket_manager import WebsocketManager
 from .track_queue import TrackQueue
+from .events import EventBus
 
 #handles all the queues, singleton
 class QueueManager:
@@ -10,19 +11,19 @@ class QueueManager:
         """
         self._queues = {}
 
-    def create(self, queue_name: str, websocket_manager: Optional[WebsocketManager] = None):
+    def create(self, queue_name: str, event_bus: Optional[EventBus] = None):
         """
         Creates a new TrackQueue with the given name, if it doesn't already exist.
 
         Args:
             queue_name (str): The name of the queue to create.
-            websocket_manager (WebsocketManager): The WebsocketManager to attach to the queue.
+            event_bus (EventBus): The EventBus to attach to the queue.
 
         Returns:
-            TrackQueuee | None: The queue if a new one was made successfully, else None.
+            TrackQueue | None: The queue if a new one was made successfully, else None.
         """
         if queue_name not in self._queues:
-            new_queue = TrackQueue(queue_name, websocket_manager)
+            new_queue = TrackQueue(queue_name, event_bus)
             self._queues[queue_name] = new_queue
             return new_queue
         return None

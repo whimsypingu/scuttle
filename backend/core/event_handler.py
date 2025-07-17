@@ -18,11 +18,11 @@ def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketMan
     """
     event_bus.subscribe(
         EventTopic.TRACK_ADDED,
-        partial(on_track_added, websocket_manager)
+        lambda event: on_track_added(event, websocket_manager)
     )
     event_bus.subscribe(
         EventTopic.TRACK_REMOVED,
-        partial(on_track_removed, websocket_manager)
+        lambda event: on_track_removed(event, websocket_manager)
     )
     return
 

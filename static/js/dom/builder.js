@@ -2,7 +2,7 @@
 
 import { SELECTORS } from "./selectors.js";
 
-import { prepareDataset } from "../utils/index.js";
+import { prepareDataset, formatTime } from "../utils/index.js";
 
 //helper to create element with optional attributes and children
 export function createElem(tag, attrs = {}, children = []) {
@@ -29,14 +29,27 @@ export function buildTrackListItem(track, context) {
     );
 
     //track fields
-    const fieldsToShow = ["title", "uploader", "duration"];
-    fieldsToShow.forEach(field => {
-        const div = createElem("div", {
-            class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
-            textContent: track[field],
-        });
-        item.appendChild(div);
+    // Title
+    const titleDiv = createElem("div", {
+        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
+        textContent: track.title || "Untitled",
     });
+    item.appendChild(titleDiv);
+
+    // Uploader
+    const uploaderDiv = createElem("div", {
+        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
+        textContent: track.uploader || "Unknown artist",
+    });
+    item.appendChild(uploaderDiv);
+
+    // Duration (formatted)
+    const durationDiv = createElem("div", {
+        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
+        textContent: formatTime(track.duration),
+    });
+    item.appendChild(durationDiv);
+
 
     //action buttons
     const trackDataset = prepareDataset(track);

@@ -6,7 +6,7 @@ import { debounce } from "../utils/index.js";
 import { onSearchInput, onSearchEnter } from "./rest/search-events.js";
 import { onClickLibraryList } from "./rest/library-events.js";
 import { onClickQueueList } from "./rest/queue-events.js";
-import { onAudioEnded } from "./rest/audio-events.js";
+import { onAudioEnded, onPreviousButtonClick, onPlayPauseButtonClick, onNextButtonClick, updateAudioProgress, onProgressBarPointerdown, onProgressBarPointerup, onProgressBarInput } from "./rest/audio-events.js";
 
 import { handleWebSocketMessage } from "./websocket/websocket-events.js";
 import { initWebSocket } from "../api/index.js";
@@ -27,6 +27,15 @@ export function setupDomEventListeners() {
 
     //audio
     $(SELECTORS.audio.ids.PLAYER).addEventListener("ended", onAudioEnded);
+
+    $(SELECTORS.audio.ids.PREVIOUS_BUTTON).addEventListener("click", onPreviousButtonClick);
+    $(SELECTORS.audio.ids.PLAY_PAUSE_BUTTON).addEventListener("click", onPlayPauseButtonClick);
+    $(SELECTORS.audio.ids.NEXT_BUTTON).addEventListener("click", onNextButtonClick);
+
+    $(SELECTORS.audio.ids.PLAYER).addEventListener("timeupdate", updateAudioProgress);
+    $(SELECTORS.audio.ids.PROGRESS_BAR).addEventListener("pointerdown", onProgressBarPointerdown);
+    $(SELECTORS.audio.ids.PROGRESS_BAR).addEventListener("pointerup", onProgressBarPointerup);
+    $(SELECTORS.audio.ids.PROGRESS_BAR).addEventListener("input", onProgressBarInput);
 }
 
 

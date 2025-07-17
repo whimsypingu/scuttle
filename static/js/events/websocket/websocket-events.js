@@ -19,8 +19,8 @@ export function handleWebSocketMessage(message) {
     const data = message.data;
 
     const handlers = {
-        "play_queue.on_add": handlePlayQueueOnAdd,
-        "play_queue.on_remove": handlePlayQueueOnRemove
+        "play_queue.track_added": handlePlayQueueOnAdd,
+        "play_queue.track_removed": handlePlayQueueOnRemove
     };
 
     const handler = handlers[context];

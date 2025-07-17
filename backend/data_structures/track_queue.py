@@ -59,7 +59,7 @@ class TrackQueue:
         """
         self.youtube_id_counts[track.youtube_id] = self.youtube_id_counts.get(track.youtube_id, 0) + 1
         self.size += 1
-        self._emit_event(
+        await self._emit_event(
             topic=EventTopic.TRACK_ADDED,
             payload={
                 "track": track
@@ -83,7 +83,7 @@ class TrackQueue:
                 del self.youtube_id_counts[track.youtube_id]
             self.size -= 1
 
-            self._emit_event(
+            await self._emit_event(
                 topic=EventTopic.TRACK_REMOVED,
                 payload={
                     "track": track

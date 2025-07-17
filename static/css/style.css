@@ -1,0 +1,281 @@
+/* Base Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Layout */
+body {
+  background-color: #f5f7fa; /* soft off-white */
+  color: #1e293b; /* dark slate blue */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Header */
+header h1 {
+  font-size: 2rem;
+  text-align: center;
+  color: #3b82f6; /* medium blue */
+  margin-bottom: 1rem;
+}
+
+/* Search Section */
+#search-section {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+#search-input {
+  padding: 0.6rem 1rem;
+  border-radius: 5px;
+  border: 1px solid #cbd5e1; /* muted border */
+  width: 60%;
+  max-width: 400px;
+  background: #e2e8f0; /* light gray-blue */
+  color: #1e293b;
+}
+
+#search-input::placeholder {
+  color: #64748b; /* muted placeholder */
+}
+
+#search-and-download-button {
+  padding: 0.6rem 1rem;
+  background-color: #3b82f6; /* medium blue */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+#search-and-download-button:hover {
+  background-color: #1d4ed8; /* deep blue */
+}
+
+/* Player Section */
+#player-section {
+  display: flex;
+  justify-content: center;
+}
+
+audio {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 6px;
+  outline: none;
+}
+
+/* Playbar Container */
+#custom-playbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #e0f0ff; /* soft light blue */
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 20px auto;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+#custom-playbar button {
+  background-color: #007acc; /* darker blue */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#custom-playbar button:hover {
+  background-color: #005fa3;
+}
+
+/* Track Info Container */
+#track-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
+}
+
+/* Time Text */
+#track-info span {
+  font-family: monospace;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Progress Bar */
+#progress-bar {
+  flex: 1;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #ccc;
+  outline: none;
+}
+
+#progress-bar::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px; 
+  background-color: #007acc;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#progress-bar::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background-color: #007acc;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+
+
+/* Sections */
+section {
+  background-color: #e2e8f0; /* very soft blue */
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(30, 41, 59, 0.1);
+}
+
+section h3 {
+  margin-bottom: 0.5rem;
+  color: #334155; /* dark blue-gray */
+  font-weight: 500;
+}
+
+/* Lists */
+ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+li {
+  background-color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1; /* muted border */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.track-field,
+.library-field,
+.queue-field {
+  flex: 1;
+  color: #1e293b;
+}
+
+.library-actions,
+.queue-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.play-button,
+.queue-button {
+  background: #3b82f6; /* medium blue */
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.play-button:hover,
+.queue-button:hover {
+  background: #1d4ed8; /* deep blue */
+}
+
+/* Danger (e.g., delete) button style */
+.danger-button {
+  background: #ef4444; /* soft red */
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.danger-button:hover {
+  background: #b91c1c;
+}
+
+/* Loading Spinner */
+#loading-spinner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(245, 247, 250, 0.8); /* tinted */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid #cbd5e1; /* muted border */
+  border-top: 5px solid #3b82f6; /* medium blue */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 600px) {
+  #search-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #search-input,
+  #search-and-download-button {
+    width: 90%;
+  }
+
+  li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .library-actions,
+  .queue-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

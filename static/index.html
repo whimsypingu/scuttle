@@ -4,7 +4,7 @@
 	<meta charset="UTF-8" />
 	<title>Music Player</title>
 
-	<link rel="stylesheet" href="/static/css/loading.css">
+	<link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 	<!-- Loading Spinner -->
@@ -28,6 +28,19 @@
 		<audio id="audio-player" controls style="display:none; margin-top: 20px;">
 			Your browser does not support the audio element.
 		</audio>
+	</section>
+	
+	<!-- Custom Playbar -->
+	<section id="custom-playbar">
+		<button id="previous-button" title="Previous">⏮️</button>
+		<button id="play-pause-button" title="Play/Pause">▶️</button>
+		<button id="next-button" title="Next">⏭️</button>
+
+		<div id="track-info">
+			<span id="audio-current-time">0:00</span>
+			<input type="range" id="audio-progress-bar" min="0" max="100" value="0">
+			<span id="audio-duration">0:00</span>
+		</div>
 	</section>
 
 	<!-- Music Library -->

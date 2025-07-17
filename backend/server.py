@@ -20,13 +20,6 @@ async def lifespan(app: FastAPI):
 
     print("Starting...")
 
-    #initialize backend
-    queue_manager = app.state.queue_manager = QueueManager()
-
-    queue_manager.create(G.SEARCH_QUEUE_NAME)
-    queue_manager.create(G.DOWNLOAD_QUEUE_NAME)
-    queue_manager.create(G.PLAY_QUEUE_NAME)
-    
     #initialize websocket manager
     websocket_manager = app.state.websocket_manager = WebsocketManager()
 
@@ -36,6 +29,13 @@ async def lifespan(app: FastAPI):
     #triggers
     register_event_handlers(event_bus=event_bus, websocket_manager=websocket_manager)
 
+    #initialize backend
+    queue_manager = app.state.queue_manager = QueueManager()
+
+    queue_manager.create(G.SEARCH_QUEUE_NAME)
+    queue_manager.create(G.DOWNLOAD_QUEUE_NAME)
+    queue_manager.create(G.PLAY_QUEUE_NAME, event_bus)
+    
     yield #app runs
 
     print("Shutting down...")
