@@ -2,19 +2,9 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
 
-from backend.data_structures import Track, TrackQueue
+from .utils import is_downloaded, get_audio_path, get_audio_size
+from backend.data_structures import Track
 import backend.globals as G
-
-
-def get_audio_path(track: Track) -> Path:
-    return G.DOWNLOAD_DIR / f"{track.youtube_id}.{G.AUDIO_FORMAT}"
-
-def is_downloaded(track: Track) -> bool:
-    return get_audio_path(track).exists()
-
-def get_audio_size(track: Track) -> int:
-    return get_audio_path(track).stat().st_size
-
 
 def stream_audio(req: Request, track: Track) -> StreamingResponse:
     #automatically attempts to stream the first song in the play_queue

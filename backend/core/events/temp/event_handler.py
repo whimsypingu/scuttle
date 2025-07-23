@@ -1,8 +1,8 @@
 from functools import partial
 
-from backend.data_structures.events import Event, EventTopic, EventBus
-from backend.data_structures.schemas.websocket_schemas import WebsocketMessage
-from backend.data_structures.websocket_manager import WebsocketManager
+from backend.core.events.temp.events import Event, EventTopic, EventBus
+from backend.core.events.temp.websocket_schemas import WebsocketMessage
+from backend.core.events.temp.websocket_manager import WebsocketManager
 
 
 def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketManager):

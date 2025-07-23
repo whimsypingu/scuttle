@@ -3,7 +3,7 @@ import asyncio
 from typing import Optional
 
 from .track import Track, TrackNode
-from .events import Event, EventTopic, EventBus
+from ..core.events.temp.events import Event, EventTopic, EventBus
 
 class TrackQueue:
     def __init__(

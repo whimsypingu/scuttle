@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from backend.core.audio import is_downloaded
+from backend.core.audio.audio import is_downloaded
 from backend.data_structures import DownloadRequest
 import backend.globals as G
 

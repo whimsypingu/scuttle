@@ -5,12 +5,18 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import queue_router, play_router, download_router, search_router, websocket_router
+from backend.core.events.event_bus import EventBus
+from backend.core.events.websocket.manager import WebsocketManager
+from backend.core.events.handlers import register_event_handlers
 
-from backend.data_structures import QueueManager, WebsocketManager, EventBus
+from backend.core.queue.manager import QueueManager
+from backend.core.queue.implementations.play_queue import PlayQueue
 
-from backend.core.event_handler import register_event_handlers
 import backend.globals as G
+
+from backend.api.routers import audio_router
+from backend.api.routers import queue_router
+from backend.api.routers import websocket_router
 
 
 
@@ -19,23 +25,23 @@ import backend.globals as G
 async def lifespan(app: FastAPI):
 
     print("Starting...")
-
-    #initialize websocket manager
-    websocket_manager = app.state.websocket_manager = WebsocketManager()
-
-    #initialize eventbus
-    event_bus = app.state.event_bus = EventBus()
     
-    #triggers
+    websocket_manager = WebsocketManager()
+    event_bus = EventBus()
+
+    # Initialize backend components early if needed for handlers
+    play_queue = PlayQueue(name=G.PLAY_QUEUE_NAME, event_bus=event_bus)
+    queue_manager = QueueManager()
+    queue_manager.add(play_queue)
+
+    # Assign to app.state for global access
+    app.state.websocket_manager = websocket_manager
+    app.state.event_bus = event_bus
+    app.state.queue_manager = queue_manager
+    
+    # triggers
     register_event_handlers(event_bus=event_bus, websocket_manager=websocket_manager)
 
-    #initialize backend
-    queue_manager = app.state.queue_manager = QueueManager()
-
-    queue_manager.create(G.SEARCH_QUEUE_NAME)
-    queue_manager.create(G.DOWNLOAD_QUEUE_NAME)
-    queue_manager.create(G.PLAY_QUEUE_NAME, event_bus)
-    
     yield #app runs
 
     print("Shutting down...")
@@ -53,10 +59,8 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app.include_router(search_router.router)
+app.include_router(audio_router.router)
 app.include_router(queue_router.router)
-app.include_router(download_router.router)
-app.include_router(play_router.router)
 
 app.include_router(websocket_router.router)
 
