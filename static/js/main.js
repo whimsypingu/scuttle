@@ -1,30 +1,17 @@
-//import { searchTrack, queueContents } from "./api/index.js";
-//import { renderLibraryList, renderQueueList } from "./ui/index.js";
+import { setupAudioEventListeners } from "./events/dom/audio.js";
+import { setupLibraryEventListeners } from "./events/dom/library.js";
+import { setupQueueEventListeners } from "./events/dom/queue.js";
+import { setupWebSocket } from "./events/websocket/websocket.js";
 
-import { setupDomEventListeners, setupWebSocket } from "./events/index.js";
+import { bootstrapAll } from "./events/bootstrap/bootstrap.js";
 
 async function init() {
-	//start websocket connection and handler
+	setupAudioEventListeners();
+	setupLibraryEventListeners();
+	setupQueueEventListeners();
 	setupWebSocket();
 
-
-	/*
-	try {
-		//render library content
-		const libraryTrackContent = await searchTrack("");
-		renderLibraryList(libraryTrackContent);
-
-		//render default queue content
-		const queueTrackContent = await queueContents("default");
-		renderQueueList(queueTrackContent);
-	} catch (error) {
-		console.error("Failed to fetch initial data:", error);
-	}
-	*/
-
-
-	//setup ui event listeners
-	setupDomEventListeners();
+	bootstrapAll();
 }
 
 window.addEventListener("DOMContentLoaded", () => {

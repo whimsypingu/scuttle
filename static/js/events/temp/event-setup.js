@@ -1,7 +1,7 @@
 // static/js/events/event-setup.js
 
-import { SELECTORS, $ } from "../dom/index.js";
-import { debounce } from "../utils/index.js";
+import { SELECTORS, $ } from "../../dom/index.js";
+import { debounce } from "../../utils/index.js";
 
 import { onSearchInput, onSearchEnter } from "./rest/search-events.js";
 import { onClickLibraryList } from "./rest/library-events.js";

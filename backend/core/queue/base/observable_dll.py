@@ -1,7 +1,7 @@
 import asyncio
 
 from backend.core.events.event_bus import EventBus
-from backend.core.models import Event
+from backend.core.models.event import Event
 
 from .doubly_linked_list import DoublyLinkedList
 
@@ -13,7 +13,7 @@ class ObservableQueue(Generic[T]):
     def __init__(
         self,
         *,
-        dll: DoublyLinkedList[T],
+        dll: Optional[DoublyLinkedList[T]] = None,
         name: Optional[str] = None,
         event_bus: Optional[EventBus] = None,
     ):
@@ -66,7 +66,7 @@ class ObservableQueue(Generic[T]):
     def to_json(self) -> list:
         #custom to_json builder
         result = []
-        for item in self:
+        for item in self._dll:
             if hasattr(item, "to_json"):
                 result.append(item.to_json())
             else:

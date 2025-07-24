@@ -13,9 +13,9 @@ export function createElem(tag, attrs = {}, children = []) {
             el.dataset[dKey] = dVal;
         });
         } else if (key === "textContent") {
-        el.textContent = val;
+            el.textContent = val;
         } else {
-        el.setAttribute(key, val);
+            el.setAttribute(key, val);
         }
     }
     children.forEach(child => el.appendChild(child));
@@ -56,14 +56,20 @@ export function buildTrackListItem(track, context) {
     const playButton = createElem("button", {
         textContent: "Play",
         class: SELECTORS.actions.classes.PLAY_BUTTON,
-        dataset: trackDataset,
+        dataset: {
+            ...trackDataset,
+            action: "play"
+        },
         type: "button",
     });
 
     const queueButton = createElem("button", {
         textContent: "Queue",
         class: SELECTORS.actions.classes.QUEUE_BUTTON,
-        dataset: trackDataset,
+        dataset: {
+            ...trackDataset,
+            action: "queue"
+        },
         type: "button",
     });
 

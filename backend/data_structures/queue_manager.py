@@ -1,7 +1,7 @@
 from typing import Optional
-from .websocket_manager import WebsocketManager
+from ..core.events.temp.websocket_manager import WebsocketManager
 from .track_queue import TrackQueue
-from .events import EventBus
+from ..core.events.temp.events import EventBus
 
 #handles all the queues, singleton
 class QueueManager:

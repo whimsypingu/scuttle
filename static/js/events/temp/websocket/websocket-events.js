@@ -1,6 +1,7 @@
 //static/js/events/websocket/websocket-events.js
 
-import { renderLibraryList, renderQueueList } from "../../ui/index.js";
+import { renderQueueList } from "../../../features/queue/index.js";
+
 
 //handles websocket messages
 export function handleWebSocketMessage(message) {
@@ -18,10 +19,10 @@ export function handleWebSocketMessage(message) {
     const context = message.context;
     const data = message.data;
 
-    const handlers = {
+    const handlers = { 
         "play_queue.track_added": handlePlayQueueOnAdd,
         "play_queue.track_removed": handlePlayQueueOnRemove
-    };
+    }; //now source+action
 
     const handler = handlers[context];
     if (handler) {

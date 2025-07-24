@@ -2,8 +2,8 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from typing import Optional
 
-from backend.core.db import search_db, insert_track_db, cache_track_db
-from backend.core.yt import search_yt
+from backend.db.db import search_db, insert_track_db, cache_track_db
+from backend.core.audio.yt import search_yt
 from backend.data_structures import SearchRequest
 import backend.globals as G
 

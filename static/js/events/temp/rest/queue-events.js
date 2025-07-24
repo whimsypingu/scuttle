@@ -1,9 +1,9 @@
 //static/js/events/rest/queue-events.js
 
-import { $, SELECTORS } from "../../dom/index.js";
+import { $, SELECTORS } from "../../../dom/index.js";
 import { playTrack, queueTrack, queueNowTrack } from "../../api/index.js";
-import { showLoading, hideLoading } from "../../ui/index.js";
-import { parseTrackFromDataset } from "../../utils/index.js"
+import { showLoading, hideLoading } from "../../../temp/ui/index.js";
+import { parseTrackFromDataset } from "../../../utils/index.js"
 import { setAndPlayBlob } from "../../core/audio-player.js";
 
 //clicking the queue list will check for this

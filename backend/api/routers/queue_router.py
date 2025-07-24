@@ -1,6 +1,6 @@
 import traceback #debugging
 
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 
 from backend.core.audio.utils import is_downloaded
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/queue")
 
 
 @router.post("/set-first")
-async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -> JSONResponse:
+async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -> Response:
     """
     Replace or set the first track in the play queue.
 
@@ -44,15 +44,14 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
             if not download_queue.contains(track):
                 await download_queue.insert_next(track)
     
-        content = play_queue.to_json()
-        return JSONResponse(content={"queueTrackContent": content}, status_code=200)
+        return Response(status_code=204)
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     
 
 @router.post("/push")
-async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> JSONResponse:
+async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Response:
     """
     Add a new track to the end of the play queue.
 
@@ -82,16 +81,15 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> JSONRes
         if not is_downloaded(track):
             if not download_queue.contains(track):
                 await download_queue.push(track)
-    
-        content = play_queue.to_json()
-        return JSONResponse(content={"queueTrackContent": content}, status_code=200)
+        
+        return Response(status_code=204)
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/pop")
-async def queue_pop_track(req: Request) -> JSONResponse:
+async def queue_pop_track(req: Request) -> Response:
     """
     Remove the first track from the play queue (i.e., dequeue the currently playing track).
 
@@ -110,16 +108,14 @@ async def queue_pop_track(req: Request) -> JSONResponse:
 
     try:
         await play_queue.pop()
-
-        content = play_queue.to_json()
-        return JSONResponse(content={"queueTrackContent": content}, status_code=200)
+        return Response(status_code=204)
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/remove-at")
-async def queue_remove_track(body: QueueRemoveTrackRequest, req: Request) -> JSONResponse:
+async def queue_remove_track(body: QueueRemoveTrackRequest, req: Request) -> Response:
     """
     Remove a track at the specified index from the play queue.
 
@@ -145,16 +141,14 @@ async def queue_remove_track(body: QueueRemoveTrackRequest, req: Request) -> JSO
 
     try:
         await play_queue.remove_at(index)
-
-        content = play_queue.to_json()
-        return JSONResponse(content={"queueTrackContent": content}, status_code=200)
+        return Response(status_code=204)
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/contents")
-def get_queue_contents(req: Request) -> JSONResponse:
+async def get_queue_contents(req: Request) -> JSONResponse:
     """
     Retrieve the current contents of the play queue.
 
@@ -168,7 +162,7 @@ def get_queue_contents(req: Request) -> JSONResponse:
     play_queue = queue_manager.get(G.PLAY_QUEUE_NAME)
 
     content = play_queue.to_json()
-    return JSONResponse(content={"queueTrackContent": content}, status_code=200)
+    return JSONResponse(content={"content": content}, status_code=200)
     
 
 #@router.get("/clear")

@@ -1,5 +1,8 @@
+//static/js/ui/audio-ui.js
+
 import { $, SELECTORS } from "../dom/index.js";
 import { formatTime } from "../utils/index.js";
+
 
 export function setCurrentTimeDisplay(value) {
     const currentTimeEl = $(SELECTORS.audio.ids.CURRENT_TIME);
@@ -7,11 +10,13 @@ export function setCurrentTimeDisplay(value) {
     currentTimeEl.textContent = formatTime(value);    
 }
 
+
 export function syncCurrentTimeDisplay(audioElement) {
     const currentTimeEl = $(SELECTORS.audio.ids.CURRENT_TIME);
 
     currentTimeEl.textContent = formatTime(audioElement.currentTime);
 }
+
 
 export function syncDurationDisplay(audioElement) {
     const durationEl = $(SELECTORS.audio.ids.DURATION);
