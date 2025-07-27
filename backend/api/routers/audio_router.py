@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import StreamingResponse
 
-from backend.core.audio.streaming import stream_audio
+from backend.core.audio.stream import stream_audio
 from backend.core.audio.utils import is_downloaded
 
 import backend.globals as G

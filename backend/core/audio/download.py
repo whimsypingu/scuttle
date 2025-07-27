@@ -6,37 +6,16 @@ from typing import List
 from pathlib import Path
 
 from .scoring import select_best_track
-from .utils import get_audio_path, get_audio_size
+from .utils import get_audio_path, get_audio_size, run_subprocess
 
 from backend.exceptions import NoSearchResultsError, DownloadFailedError, SearchFailedError
-from backend.data_structures import Track
+from backend.core.models.track import Track
 import backend.globals as G
 
 logger = logging.getLogger(__name__)
 
 
-def run_subprocess(cmd: List[str], timeout: int) -> subprocess.CompletedProcess:
-    """
-    Executes a subprocess with the given command and timeout.
-
-    Args:
-        cmd (List[str]): The command and arguments to execute.
-        timeout (int): Timeout duration in seconds.
-
-    Returns:
-        subprocess.CompletedProcess: The result of the subprocess execution.
-    """
-    return subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True, #log as text not bytes
-        check=True, #throw exceptions
-        timeout=timeout
-    )
-
-
-def download_track_yt(track: Track, timeout: int=G.DOWNLOAD_TIMEOUT_DEFAULT, max_attempts: int=G.MAX_ATTEMPTS, retry_delay: int=G.RETRY_DELAY) -> None:
+def download_track_from_yt(track: Track, timeout: int=G.DOWNLOAD_TIMEOUT_DEFAULT, max_attempts: int=G.MAX_ATTEMPTS, retry_delay: int=G.RETRY_DELAY) -> None:
     """
     Downloads a YouTube audio track as an MP3 using yt-dlp.
 
@@ -100,7 +79,7 @@ def download_track_yt(track: Track, timeout: int=G.DOWNLOAD_TIMEOUT_DEFAULT, max
             raise DownloadFailedError(f"Download timed out for {youtube_id}") from e
     
 
-def search_yt(q: str, limit: int=G.SEARCH_LIMIT_DEFAULT, timeout: int=G.SEARCH_TIMEOUT_DEFAULT, max_attempts: int=G.MAX_ATTEMPTS, retry_delay: int=G.RETRY_DELAY) -> List[Track]:
+def search_from_yt(q: str, limit: int=G.SEARCH_LIMIT_DEFAULT, timeout: int=G.SEARCH_TIMEOUT_DEFAULT, max_attempts: int=G.MAX_ATTEMPTS, retry_delay: int=G.RETRY_DELAY) -> List[Track]:
     """
     Performs a YouTube search using yt-dlp and returns a list of matching tracks.
 
@@ -175,11 +154,11 @@ def search_yt(q: str, limit: int=G.SEARCH_LIMIT_DEFAULT, timeout: int=G.SEARCH_T
             raise SearchFailedError(f"Search timed out for {q}") from e
 
 
-def best_result_yt(q: str, limit: int=G.SEARCH_LIMIT_DEFAULT, timeout: int=G.SEARCH_TIMEOUT_DEFAULT, max_attempts: int=G.MAX_ATTEMPTS, retry_delay: int=G.RETRY_DELAY) -> Track:
+def best_result_from_yt(q: str, limit: int=G.SEARCH_LIMIT_DEFAULT, timeout: int=G.SEARCH_TIMEOUT_DEFAULT, max_attempts: int=G.MAX_ATTEMPTS, retry_delay: int=G.RETRY_DELAY) -> Track:
     """
     Performs a YouTube search and returns the best matching result.
 
-    Args:
+    Args: 
         q (str): Search query.
         limit (int): Number of candidates to consider from yt-dlp.
         timeout (int): Timeout (in seconds) for the yt-dlp subprocess.
@@ -190,7 +169,7 @@ def best_result_yt(q: str, limit: int=G.SEARCH_LIMIT_DEFAULT, timeout: int=G.SEA
     Raises:
         NoSearchResultsError: If no results are returned from the youtube search.
     """
-    yt_results = search_yt(q, limit=limit, timeout=timeout, max_attempts=max_attempts, retry_delay=retry_delay)
+    yt_results = search_from_yt(q, limit=limit, timeout=timeout, max_attempts=max_attempts, retry_delay=retry_delay)
 
     if not yt_results:
         raise NoSearchResultsError(f"No yt results found for query: '{q}'")

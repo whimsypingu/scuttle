@@ -1,6 +1,6 @@
 //static/js/features/library/ui.js
 
-import { buildTrackListItem } from "../dom/index.js";
+import { buildTrackListItem } from "../../../dom/index.js";
 
 
 //renders a list of tracks in the ui

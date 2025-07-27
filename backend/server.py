@@ -5,6 +5,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.core.audio.youtube_client import YouTubeClient
+from backend.core.database.audio_database import AudioDatabase
+
 from backend.core.events.event_bus import EventBus
 from backend.core.events.websocket.manager import WebsocketManager
 from backend.core.events.handlers import register_event_handlers
@@ -16,6 +19,7 @@ import backend.globals as G
 
 from backend.api.routers import audio_router
 from backend.api.routers import queue_router
+from backend.api.routers import search_router
 from backend.api.routers import websocket_router
 
 
@@ -29,6 +33,16 @@ async def lifespan(app: FastAPI):
     websocket_manager = WebsocketManager()
     event_bus = EventBus()
 
+    # link the db
+    db = AudioDatabase(filepath=G.DB_FILE, event_bus=event_bus)
+    await db.build()
+    await db.view_all()
+
+    print(await db.search(""))
+
+    # ytdlp
+    yt = YouTubeClient(download_dir=G.DATA_DIR, event_bus=event_bus)
+
     # Initialize backend components early if needed for handlers
     play_queue = PlayQueue(name=G.PLAY_QUEUE_NAME, event_bus=event_bus)
     queue_manager = QueueManager()
@@ -38,6 +52,9 @@ async def lifespan(app: FastAPI):
     app.state.websocket_manager = websocket_manager
     app.state.event_bus = event_bus
     app.state.queue_manager = queue_manager
+
+    app.state.db = db
+    app.state.yt = yt
     
     # triggers
     register_event_handlers(event_bus=event_bus, websocket_manager=websocket_manager)
@@ -61,6 +78,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(audio_router.router)
 app.include_router(queue_router.router)
+app.include_router(search_router.router)
 
 app.include_router(websocket_router.router)
 

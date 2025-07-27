@@ -3,7 +3,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
 
 from .utils import is_downloaded, get_audio_path, get_audio_size
-from backend.data_structures import Track
+from backend.core.models.track import Track
 import backend.globals as G
 
 def stream_audio(req: Request, track: Track) -> StreamingResponse:

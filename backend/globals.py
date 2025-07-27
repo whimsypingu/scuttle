@@ -8,7 +8,7 @@ PLAY_QUEUE_NAME = "play_queue"
 
 #database
 DATA_DIR = Path("data")
-DB_FILE = DATA_DIR / "music.db"
+DB_FILE = Path("backend") / "data" / "audio.db"
 
 DB_TRACKS_TABLENAME = "tracks" #do not make dynamic to avoid sql injection
 DB_DOWNLOADS_TABLENAME = "downloads"

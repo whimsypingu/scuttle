@@ -30,6 +30,9 @@ def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketMan
         (G.PLAY_QUEUE_NAME, PQA.POP),
         (G.PLAY_QUEUE_NAME, PQA.REMOVE),
         (G.PLAY_QUEUE_NAME, PQA.SEND_CONTENT),
+
+        ("search", "input"),
+        ("search", "enter"),
     ]
 
     handler = make_basic_handler(websocket_manager)

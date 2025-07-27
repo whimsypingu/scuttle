@@ -1,0 +1,1 @@
+export { search, deepSearch } from "./lib/api.js";

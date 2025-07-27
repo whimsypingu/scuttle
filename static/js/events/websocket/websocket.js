@@ -1,5 +1,7 @@
 //static/js/events/websocket/websocket.js
 
+import { $, SELECTORS } from "../../dom/index.js";
+import { renderLibraryList } from "../../features/library/index.js";
 import { renderQueueList } from "../../features/queue/index.js";
 import { initWebSocket } from "./socket.js";
 
@@ -20,13 +22,21 @@ export function setupWebSocket() {
 //handles websocket messages //later this should be migrated from the backend to ensure consistency
 const handlers = {
     play_queue: {
-        set_first: tempUniversalHandler,
-        insert_next: tempUniversalHandler,
-        push: tempUniversalHandler,
-        pop: tempUniversalHandler,
-        remove: tempUniversalHandler
+        set_first: tempQueueHandler,
+        insert_next: tempQueueHandler,
+        push: tempQueueHandler,
+        pop: tempQueueHandler,
+        remove: tempQueueHandler
+    },
+    library: {
+        insert: tempLibraryHandler,
+    },
+    search: {
+        input: tempLibraryHandler,
+        enter: tempLibraryHandler
     }
 }
+
 function handleWebSocketMessage(message) {
 
     //defense
@@ -49,7 +59,12 @@ function handleWebSocketMessage(message) {
     }
 }
 
-function tempUniversalHandler(payload) {
-    renderQueueList(payload.content);
+function tempQueueHandler(payload) {
+    renderQueueList($(SELECTORS.queue.ids.LIST), payload.content);
+}
+
+function tempLibraryHandler(payload) {
+    console.log("tempLibraryHandler called with payload content:", payload.content);
+    renderLibraryList($(SELECTORS.library.ids.LIST), payload.content);
 }
 
