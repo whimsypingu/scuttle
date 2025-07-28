@@ -3,3 +3,6 @@ __pycache__/
 *.py[cod]
 .env
 bot/users.json
+data/
+downloads/
+backend/data/
