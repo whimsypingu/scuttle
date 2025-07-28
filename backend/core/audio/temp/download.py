@@ -6,7 +6,7 @@ from typing import List
 from pathlib import Path
 
 from .scoring import select_best_track
-from .utils import get_audio_path, get_audio_size, run_subprocess
+from ..utils import get_audio_path, get_audio_size, run_subprocess
 
 from backend.exceptions import NoSearchResultsError, DownloadFailedError, SearchFailedError
 from backend.core.models.track import Track

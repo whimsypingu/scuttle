@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -5,7 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.core.audio.youtube_client import YouTubeClient
+from backend.core.worker.download import DownloadWorker
+from backend.core.youtube.client import YouTubeClient
 from backend.core.database.audio_database import AudioDatabase
 
 from backend.core.events.event_bus import EventBus
@@ -14,6 +16,7 @@ from backend.core.events.handlers import register_event_handlers
 
 from backend.core.queue.manager import QueueManager
 from backend.core.queue.implementations.play_queue import PlayQueue
+from backend.core.queue.implementations.download_queue import DownloadQueue
 
 import backend.globals as G
 
@@ -34,19 +37,26 @@ async def lifespan(app: FastAPI):
     event_bus = EventBus()
 
     # link the db
-    db = AudioDatabase(filepath=G.DB_FILE, event_bus=event_bus)
+    db = AudioDatabase(name=G.AUDIO_DATABASE_NAME, filepath=G.DB_FILE, event_bus=event_bus)
     await db.build()
     await db.view_all()
 
     print(await db.search(""))
 
     # ytdlp
-    yt = YouTubeClient(download_dir=G.DATA_DIR, event_bus=event_bus)
+    yt = YouTubeClient(name=G.YOUTUBE_CLIENT_NAME, base_dir=G.DATA_DIR, event_bus=event_bus)
 
     # Initialize backend components early if needed for handlers
     play_queue = PlayQueue(name=G.PLAY_QUEUE_NAME, event_bus=event_bus)
+    download_queue = DownloadQueue(name=G.DOWNLOAD_QUEUE_NAME, event_bus=event_bus)
+
     queue_manager = QueueManager()
     queue_manager.add(play_queue)
+    queue_manager.add(download_queue)
+
+    # workers
+    download_worker = DownloadWorker(download_queue=download_queue, youtube_client=yt)
+    download_task = asyncio.create_task(download_worker.run())
 
     # Assign to app.state for global access
     app.state.websocket_manager = websocket_manager
@@ -55,6 +65,8 @@ async def lifespan(app: FastAPI):
 
     app.state.db = db
     app.state.yt = yt
+
+
     
     # triggers
     register_event_handlers(event_bus=event_bus, websocket_manager=websocket_manager)

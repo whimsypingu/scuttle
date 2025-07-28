@@ -1,20 +1,19 @@
 from pathlib import Path
 from enum import Enum
 
-#logic
+#singleton names, and also websocket sources
 SEARCH_QUEUE_NAME = "search_queue"
 DOWNLOAD_QUEUE_NAME = "download_queue"
 PLAY_QUEUE_NAME = "play_queue"
 
+AUDIO_DATABASE_NAME = "audio_database"
+YOUTUBE_CLIENT_NAME = "youtube_client"
+
 #database
-DATA_DIR = Path("data")
 DB_FILE = Path("backend") / "data" / "audio.db"
+DOWNLOAD_DIR = Path("backend") / "data" / "downloads"
 
-DB_TRACKS_TABLENAME = "tracks" #do not make dynamic to avoid sql injection
-DB_DOWNLOADS_TABLENAME = "downloads"
-DB_CACHE_TABLENAME = "cache"
 
-YOUTUBE_VIDEO_URL = "https://www.youtube.com/watch?v={}"
 
 #ytdlp extraction query arguments and core audio formatting
 AUDIO_FORMAT_FILTER = "bestaudio[ext=m4a]/bestaudio/best"
@@ -30,8 +29,4 @@ DOWNLOAD_TIMEOUT_DEFAULT = 300
 
 MAX_ATTEMPTS = 3
 RETRY_DELAY = 2
-
-#files
-DOWNLOAD_DIR = Path("downloads")
-
 

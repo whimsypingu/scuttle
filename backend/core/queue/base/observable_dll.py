@@ -6,10 +6,11 @@ from backend.core.models.event import Event
 from .doubly_linked_list import DoublyLinkedList
 
 from typing import Generic, TypeVar, Optional
+from abc import ABC, abstractmethod
 
 T = TypeVar("T")
 
-class ObservableQueue(Generic[T]):
+class ObservableQueue(Generic[T], ABC):
     def __init__(
         self,
         *,
@@ -21,7 +22,9 @@ class ObservableQueue(Generic[T]):
         self._name = name
         self._event_bus = event_bus
         self._lock = asyncio.Lock()
+        self._condition = asyncio.Condition(lock=self._lock)
 
+    # ===== Internal helpers (do not override) =====
     async def _emit_event(self, action: str, payload: Optional[dict] = None):
         if self._event_bus:
             event = Event(
@@ -31,23 +34,24 @@ class ObservableQueue(Generic[T]):
             )
             await self._event_bus.publish(event)
 
-    async def _push(self, item: T):
+    def _push(self, item: T):
         self._dll.push(item)
 
-    async def _pop(self) -> Optional[T]:
+    def _pop(self) -> Optional[T]:
         item = self._dll.pop()
         return item
 
-    async def _insert_at(self, index: int, item: T):
+    def _insert_at(self, index: int, item: T):
         self._dll.insert_at(index, item)
 
-    async def _remove_at(self, index: int) -> Optional[T]:
+    def _remove_at(self, index: int) -> Optional[T]:
         # you would need to implement remove_at in DoublyLinkedList too
         raise NotImplementedError("Implement remove_at in DoublyLinkedList")
         # item = self._dll.remove_at(index)
         # await self._emit_event("remove", {"index": index, "item": item, "size": self.size()})
         # return item
 
+    # ===== Public Read-only APIs =====
     def peek(self) -> Optional[T]:
         return self._dll.peek()
 
@@ -56,6 +60,9 @@ class ObservableQueue(Generic[T]):
 
     def contains(self, item: T) -> bool:
         return self._dll.contains(item)
+    
+    def is_empty(self) -> bool:
+        return self._dll.size == 0
 
     def get_size(self) -> int:
         return self._dll.size
@@ -72,3 +79,4 @@ class ObservableQueue(Generic[T]):
             else:
                 result.append(item)
         return result
+

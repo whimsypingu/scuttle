@@ -7,6 +7,10 @@ from backend.core.models.event import Event
 
 import backend.globals as G
 from backend.core.queue.implementations.play_queue import PlayQueueAction as PQA
+from backend.core.queue.implementations.download_queue import DownloadQueueAction as DQA
+
+from backend.core.database.audio_database import AudioDatabaseAction as ADA
+from backend.core.youtube.client import YouTubeClientAction as YTCA
 
 
 def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketManager):
@@ -31,8 +35,10 @@ def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketMan
         (G.PLAY_QUEUE_NAME, PQA.REMOVE),
         (G.PLAY_QUEUE_NAME, PQA.SEND_CONTENT),
 
-        ("search", "input"),
-        ("search", "enter"),
+        (G.AUDIO_DATABASE_NAME, ADA.SEARCH),
+
+        (G.YOUTUBE_CLIENT_NAME, YTCA.SEARCH),
+        (G.YOUTUBE_CLIENT_NAME, YTCA.DOWNLOAD)
     ]
 
     handler = make_basic_handler(websocket_manager)

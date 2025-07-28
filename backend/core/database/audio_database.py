@@ -11,17 +11,9 @@ from backend.core.models.track import Track
 
 from enum import Enum
 
-class AudioDatabaseSource(str, Enum):
-    DOWNLOADS = "downloads"
+class AudioDatabaseAction(str, Enum):
     SEARCH = "search"
 
-ADS = AudioDatabaseSource #alias
-
-
-class AudioDatabaseAction(str, Enum):
-    INPUT = "input"
-    ENTER = "enter"
-    
 ADA = AudioDatabaseAction #alias
 
 
@@ -29,9 +21,12 @@ class AudioDatabase:
     def __init__(
         self, 
         *,
+        name: str,
         filepath: Path,
         event_bus: Optional[EventBus] = None,
     ):
+        self.name = name
+
         self._filepath = filepath
         self._event_bus = event_bus
         self._lock = asyncio.Lock()
@@ -95,10 +90,10 @@ class AudioDatabase:
         with self.cursor() as cur:
             return cur.execute(query, params).fetchall()
 
-    async def _emit_event(self, source: str, action: str, payload: Optional[dict] = None):
+    async def _emit_event(self, action: str, payload: Optional[dict] = None):
         if self._event_bus:
             event = Event(
-                source=source,
+                source=self.name,
                 action=action,
                 payload={**(payload or {})}
             )
@@ -164,7 +159,6 @@ class AudioDatabase:
                 INSERT OR IGNORE INTO {self.DOWNLOADS_TABLE} (youtube_id, downloaded_at)
                 VALUES (?, CURRENT_TIMESTAMP)
             ''', (track.youtube_id,))
-            await self._emit_event(source=ADS.DOWNLOADS, action=ADA.INSERT, payload={"track": track})
 
 
     async def search(self, q: str) -> List[Track]:
@@ -201,7 +195,7 @@ class AudioDatabase:
                 for row in rows
             ]
 
-            await self._emit_event(action=ADS.SEARCH, source=ADA.INPUT, payload={"content": content})
+            await self._emit_event(action=ADA.SEARCH, payload={"content": content})
     
             return [track.to_json() for track in content]
 

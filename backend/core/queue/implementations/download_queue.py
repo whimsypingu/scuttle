@@ -18,32 +18,39 @@ DQA = DownloadQueueAction #alias for convenience in this file
 
 
 class DownloadQueue(ObservableQueue[Track]):
-    download_queue = asyncio.Queue(maxsize=1)
-
+    '''
     async def insert_next(self, track: Track):
         #for queueing the song right after the current one
-        async with self._lock:
-            await self._insert_at(1, track)
+        async with self._condition:
+            self._insert_at(1, track)
             await self._emit_event(action=DQA.INSERT_NEXT, payload={"track": track, "content": self.to_json()})
-
+            self._condition.notify()
+    '''
+            
     async def push(self, track: Track):
         #pushing to end
-        async with self._lock:
-            await self._push(track)
+        async with self._condition:
+            self._push(track)
             await self._emit_event(action=DQA.PUSH, payload={"track": track, "content": self.to_json()})
+            self._condition.notify()
 
     async def pop(self):
         #pop first track
-        async with self._lock:
-            track = await self._pop()
+        async with self._condition:
+            while self.is_empty():
+                await self._condition.wait() #yield control nothing to consume
+            track = self._pop()
             await self._emit_event(action=DQA.POP, payload={"track": track, "content": self.to_json()})
+            return track
 
+    '''
     async def remove_at(self, index: int):
         #remove track
         async with self._lock:
-            track = await self._remove_at(index)
+            track = self._remove_at(index)
             await self._emit_event(action=DQA.REMOVE, payload={"track": track, "content": self.to_json()})
-
+    '''
+            
     async def send_content(self):
         async with self._lock:
             await self._emit_event(action=DQA.SEND_CONTENT, payload={"content": self.to_json()})

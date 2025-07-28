@@ -28,12 +28,11 @@ const handlers = {
         pop: tempQueueHandler,
         remove: tempQueueHandler
     },
-    library: {
-        insert: tempLibraryHandler,
+    audio_database: {
+        search: tempLibraryHandler,
     },
-    search: {
-        input: tempLibraryHandler,
-        enter: tempLibraryHandler
+    youtube_client: {
+        search: tempLibraryHandler,
     }
 }
 
