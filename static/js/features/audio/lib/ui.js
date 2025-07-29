@@ -10,17 +10,25 @@ export function setCurrentTimeDisplay(currTimeEl, value) {
 
 
 export function syncCurrentTimeDisplay(currTimeEl, audioEl) {
-    currTimeEl.textContent = formatTime(audioEl.currentTime);
+    const time = isNaN(audioEl.currentTime) ? 0 : audioEl.currentTime;
+    currTimeEl.textContent = formatTime(time);
 }
 
 
-export function syncDurationDisplay(audioEl, durationEl) {
-    durationEl.textContent = formatTime(audioEl.duration);
+export function syncDurationDisplay(durationEl, audioEl) {
+    const duration = isNaN(audioEl.duration) ? 0 : audioEl.duration;
+    durationEl.textContent = formatTime(duration);
 }
 
 
 export function syncProgressBar(progBarEl, audioEl) {
-    progBarEl.value = (audioEl.currentTime / audioEl.duration) * 100;
+    const duration = audioEl.duration;
+    if (isNaN(duration) || duration === 0) {
+        progBarEl.value = 0;
+    }
+    else {
+        progBarEl.value = (audioEl.currentTime / audioEl.duration) * 100;    
+    }
 }
 
 

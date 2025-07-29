@@ -10,6 +10,10 @@ export function setAudioSourceFromBlob(audioElement, blob) {
 
 export function waitForAudioMetadata(audioElement) {
     return new Promise((resolve, reject) => {
+        //if metadata is already available, resolve immediately
+        if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
+            return resolve();
+        }
         const onLoadedMetadata = () => {
             audioElement.removeEventListener("loadedmetadata", onLoadedMetadata);
             resolve();

@@ -18,12 +18,15 @@ let isSeeking = false;
 
 //autoplay
 export async function onAudioEnded(domEls) {
-    const ppButtonEl = domEls.ppButtonEl;
+    const audioEl = domEls.audioEl;
     const durationEl = domEls.durationEl;
+    const ppButtonEl = domEls.ppButtonEl;
+    const currTimeEl = domEls.currTimeEl;
+    const progBarEl = domEls.progBarEl;
 
     try {
         await queuePopTrack();
-        await playCurrentTrack(ppButtonEl, durationEl);
+        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl);
     } catch (err) {
         console.error("Failed to play audio:", err);
     }
@@ -31,24 +34,37 @@ export async function onAudioEnded(domEls) {
 
 //next
 export async function onNextButtonClick(domEls) {
-    const ppButtonEl = domEls.ppButtonEl;
+    const audioEl = domEls.audioEl;
     const durationEl = domEls.durationEl;
+    const ppButtonEl = domEls.ppButtonEl;
+    const currTimeEl = domEls.currTimeEl;
+    const progBarEl = domEls.progBarEl;
+
+    console.error(audioEl.paused);
 
     try {
         await queuePopTrack();
-        await playCurrentTrack(ppButtonEl, durationEl);
+        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl);
     } catch (err) {
         console.error("Failed to play audio:", err);
     }
 }
 
 //play or pause
-export function onPlayPauseButtonClick(domEls) {
+export async function onPlayPauseButtonClick(domEls) {
     const audioEl = domEls.audioEl;
+    const durationEl = domEls.durationEl;
     const ppButtonEl = domEls.ppButtonEl;
+    const currTimeEl = domEls.currTimeEl;
+    const progBarEl = domEls.progBarEl;
 
-    if (!audioEl.src) {
-        console.warn("No audio source set");
+    console.error(audioEl.paused);
+
+
+    //edge case where item is in queue but not yet loaded into audio element.    
+    if (!audioEl.src || audioEl.readyState === 0) {
+        console.warn("No audio source set, attempting blob load");
+        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl);
         return;
     }
 

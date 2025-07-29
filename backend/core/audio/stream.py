@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
 
-from .utils import is_downloaded, get_audio_path, get_audio_size
+from backend.core.lib.utils import is_downloaded, get_audio_path, get_audio_size
 from backend.core.models.track import Track
 import backend.globals as G
 
@@ -11,11 +11,11 @@ def stream_audio(req: Request, track: Track) -> StreamingResponse:
     if not track:
         raise HTTPException(status_code=404, detail="No track provided.")
     
-    if not is_downloaded(track):
+    if not is_downloaded(track=track):
         raise HTTPException(status_code=404, detail="Track not downloaded.")
 
-    file_path = get_audio_path(track)
-    file_size = get_audio_size(track)
+    file_path = get_audio_path(track=track)
+    file_size = get_audio_size(track=track)
 
     range_header = req.headers.get("range")
     if range_header:

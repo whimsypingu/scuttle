@@ -18,14 +18,12 @@ DQA = DownloadQueueAction #alias for convenience in this file
 
 
 class DownloadQueue(ObservableQueue[Track]):
-    '''
     async def insert_next(self, track: Track):
         #for queueing the song right after the current one
         async with self._condition:
             self._insert_at(1, track)
             await self._emit_event(action=DQA.INSERT_NEXT, payload={"track": track, "content": self.to_json()})
             self._condition.notify()
-    '''
             
     async def push(self, track: Track):
         #pushing to end
@@ -34,6 +32,8 @@ class DownloadQueue(ObservableQueue[Track]):
             await self._emit_event(action=DQA.PUSH, payload={"track": track, "content": self.to_json()})
             self._condition.notify()
 
+            print(f"[DEBUG]: contents of download queue: {self.to_json()}")
+
     async def pop(self):
         #pop first track
         async with self._condition:
@@ -41,6 +41,8 @@ class DownloadQueue(ObservableQueue[Track]):
                 await self._condition.wait() #yield control nothing to consume
             track = self._pop()
             await self._emit_event(action=DQA.POP, payload={"track": track, "content": self.to_json()})
+
+            print(f"[DEBUG]: contents of download queue: {self.to_json()}")
             return track
 
     '''

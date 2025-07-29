@@ -28,9 +28,9 @@ export async function queueRemoveTrack(index) {
 }
 
 
-export async function getQueueContents() {
-    const response = await getResponse(`/queue/contents`);
-    console.log("getQueueContents status:", response.status);
+export async function getQueueContent() {
+    const response = await getResponse(`/queue/content`);
+    console.log("getQueueContent status:", response.status);
     const data = await response.json();
     return data;
 }

@@ -23,6 +23,8 @@ class PlayQueue(ObservableQueue[Track]):
             self._pop()
             self._insert_at(0, track)
             await self._emit_event(action=PQA.SET_FIRST, payload={"track": track, "content": self.to_json()})
+
+            print(f"[DEBUG]: contents of play queue: {self.to_json()}")
     
     async def insert_next(self, track: Track):
         #for queueing the song right after the current one
@@ -30,11 +32,15 @@ class PlayQueue(ObservableQueue[Track]):
             self._insert_at(1, track)
             await self._emit_event(action=PQA.INSERT_NEXT, payload={"track": track, "content": self.to_json()})
 
+            print(f"[DEBUG]: contents of play queue: {self.to_json()}")
+
     async def push(self, track: Track):
         #pushing to end
         async with self._lock:
             self._push(track)
             await self._emit_event(action=PQA.PUSH, payload={"track": track, "content": self.to_json()})
+
+            print(f"[DEBUG]: contents of play queue: {self.to_json()}")
 
     async def pop(self):
         #pop first track
@@ -42,11 +48,15 @@ class PlayQueue(ObservableQueue[Track]):
             track = self._pop()
             await self._emit_event(action=PQA.POP, payload={"track": track, "content": self.to_json()})
 
+            print(f"[DEBUG]: contents of play queue: {self.to_json()}")
+
     async def remove_at(self, index: int):
         #remove track
         async with self._lock:
             track = self._remove_at(index)
             await self._emit_event(action=PQA.REMOVE, payload={"track": track, "content": self.to_json()})
+
+            print(f"[DEBUG]: contents of play queue: {self.to_json()}")
 
     async def send_content(self):
         async with self._lock:

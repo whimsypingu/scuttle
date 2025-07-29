@@ -33,8 +33,11 @@ export async function onClickLibraryList(e, domEls) {
 
 //helpers
 async function onClickPlayButton(button, domEls) {
+    const audioEl = domEls.audioEl;
     const ppButtonEl = domEls.ppButtonEl;
     const durationEl = domEls.durationEl;
+
+    console.log("")
 
     const track = parseTrackFromDataset(button.dataset);
     if (!track) {
@@ -44,7 +47,7 @@ async function onClickPlayButton(button, domEls) {
     
     try {
         await queueSetFirstTrack(track);
-        await playCurrentTrack(ppButtonEl, durationEl);
+        await playCurrentTrack(audioEl, durationEl, ppButtonEl);
     } catch (err) {
         console.error("Failed to play audio:", err);
     }

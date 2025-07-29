@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
     print(await db.search(""))
 
     # ytdlp
-    yt = YouTubeClient(name=G.YOUTUBE_CLIENT_NAME, base_dir=G.DATA_DIR, event_bus=event_bus)
+    yt = YouTubeClient(name=G.YOUTUBE_CLIENT_NAME, base_dir=G.DOWNLOAD_DIR, event_bus=event_bus)
 
     # Initialize backend components early if needed for handlers
     play_queue = PlayQueue(name=G.PLAY_QUEUE_NAME, event_bus=event_bus)
@@ -55,7 +55,7 @@ async def lifespan(app: FastAPI):
     queue_manager.add(download_queue)
 
     # workers
-    download_worker = DownloadWorker(download_queue=download_queue, youtube_client=yt)
+    download_worker = DownloadWorker(download_queue=download_queue, youtube_client=yt, audio_database=db)
     download_task = asyncio.create_task(download_worker.run())
 
     # Assign to app.state for global access

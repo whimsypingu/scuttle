@@ -5,11 +5,13 @@ import {
 } from "../../features/queue/controller.js";
 
 
-
-const domEls = {
-    queueList: $(SELECTORS.queue.ids.LIST)
-};
-
 export function setupQueueEventListeners() {
+    const domEls = {
+        audioEl: $(SELECTORS.audio.ids.PLAYER),
+        ppButtonEl: $(SELECTORS.audio.ids.PLAY_PAUSE_BUTTON),
+        durationEl: $(SELECTORS.audio.ids.DURATION),
+        queueList: $(SELECTORS.queue.ids.LIST)
+    };
+
     domEls.queueList.addEventListener("click", (e) => onClickQueueList(e, domEls));
 }

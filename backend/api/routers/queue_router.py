@@ -3,7 +3,7 @@ import traceback #debugging
 from fastapi import APIRouter, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 
-from backend.core.audio.utils import is_downloaded
+from backend.core.lib.utils import is_downloaded
 from backend.api.schemas.queue_schemas import *
 import backend.globals as G
 
@@ -37,7 +37,7 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
 
     try:
         #queueing logic for replacing first item in queue if available
-        if is_downloaded(track):
+        if is_downloaded(track=track):
             await play_queue.set_first(track)
         else:
             await play_queue.insert_next(track)
@@ -78,7 +78,7 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
         #normal queueing logic
         await play_queue.push(track)
 
-        if not is_downloaded(track):
+        if not is_downloaded(track=track):
             if not download_queue.contains(track):
                 await download_queue.push(track)
         
@@ -147,8 +147,8 @@ async def queue_remove_track(body: QueueRemoveTrackRequest, req: Request) -> Res
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/contents")
-async def get_queue_contents(req: Request) -> JSONResponse:
+@router.get("/content")
+async def get_queue_content(req: Request) -> JSONResponse:
     """
     Retrieve the current contents of the play queue.
 

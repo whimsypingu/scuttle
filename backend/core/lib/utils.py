@@ -22,4 +22,4 @@ def is_downloaded(track: Track, base_dir: Path = G.DOWNLOAD_DIR, audio_format: s
     return get_audio_path(track=track, base_dir=base_dir, audio_format=audio_format).exists()
 
 def get_audio_size(track: Track, base_dir: Path = G.DOWNLOAD_DIR, audio_format: str = G.AUDIO_FORMAT) -> int:
-    return get_audio_path(track=track, base_dir=base_dir, audio_format=audio_format).stat().st_size()
+    return get_audio_path(track=track, base_dir=base_dir, audio_format=audio_format).stat().st_size

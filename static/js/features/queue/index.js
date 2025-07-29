@@ -3,7 +3,7 @@ export {
     queuePushTrack,
     queuePopTrack,
     queueRemoveTrack,
-    getQueueContents
+    getQueueContent
 } from "./lib/api.js";
 
 export { 
