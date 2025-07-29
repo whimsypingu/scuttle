@@ -4,6 +4,9 @@
 	<meta charset="UTF-8" />
 	<title>Music Player</title>
 
+	<!-- Font Awesome CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 	<link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
@@ -32,9 +35,17 @@
 	
 	<!-- Custom Playbar -->
 	<section id="custom-playbar">
-		<button id="previous-button" title="Previous">⏮️</button>
-		<button id="play-pause-button" title="Play/Pause">▶️</button>
-		<button id="next-button" title="Next">⏭️</button>
+		<button id="previous-button" title="Previous">
+			<i class="fa fa-backward"></i>
+		</button>
+
+		<button id="play-pause-button" title="Play/Pause">
+			<i class="fa fa-play"></i>
+		</button>
+		
+		<button id="next-button" title="Next">
+			<i class="fa fa-forward"></i>
+		</button>
 
 		<div id="track-info">
 			<span id="audio-current-time">0:00</span>

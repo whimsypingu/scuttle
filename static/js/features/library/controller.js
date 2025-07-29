@@ -37,8 +37,6 @@ async function onClickPlayButton(button, domEls) {
     const ppButtonEl = domEls.ppButtonEl;
     const durationEl = domEls.durationEl;
 
-    console.log("")
-
     const track = parseTrackFromDataset(button.dataset);
     if (!track) {
         console.error("Missing track data attributes in dataset");

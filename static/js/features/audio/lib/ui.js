@@ -33,5 +33,9 @@ export function syncProgressBar(progBarEl, audioEl) {
 
 
 export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
-    ppButtEl.textContent = isPlaying ? "⏸️" : "▶️";
+    const icon = ppButtEl.querySelector("i");
+
+    if (!icon) return;
+
+    icon.className = isPlaying ? "fa fa-pause" : "fa fa-play";
 }
