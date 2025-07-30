@@ -60,19 +60,6 @@ header h1 {
   background-color: #1d4ed8; /* deep blue */
 }
 
-/* Player Section */
-#player-section {
-  display: flex;
-  justify-content: center;
-}
-
-audio {
-  width: 100%;
-  max-width: 600px;
-  border-radius: 6px;
-  outline: none;
-}
-
 /* Playbar Container */
 #custom-playbar {
   display: flex;
@@ -87,6 +74,29 @@ audio {
   gap: 12px;
   flex-wrap: wrap;
 }
+
+/* Current track */
+#now-playing-info {
+  text-align: center;
+  margin-bottom: 8px;
+  font-family: sans-serif;
+}
+
+#now-playing-title {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#now-playing-artist {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 2px;
+}
+
 
 /* Buttons */
 #custom-playbar button {

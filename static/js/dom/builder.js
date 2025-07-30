@@ -53,25 +53,25 @@ export function buildTrackListItem(track, context) {
 
     //action buttons
     const trackDataset = prepareDataset(track);
+    const playIcon = createElem("i", { class: "fa fa-play" });
     const playButton = createElem("button", {
-        textContent: "Play",
         class: SELECTORS.actions.classes.PLAY_BUTTON,
         dataset: {
             ...trackDataset,
             action: "play"
         },
         type: "button",
-    });
+    }, [playIcon]);
 
+    const queueIcon = createElem("i", { class: "fa fa-plus" });
     const queueButton = createElem("button", {
-        textContent: "Queue",
         class: SELECTORS.actions.classes.QUEUE_BUTTON,
         dataset: {
             ...trackDataset,
             action: "queue"
         },
         type: "button",
-    });
+    }, [queueIcon]);
 
     const actions = createElem("div", 
         { class: `${SELECTORS[context].classes.FIELD} ${SELECTORS[context].classes.ACTIONS}` }, 
