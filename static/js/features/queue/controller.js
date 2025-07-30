@@ -3,13 +3,37 @@
 import { parseTrackFromDataset } from "../../utils/index.js"
 
 import { 
-    playCurrentTrack 
+    playCurrentTrack,
+    renderNowPlaying
 } from "../audio/index.js";
 
 import { 
     queuePushTrack,
-    queueSetFirstTrack
+    queueSetFirstTrack,
+    renderQueueList
 } from "./index.js";
+
+
+
+//ui update
+export async function renderQueueUI(domEls, tracks) {
+    const queueListEl = domEls.queueListEl;
+
+    const titleEl = domEls.titleEl;
+    const authorEl = domEls.authorEl;
+
+    if (!Array.isArray(tracks) || tracks.length === 0) {
+        renderNowPlaying(null);
+        renderQueueList(queueListEl, null);
+        return;
+    }
+
+    const currTrack = tracks[0];
+    renderNowPlaying(titleEl, authorEl, currTrack);
+
+    const remainingQueue = tracks.slice(1);
+    renderQueueList(queueListEl, remainingQueue);
+}
 
 
 //clicking the queue list will check for this

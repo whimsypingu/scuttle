@@ -4,6 +4,7 @@ export {
 } from "./lib/api.js";
 
 export { 
+    renderNowPlaying,
     setCurrentTimeDisplay, 
     syncCurrentTimeDisplay, 
     syncDurationDisplay, 

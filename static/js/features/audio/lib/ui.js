@@ -3,6 +3,18 @@
 import { formatTime } from "../../../utils/index.js";
 
 
+//renders the top element of the queue here
+export function renderNowPlaying(titleEl, authorEl, track) {
+    if (!track) {
+        titleEl.textContent = "---";
+        authorEl.textContent = "---";
+        return;
+    }
+
+    titleEl.textContent = track.title || "Unknown Title";
+    authorEl.textContent = track.uploader || "Unknown Artist";
+}
+
 
 export function setCurrentTimeDisplay(currTimeEl, value) {
     currTimeEl.textContent = formatTime(value);    

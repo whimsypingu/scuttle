@@ -20,6 +20,8 @@ export const SELECTORS = {
 	audio: {
 		ids: {
 			PLAYER: "audio-player",
+			TITLE: "now-playing-title",
+			AUTHOR: "now-playing-author",
 			PREVIOUS_BUTTON: "previous-button",
 			PLAY_PAUSE_BUTTON: "play-pause-button",
 			NEXT_BUTTON: "next-button",

@@ -1,9 +1,9 @@
 //static/js/events/websocket/handlers.js
 
 import { $, SELECTORS } from "../../dom/index.js";
-import { renderQueueList } from "../../features/queue/index.js";
 import { renderLibraryList } from "../../features/library/index.js";
 
+import { renderQueueUI } from "../../features/queue/controller.js";
 
 
 //handles websocket messages //later this should be migrated from the backend to ensure consistency
@@ -25,28 +25,34 @@ export const handlers = {
 }
 
 
+const domEls = {
+    queueListEl: $(SELECTORS.queue.ids.LIST),
+    titleEl: $(SELECTORS.audio.ids.TITLE),
+    authorEl: $(SELECTORS.audio.ids.AUTHOR),
 
-const queueListEl = $(SELECTORS.queue.ids.LIST)
+    libraryListEl: $(SELECTORS.library.ids.LIST),
+}
 
 function handlePQSF(payload) {
-    renderQueueList(queueListEl, payload.content);
+    renderQueueUI(domEls, payload.content);
 }
 
 function handlePQIN(payload) {
-    renderQueueList(queueListEl, payload.content);
+    renderQueueUI(domEls, payload.content);
 }
 
 function handlePQPU(payload) {
-    renderQueueList(queueListEl, payload.content);
+    renderQueueUI(domEls, payload.content);
 }
 
 function handlePQPO(payload) {
-    renderQueueList(queueListEl, payload.content);
+    renderQueueUI(domEls, payload.content);
 }
 
 function handlePQRE(payload) {
-    renderQueueList(queueListEl, payload.content);
+    renderQueueUI(domEls, payload.content);
 }
+
 
 
 

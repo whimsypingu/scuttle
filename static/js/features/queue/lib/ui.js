@@ -6,7 +6,7 @@ import { buildTrackListItem } from "../../../dom/index.js";
 export function renderQueueList(queueListEl, tracks) {
     queueListEl.innerHTML = "";
 
-    if (!tracks?.length) {
+    if (!Array.isArray(tracks) || !tracks?.length) {
         queueListEl.innerHTML = "<li>No tracks available</li>";
         return;
     }

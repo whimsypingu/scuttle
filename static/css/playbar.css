@@ -64,6 +64,11 @@
     cursor: pointer;
 }
 
+#audio-progress-bar:hover {
+    background-color: #007acc;
+    cursor: pointer;
+}
+
 #audio-progress-bar::-webkit-slider-thumb {
     appearance: none;
     width: 14px;
@@ -98,4 +103,5 @@
 #playback-buttons button:hover,
 #playback-buttons button:focus {
     background-color: #005fa3;
+    cursor: pointer;
 }
