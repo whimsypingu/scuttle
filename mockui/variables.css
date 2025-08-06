@@ -1,0 +1,58 @@
+:root {
+    /* Color palette (your existing OKLCH variables) */
+    --bg-dark: oklch(0.90 0.005 215);
+    --bg: oklch(0.93 0.005 215);
+    --bg-light: oklch(0.96 0.005 215);
+    --bg-very-light: oklch(1 0.005 215);
+    --text: oklch(0.15 0.01 215);
+    --text-muted: oklch(0.4 0.01 215);
+    --highlight: oklch(1 0.01 215);
+    --border: oklch(0.6 0.01 215);
+    --border-muted: oklch(0.7 0.01 215);
+    --primary: oklch(0.4 0.1 215);
+    --secondary: oklch(0.4 0.1 35);
+    --danger: oklch(0.5 0.05 30);
+    --warning: oklch(0.5 0.05 100);
+    --success: oklch(0.5 0.05 160);
+    --info: oklch(0.5 0.05 260);
+
+    --gradient: linear-gradient(0deg, var(--bg), var(--bg-light));
+    --border-card: solid 1px var(--border);
+    --shadow: 0px 2px 2px oklch(0 0 0 / 0.2), 0px 4px 4px oklch(0 0 0 / 0.1);
+    /*--shadow: 0px 2px 2px hsla(0 0% 0% 0.07), 0px 4px 4px hsla(0 0% 0% 0.15);*/
+
+    /* Typescale */
+    --ff: "Inter", sans-serif;
+    --h1: bold 1.125rem/1.4em var(--ff);
+    --h2: bold 1rem/1.4em var(--ff);
+    --p: 1rem/1.4em var(--ff);
+    --p2: .875rem/1.4em var(--ff);
+
+    --gray90: hsl(0 0% 90%);
+    --gray50: hsl(0 0% 50%);
+    --gray10: hsl(0 0% 10%);
+
+    --textsize-s: 0.875rem; /* 14px */
+    --textsize-m: 1rem;     /* 16px */
+    --textsize-l: 1.125rem; /* 18px */
+
+    /* Spacing scale */
+    --space-xxs: 0.25rem;   /* 4px */
+    --space-xs:  0.5rem;    /* 8px */
+    --space-s:  0.75rem;   /* 12px */
+    --space-m:  1rem;      /* 16px */
+    --space-l:  1.5rem;    /* 24px */
+    --space-xl:  2rem;      /* 32px */
+    --space-xxl: 3rem;      /* 48px */
+
+    /* Radius */
+    --radius-s: 0.25rem;
+    --radius-m: 0.5rem;
+    --radius-l: 0.75rem;
+
+    /* Font sizes */
+    --font-s: 0.875rem;
+    --font-m: 1rem;
+    --font-l: 1.25rem;
+    --font-xl: 2rem;
+}

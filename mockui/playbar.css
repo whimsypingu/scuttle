@@ -1,0 +1,106 @@
+#playbar-and-queue {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-inline: var(--space-xxl);
+    height: 80vh;
+    transition: height 0.5s ease;
+}
+
+
+#queue-toggle {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    background-color: transparent;
+}
+#queue-toggle-button {
+    font: var(--space-p);
+    border: none;
+    background-color: var(--bg);
+    border-top-left-radius: var(--radius-l);
+    border-top-right-radius: var(--radius-l);
+    padding-inline: var(--space-l);
+    margin-inline: var(--space-xl);
+    display: inline-block;
+    transition: transform 0.5s ease;
+}
+
+
+#playbar-and-queue-contents {
+    background-color: var(--bg);
+    border-top-left-radius: var(--radius-l);
+    border-top-right-radius: var(--radius-l);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+
+#custom-playbar {
+    background-color: var(--bg-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: var(--space-xl);
+    padding: var(--space-xl);
+    border-radius: var(--radius-l);
+}
+
+/* Title and Author */
+#now-playing-info {
+    text-align: center;
+    width: 50%;
+    padding-inline: var(--space-l);
+}
+#now-playing-title {
+    font: var(--h2);
+    color: var(--gray10);
+}
+#now-playing-author {
+    font: var(--p);
+    color: var(--gray50);
+    margin-top: var(--space-l);
+}
+
+/* Scrubber and Times */
+#playback-scrubber {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xs);
+    font: var(--p2);
+    color: var(--gray50);
+    max-width: 50rem;
+    width: 80%;
+    padding-inline: var(--space-l);
+    margin-top: var(--space-l);
+}
+
+#playback-scrubber span {
+    flex: 0 0 auto;
+}
+
+#audio-progress-bar {
+    flex: 1;
+}
+
+/* Control Buttons */
+#playback-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+    gap: var(--space-s);
+    margin-top: var(--space-l);
+}

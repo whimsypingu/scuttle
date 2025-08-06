@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Mock UI</title>
+
+	<!-- Font Awesome CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+	<link rel="stylesheet" href="variables.css ">
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="playbar.css">
+    <link rel="stylesheet" href="queue.css">
+    <link rel="stylesheet" href="library.css">
+    <link rel="stylesheet" href="scrollbars.css">
+</head>
+<body>
+	<!-- Page Title -->
+	<header>
+		<h1 id="app-name">Mock UI</h1>
+	</header>
+
+	<!-- Search Bar -->
+	<section id="search-section">
+		<input type="text" id="search-input" placeholder="Search..." />
+		<button id="search-and-download-button">Search</button>
+	</section>
+
+  	<!-- Music Library -->
+    <div id="library-section">
+        <div id="library-contents">
+            <div id="library">
+                <h3 id="library-title">Library</h3>
+
+                <ul id="library-list">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+
+	<!-- Custom Playbar and Audio -->
+    <div id="playbar-and-queue">
+        <div id="queue-toggle">
+            <button id="queue-toggle-button">
+                <i class="fa fa-angle-double-down"></i>
+            </button>
+        </div>
+
+        <div id="playbar-and-queue-contents">
+            <div id="custom-playbar">
+                <audio id="audio-player" hidden>
+                    Your browser does not support the audio element.
+                </audio>
+
+                <div id="now-playing-info">
+                    <h2 id="now-playing-title">Name of track</h2>
+                    <h3 id="now-playing-author">Author</h3>
+                </div>
+
+                <div id="playback-scrubber">
+                    <span id="audio-current-time">0:00</span>
+                    <input type="range" id="audio-progress-bar" min="0" max="100" value="0" step="any">
+                    <span id="audio-duration">0:00</span>
+                </div>
+
+                <div id="playback-buttons">
+                    <button id="previous-button" title="Previous">
+                        <i class="fa fa-backward"></i>
+                    </button>
+
+                    <button id="play-pause-button" title="Play/Pause">
+                        <i class="fa fa-play"></i>
+                    </button>
+                    
+                    <button id="next-button" title="Next">
+                        <i class="fa fa-forward"></i>
+                    </button>
+                </div>                 
+            </div>
+
+            <div id="queue">
+                <h3>Queue</h3>
+                <ul id="queue-list">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+	<!-- <script type="module" src="/static/js/main.js" defer></script> -->
+    <script type="module" src="./toggle.js"></script>
+    <script type="module" src="./populate.js"></script>
+    
+    </body>
+</html>

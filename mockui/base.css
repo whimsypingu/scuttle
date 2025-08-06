@@ -1,0 +1,28 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background: linear-gradient(
+        to bottom,
+        var(--bg),
+        var(--bg-dark)
+    );
+    color: var(--text);
+    font-family: var(--ff);
+    /*padding: var(--space-xxl);*/
+}
+
+#app-name {
+    color: var(--gray10);
+    font: var(--h1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+    margin: 0;
+}
