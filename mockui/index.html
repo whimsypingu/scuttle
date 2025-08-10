@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8" />
-	<title>Mock UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Scuttle</title>
 
-	<!-- Font Awesome CDN -->
+    <!-- favicon - change file location -->
+    <link rel="shortcut icon" href="/mockui/favicon.ico" type="image/x-icon">
+
+    <!-- Font Awesome CDN -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <!-- Font Inter -->
@@ -12,6 +16,8 @@
     
 	<link rel="stylesheet" href="variables.css ">
     <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="title.css">
+    <link rel="stylesheet" href="search.css">
     <link rel="stylesheet" href="playbar.css">
     <link rel="stylesheet" href="queue.css">
     <link rel="stylesheet" href="library.css">
@@ -19,24 +25,36 @@
 </head>
 <body>
 	<!-- Page Title -->
-	<header>
-		<h1 id="app-name">Mock UI</h1>
-	</header>
+    <div id="title-search-library">
+        <div id="title-search-library-contents">
+            <div id="title-search">
+                <div id="title">
+                    <img src="big_favicon.png" alt="Scuttle Logo" />
+                    <h1 id="app-name">Scuttle</h1>
+                </div>
 
-	<!-- Search Bar -->
-	<section id="search-section">
-		<input type="text" id="search-input" placeholder="Search..." />
-		<button id="search-and-download-button">Search</button>
-	</section>
+                <div id="search">
+                    <input type="text" id="search-input" placeholder="Search..." />
+                    <button id="search-and-download-button">Search</button>
+                </div>
+            </div>
 
-  	<!-- Music Library -->
-    <div id="library-section">
-        <div id="library-contents">
             <div id="library">
                 <h3 id="library-title">Library</h3>
 
                 <ul id="library-list">
                 </ul>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!-- Playlists -->
+    <div id="playlist-section">
+        <div id="playlists">
+            <div>
+
             </div>
         </div>
     </div>

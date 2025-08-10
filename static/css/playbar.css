@@ -60,7 +60,7 @@
     border-radius: 4px;
     background-color: #ccc;
     outline: none;
-    transition: background 0.3s ease;
+    transition: all 20ms linear;
     cursor: pointer;
 }
 

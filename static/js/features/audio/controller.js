@@ -9,12 +9,15 @@ import {
     setCurrentTimeDisplay, 
     syncCurrentTimeDisplay, 
     updatePlayPauseButtonDisplay, 
-    syncProgressBar 
+    syncProgressBar, 
+    startProgressBarAnimation,
+    stopProgressBarAnimation
 } from "./index.js";
 
 
 //scrubber logic and events
 let isSeeking = false;
+const animate = true;
 
 //autoplay
 export async function onAudioEnded(domEls) {
@@ -26,7 +29,7 @@ export async function onAudioEnded(domEls) {
 
     try {
         await queuePopTrack();
-        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl);
+        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl, animate);
     } catch (err) {
         console.error("Failed to play audio:", err);
     }
@@ -44,7 +47,7 @@ export async function onNextButtonClick(domEls) {
 
     try {
         await queuePopTrack();
-        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl);
+        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl, animate);
     } catch (err) {
         console.error("Failed to play audio:", err);
     }
@@ -64,19 +67,25 @@ export async function onPlayPauseButtonClick(domEls) {
     //edge case where item is in queue but not yet loaded into audio element.    
     if (!audioEl.src || audioEl.readyState === 0) {
         console.warn("No audio source set, attempting blob load");
-        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl);
+        await playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl, animate);
         return;
     }
 
     if (audioEl.paused) {
         audioEl.play().then(() => {
             updatePlayPauseButtonDisplay(ppButtonEl, true);
+
+            startProgressBarAnimation(audioEl, progBarEl);
         }).catch(err => {
             console.error("Failed to play audio:", err);
+            
+            stopProgressBarAnimation();
         });
     } else {
         audioEl.pause()
         updatePlayPauseButtonDisplay(ppButtonEl, false);
+        
+        stopProgressBarAnimation();
     }
 }
 
@@ -92,6 +101,7 @@ export function onPreviousButtonClick(domEls) {
 //scrubbing
 export function scrubStartSeek() {
     isSeeking = true;
+    stopProgressBarAnimation();
 }
 
 export function scrubPreviewSeekTime(domEls) {
@@ -117,6 +127,8 @@ export function scrubCommitSeek(domEls) {
     const seekTime = (progBarEl.value / 100) * audioEl.duration;
     audioEl.currentTime = seekTime; //set and sync
     syncCurrentTimeDisplay(currTimeEl, audioEl);
+
+    startProgressBarAnimation(audioEl, progBarEl, animate);
 }
 
 //also autoplay

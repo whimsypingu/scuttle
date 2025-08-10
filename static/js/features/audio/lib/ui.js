@@ -44,10 +44,40 @@ export function syncProgressBar(progBarEl, audioEl) {
 }
 
 
+
 export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
     const icon = ppButtEl.querySelector("i");
 
     if (!icon) return;
 
     icon.className = isPlaying ? "fa fa-pause" : "fa fa-play";
+}
+
+
+
+let animationFrameId = null;
+
+export function startProgressBarAnimation(audioEl, progBarEl) {
+    function update() {
+        const duration = audioEl.duration;
+        const current = audioEl.currentTime;
+
+        console.log(`update(): current = ${current}, duration = ${duration}, progress = ${progBarEl.value}`); // Debug
+
+        if (!isNaN(duration) && duration > 0) {
+            progBarEl.value = (current / duration) * 100;
+        }
+
+        animationFrameId = requestAnimationFrame(update);
+    }
+
+    stopProgressBarAnimation(); // Avoid duplicates
+    update();
+}
+
+export function stopProgressBarAnimation() {
+    if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
 }

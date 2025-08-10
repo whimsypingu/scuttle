@@ -45,14 +45,52 @@
     --space-xl:  2rem;      /* 32px */
     --space-xxl: 3rem;      /* 48px */
 
+    --space-app-border: 2rem;
+    --space-content-margin: 1.5rem;
+
     /* Radius */
     --radius-s: 0.25rem;
     --radius-m: 0.5rem;
     --radius-l: 0.75rem;
 
     /* Font sizes */
+    --font-xs: 0.75rem;
     --font-s: 0.875rem;
     --font-m: 1rem;
     --font-l: 1.25rem;
     --font-xl: 2rem;
+
+    /* Playbar */
+    --playbar-h: 0.6rem;
+    --thumb-h: 0.6rem;
+    --thumb-offset: 0rem;
 }
+
+
+@media (max-width: 600px) {
+    :root {
+        --space-xxs: 0.1rem;   /* 2px */
+        --space-xs:  0.125rem;    /* 4px */
+        --space-s:   0.25rem;     /* 8px */
+        --space-m:   0.5rem;    /* 12px */
+        --space-l:   0.75rem;       /* 16px */
+        --space-xl:  1rem;     /* 24px */
+        --space-xxl: 1.5rem;       /* 32px */
+
+        --space-app-border: 0.5rem;
+        --space-content-margin: 0.5rem;
+
+        --h1: bold 1rem/1.3em var(--ff);
+        --h2: bold 0.875rem/1.3em var(--ff);
+        --p: 0.875rem/1.4em var(--ff);
+        --p2: 0.75rem/1.4em var(--ff);
+
+        --font-xs: 0.5rem;
+
+        --playbar-h: 0.4rem;
+        --thumb-h: 0.4rem;
+        --thumb-offset: 0rem;
+    }
+}
+
+

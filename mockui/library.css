@@ -1,4 +1,4 @@
-#library-section {
+/*#library-section {
     background-color: transparent;
     display: flex;
     flex-direction: column;
@@ -15,11 +15,12 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-}
+}*/
 
 #library {
     background-color: var(--bg-light);
-    margin: var(--space-xl);
+    margin-inline: var(--space-content-margin);
+    margin-bottom: var(--space-content-margin);
     border-radius: var(--radius-l);
     padding: var(--space-xl);
     flex-grow: 1;
@@ -54,16 +55,23 @@ li.library-item {
 .library-title-and-author {
     flex: 8;
     justify-content: left;
+    min-width: 0;
 }
 
 .library-item-title {
     font: var(--p);
     color: var(--gray10);
     margin-bottom: var(--space-xs);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 .library-item-author {
     font: var(--p2);
     color: var(--gray50);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 .library-duration {
     flex: 1;

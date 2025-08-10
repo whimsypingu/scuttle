@@ -1,21 +1,3 @@
-#playbar-and-queue {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    z-index: 1000;
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-inline: var(--space-xxl);
-    height: 80vh;
-    transition: height 0.5s ease;
-}
-
-
 #queue-toggle {
     flex: 0 0 auto;
     display: flex;
@@ -23,7 +5,7 @@
     background-color: transparent;
 }
 #queue-toggle-button {
-    font: var(--space-p);
+    font-size: var(--font-xs);
     border: none;
     background-color: var(--bg);
     border-top-left-radius: var(--radius-l);
@@ -34,24 +16,12 @@
     transition: transform 0.5s ease;
 }
 
-
-#playbar-and-queue-contents {
-    background-color: var(--bg);
-    border-top-left-radius: var(--radius-l);
-    border-top-right-radius: var(--radius-l);
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-
 #custom-playbar {
     background-color: var(--bg-light);
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: var(--space-xl);
+    margin: var(--space-content-margin);
     padding: var(--space-xl);
     border-radius: var(--radius-l);
 }
@@ -59,17 +29,23 @@
 /* Title and Author */
 #now-playing-info {
     text-align: center;
-    width: 50%;
-    padding-inline: var(--space-l);
+    width: 100%;
+    padding-inline: var(--space-xxl);
 }
 #now-playing-title {
     font: var(--h2);
     color: var(--gray10);
+    margin-bottom: var(--space-xs);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 #now-playing-author {
     font: var(--p);
     color: var(--gray50);
-    margin-top: var(--space-l);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 /* Scrubber and Times */
@@ -92,7 +68,64 @@
 
 #audio-progress-bar {
     flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 0.5rem;
+    background: var(--gray20);
+    border-radius: 1rem;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+    margin: 0;
 }
+
+/* Track */
+#audio-progress-bar::-webkit-slider-runnable-track {
+  height: var(--playbar-h);
+  background: var(--gray90);
+  border-radius: var(--radius-m);
+}
+#audio-progress-bar::-moz-range-track {
+  height: var(--playbar-h);
+  background: var(--gray90);
+  border-radius: var(--radius-m);
+}
+
+/* Thumb (the circle you drag) */
+#audio-progress-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: var(--thumb-h);
+  width: var(--thumb-h);
+  border-radius: 50%;
+  background: var(--primary);
+  margin-top: var(--thumb-offset); /* centers thumb vertically */
+  box-shadow: 0 0 0 2px var(--bg); /* adds an outline */
+}
+
+
+@media (max-width: 600px) {
+    #playback-scrubber {
+        display: flex;
+        flex-direction: row;       /* stack instead of row */
+        align-items: center;         /* or center, depending on look */
+        gap: var(--space-s);
+        width: 100%;                  /* full width */
+    }
+
+    #playback-scrubber span {
+        flex: 0 0 auto;
+        text-align: center;
+    }
+
+    #audio-progress-bar {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+    }
+}
+
 
 /* Control Buttons */
 #playback-buttons {
@@ -102,5 +135,5 @@
     flex: 1;
     justify-content: center;
     gap: var(--space-s);
-    margin-top: var(--space-l);
+    margin-top: var(--space-s);
 }

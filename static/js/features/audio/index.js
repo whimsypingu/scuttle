@@ -9,7 +9,9 @@ export {
     syncCurrentTimeDisplay, 
     syncDurationDisplay, 
     syncProgressBar, 
-    updatePlayPauseButtonDisplay 
+    updatePlayPauseButtonDisplay,
+    startProgressBarAnimation,
+    stopProgressBarAnimation
 } from "./lib/ui.js";
 
 export { 
@@ -21,7 +23,7 @@ export {
 
 //for internal use to make constructed functions
 import { getCurrentAudioStream } from "./lib/api.js";
-import { syncCurrentTimeDisplay, syncDurationDisplay, updatePlayPauseButtonDisplay } from "./lib/ui.js";
+import { startProgressBarAnimation, stopProgressBarAnimation, syncCurrentTimeDisplay, syncDurationDisplay, updatePlayPauseButtonDisplay } from "./lib/ui.js";
 import { setAudioSourceFromBlob, waitForAudioMetadata, playAudioWithCleanup } from "./lib/utils.js";
 
 
@@ -30,18 +32,19 @@ export function resetAudioUI(audioEl, durationEl, ppButtonEl, currTimeEl, progBa
     audioEl.removeAttribute('src'); //apparently setting to "" or null is not enough
     audioEl.load();
     updatePlayPauseButtonDisplay(ppButtonEl, false);
+    stopProgressBarAnimation();
     syncCurrentTimeDisplay(currTimeEl, audioEl);
     syncDurationDisplay(durationEl, audioEl); // Will show 0:00 with proper guard
     progBarEl.value = 0;
 }
 
 //when audio finishes
-export async function playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl) {
+export async function playCurrentTrack(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl, animate) {
     const blob = await getCurrentAudioStream();
     if (!blob) {
         console.warn("No track to play.");
         resetAudioUI(audioEl, durationEl, ppButtonEl, currTimeEl, progBarEl);
-        return;
+        return false;
     }
 
     const url = setAudioSourceFromBlob(audioEl, blob);
@@ -49,4 +52,9 @@ export async function playCurrentTrack(audioEl, durationEl, ppButtonEl, currTime
     syncDurationDisplay(durationEl, audioEl);
     await playAudioWithCleanup(audioEl, url);
     updatePlayPauseButtonDisplay(ppButtonEl, true);
+
+    if (animate) {
+        startProgressBarAnimation(audioEl, progBarEl);
+    }
+    return true;
 }
