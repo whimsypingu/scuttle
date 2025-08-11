@@ -11,13 +11,13 @@
     <!-- Font Awesome CDN -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <!-- Font Inter -->
+    <!-- Font Inter and poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     
 	<link rel="stylesheet" href="variables.css ">
     <link rel="stylesheet" href="base.css">
-    <link rel="stylesheet" href="title.css">
-    <link rel="stylesheet" href="search.css">
+    <link rel="stylesheet" href="title_and_search.css">
     <link rel="stylesheet" href="playbar.css">
     <link rel="stylesheet" href="queue.css">
     <link rel="stylesheet" href="library.css">
@@ -35,7 +35,12 @@
 
                 <div id="search">
                     <input type="text" id="search-input" placeholder="Search..." />
-                    <button id="search-and-download-button">Search</button>
+                    <button id="search-get-results-button" class="search-button">
+                        <i class="fa fa-search"></i>
+                    </button>
+                    <button id="search-and-download-button" class="search-button">
+                        <i class="fa fa-plus-square"></i>
+                    </button>
                 </div>
             </div>
 
@@ -87,15 +92,15 @@
                 </div>
 
                 <div id="playback-buttons">
-                    <button id="previous-button" title="Previous">
+                    <button id="previous-button" class="normal-button" title="Previous">
                         <i class="fa fa-backward"></i>
                     </button>
 
-                    <button id="play-pause-button" title="Play/Pause">
+                    <button id="play-pause-button" class="normal-button" title="Play/Pause">
                         <i class="fa fa-play"></i>
                     </button>
                     
-                    <button id="next-button" title="Next">
+                    <button id="next-button" class="normal-button" title="Next">
                         <i class="fa fa-forward"></i>
                     </button>
                 </div>                 

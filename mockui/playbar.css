@@ -10,11 +10,19 @@
     background-color: var(--bg);
     border-top-left-radius: var(--radius-l);
     border-top-right-radius: var(--radius-l);
+    padding-top: var(--space-xxs);
+    padding-bottom: var(--space-xxs);
     padding-inline: var(--space-l);
     margin-inline: var(--space-xl);
     display: inline-block;
-    transition: transform 0.5s ease;
+    transition: transform 0.5s ease, color 0.5s ease;
+    color: var(--gray50);
+    cursor: pointer;
 }
+#queue-toggle-button:hover {
+    color: var(--gray10);
+}
+
 
 #custom-playbar {
     background-color: var(--bg-light);
@@ -137,3 +145,5 @@
     gap: var(--space-s);
     margin-top: var(--space-s);
 }
+
+

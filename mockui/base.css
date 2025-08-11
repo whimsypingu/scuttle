@@ -74,3 +74,43 @@ body {
 h1, h2, h3, h4, h5, h6, p {
     margin: 0;
 }
+
+
+.normal-button {
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    padding-inline: var(--space-s);
+    background: transparent;
+    border-radius: var(--radius-s);
+    border: none;
+    color: var(--button-color-1);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    cursor: pointer;
+}
+.normal-button:hover {
+    background-color: var(--button-color-2);
+    color: var(--button-color-3);
+}
+
+
+
+/*
+button {
+  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+button:hover {
+  background-color: #666;
+  color: white;
+}
+
+button:active {
+  background-color: #444;
+}*/

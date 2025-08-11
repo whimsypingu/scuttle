@@ -23,6 +23,7 @@
 
     /* Typescale */
     --ff: "Inter", sans-serif;
+    --ff-title: "Poppins", sans-serif;
     --h1: bold 1.125rem/1.4em var(--ff);
     --h2: bold 1rem/1.4em var(--ff);
     --p: 1rem/1.4em var(--ff);
@@ -31,10 +32,6 @@
     --gray90: hsl(0 0% 90%);
     --gray50: hsl(0 0% 50%);
     --gray10: hsl(0 0% 10%);
-
-    --textsize-s: 0.875rem; /* 14px */
-    --textsize-m: 1rem;     /* 16px */
-    --textsize-l: 1.125rem; /* 18px */
 
     /* Spacing scale */
     --space-xxs: 0.25rem;   /* 4px */
@@ -64,6 +61,13 @@
     --playbar-h: 0.6rem;
     --thumb-h: 0.6rem;
     --thumb-offset: 0rem;
+
+    /* Library button */
+    --button-color-1: #333;
+    --button-color-2: green;
+    --button-color-3: white;
+    --ease-time: 1.5s;
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 
@@ -90,6 +94,8 @@
         --playbar-h: 0.4rem;
         --thumb-h: 0.4rem;
         --thumb-offset: 0rem;
+
+        --mobile-button-m: 2.75rem; /* 44px recommended by apple and google apparently*/
     }
 }
 

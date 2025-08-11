@@ -13,11 +13,11 @@ export function populateMockLibraryItems() {
                 <p class="library-item-duration">${Math.floor(Math.random() * 10)}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}</p>
             </div>
             <div class="library-actions">
-                <button class="library-item-play">
+                <button class="library-item-play normal-button">
                     <i class="fa fa-play"></i>
                 </button>
-                <button class="library-item-save">
-                    <i class="fa fa-plus"></i>
+                <button class="library-item-save normal-button">
+                    <i class="fa fa-plus-square"></i>
                 </button>
             </div>
         `;
@@ -40,11 +40,11 @@ export function populateMockQueueItems() {
                 <p class="queue-item-duration">${Math.floor(Math.random() * 10)}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}</p>
             </div>
             <div class="queue-actions">
-                <button class="queue-item-play">
+                <button class="queue-item-play normal-button">
                     <i class="fa fa-play"></i>
                 </button>
-                <button class="queue-item-save">
-                    <i class="fa fa-plus"></i>
+                <button class="queue-item-save normal-button">
+                    <i class="fa fa-plus-square"></i>
                 </button>
             </div>
         `;
