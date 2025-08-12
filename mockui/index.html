@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
 	<title>Scuttle</title>
 
     <!-- favicon - change file location -->
@@ -15,15 +16,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     
-	<link rel="stylesheet" href="variables.css ">
-    <link rel="stylesheet" href="base.css">
-    <link rel="stylesheet" href="title_and_search.css">
-    <link rel="stylesheet" href="playbar.css">
-    <link rel="stylesheet" href="queue.css">
-    <link rel="stylesheet" href="library.css">
-    <link rel="stylesheet" href="scrollbars.css">
+	<link rel="stylesheet" href="css/variables.css ">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/title_and_search.css">
+    <link rel="stylesheet" href="css/playbar.css">
+    <link rel="stylesheet" href="css/queue.css">
+    <link rel="stylesheet" href="css/library.css">
+    <link rel="stylesheet" href="css/scrollbars.css">
 </head>
 <body>
+    <div id="background-layer"></div>
+    
 	<!-- Page Title -->
     <div id="title-search-library">
         <div id="title-search-library-contents">
@@ -35,17 +38,17 @@
 
                 <div id="search">
                     <input type="text" id="search-input" placeholder="Search..." />
-                    <button id="search-get-results-button" class="search-button">
+                    <button id="search-get-results-button" class="search-button" data-tooltip="Search">
                         <i class="fa fa-search"></i>
                     </button>
-                    <button id="search-and-download-button" class="search-button">
-                        <i class="fa fa-plus-square"></i>
+                    <button id="search-and-download-button" class="search-button" data-tooltip="Get best match">
+                        <i class="fa fa-rocket"></i>
                     </button>
                 </div>
             </div>
 
             <div id="library">
-                <h3 id="library-title">Library</h3>
+                <h3>Library</h3>
 
                 <ul id="library-list">
                 </ul>
@@ -67,15 +70,15 @@
 
 
 	<!-- Custom Playbar and Audio -->
-    <div id="playbar-and-queue">
+    <div id="playbar-queue">
         <div id="queue-toggle">
             <button id="queue-toggle-button">
                 <i class="fa fa-angle-double-down"></i>
             </button>
         </div>
 
-        <div id="playbar-and-queue-contents">
-            <div id="custom-playbar">
+        <div id="playbar-queue-contents">
+            <div id="playbar">
                 <audio id="audio-player" hidden>
                     Your browser does not support the audio element.
                 </audio>
@@ -92,15 +95,15 @@
                 </div>
 
                 <div id="playback-buttons">
-                    <button id="previous-button" class="normal-button" title="Previous">
+                    <button id="previous-button" class="normal-button playback-button" title="Previous">
                         <i class="fa fa-backward"></i>
                     </button>
 
-                    <button id="play-pause-button" class="normal-button" title="Play/Pause">
+                    <button id="play-pause-button" class="normal-button playback-button" title="Play/Pause">
                         <i class="fa fa-play"></i>
                     </button>
-                    
-                    <button id="next-button" class="normal-button" title="Next">
+                        
+                    <button id="next-button" class="normal-button playback-button" title="Next">
                         <i class="fa fa-forward"></i>
                     </button>
                 </div>                 
@@ -115,8 +118,9 @@
     </div>
 
 	<!-- <script type="module" src="/static/js/main.js" defer></script> -->
-    <script type="module" src="./toggle.js"></script>
-    <script type="module" src="./populate.js"></script>
+    <script type="module" src="js/toggle.js"></script>
+    <script type="module" src="js/slider.js"></script>
+    <script type="module" src="js/populate.js"></script>
     
     </body>
 </html>

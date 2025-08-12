@@ -7,16 +7,15 @@
 /* Track (background) */
 ::-webkit-scrollbar-track {
     background: transparent;
-    border-radius: var(--radius-s);
 }
 
 /* Handle (thumb) */
 ::-webkit-scrollbar-thumb {
-    background: var(--gray90); /* customize this */
+    background: var(--bg-5); /* customize this */
     border-radius: var(--radius-s);
 }
 
 /* On hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--gray50);
+    background: var(--bg-7);
 }
