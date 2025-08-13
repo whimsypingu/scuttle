@@ -16,15 +16,6 @@ export function parseTrackFromDataset(dataset) {
 }
 
 
-
-//capitalize header labels nicely
-export function formatHeader(header) {
-    return header
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, c => c.toUpperCase());
-}
-
-
 //builds a dataset from track data
 export function prepareDataset(track) {
     const dataset = {};
@@ -35,4 +26,24 @@ export function prepareDataset(track) {
         dataset[newKey] = val;
     }
     return dataset
+}
+
+
+
+
+//capitalize header labels nicely
+export function formatHeader(header) {
+    return header
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+
+
+//formats seconds -> MM:SS
+export function formatTime(seconds) {
+    const totalSecs = Math.round(seconds);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = Math.floor(totalSecs % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }

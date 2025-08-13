@@ -4,7 +4,10 @@
 	<meta charset="UTF-8" />
 	<title>Music Player</title>
 
-	<link rel="stylesheet" href="/static/css/loading.css">
+	<!-- Font Awesome CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<link rel="stylesheet" href="/static/css/playbar.css">
 </head>
 <body>
 	<!-- Loading Spinner -->
@@ -23,11 +26,36 @@
 		<button id="search-and-download-button">Search</button>
 	</section>
 
-	<!-- Audio Player -->
-	<section id="player-section">
-		<audio id="audio-player" controls style="display:none; margin-top: 20px;">
+	<!-- Custom Playbar and Audio -->
+	<section id="custom-playbar">
+		<audio id="audio-player" hidden>
 			Your browser does not support the audio element.
 		</audio>
+
+		<div id="now-playing-info">
+			<div id="now-playing-title">---</div>
+			<div id="now-playing-author">---</div>
+		</div>
+
+		<div id="playback-scrubber">
+			<span id="audio-current-time">0:00</span>
+			<input type="range" id="audio-progress-bar" min="0" max="100" value="0" step="any">
+			<span id="audio-duration">0:00</span>
+		</div>
+
+		<div id="playback-buttons">
+			<button id="previous-button" title="Previous">
+				<i class="fa fa-backward"></i>
+			</button>
+
+			<button id="play-pause-button" title="Play/Pause">
+				<i class="fa fa-play"></i>
+			</button>
+			
+			<button id="next-button" title="Next">
+				<i class="fa fa-forward"></i>
+			</button>
+		</div>
 	</section>
 
 	<!-- Music Library -->

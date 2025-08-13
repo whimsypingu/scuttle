@@ -1,17 +1,12 @@
 #import shutil
 
-#import backend.core as core
-#import backend.globals as G
+from backend.core.database.audio_database import AudioDatabase
+import backend.globals as G
 
-#G.DATA_DIR.mkdir(parents=True, exist_ok=True)
+db = AudioDatabase(G.DB_FILE)
 
-#shutil.rmtree(G.DOWNLOAD_DIR)
-#G.DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-#core.delete_db()
-#core.init_db()
-#core.view_db()
-
+'''
 from itertools import product
 import csv
 
@@ -30,4 +25,4 @@ with open(csv_file_path_custom, mode="w", newline="") as file:
     for qlen, button, downloaded in combinations:
         writer.writerow([qlen, button, downloaded, ""])  # Empty expected behavior
 
-csv_file_path_custom
+csv_file_path_custom'''

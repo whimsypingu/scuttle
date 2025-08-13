@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+	<title>Scuttle</title>
+
+    <!-- favicon - change file location -->
+    <link rel="shortcut icon" href="/mockui/favicon.ico" type="image/x-icon">
+
+    <!-- Font Awesome CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Font Inter and poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+	<link rel="stylesheet" href="css/variables.css ">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/title_and_search.css">
+    <link rel="stylesheet" href="css/playbar.css">
+    <link rel="stylesheet" href="css/queue.css">
+    <link rel="stylesheet" href="css/library.css">
+    <link rel="stylesheet" href="css/scrollbars.css">
+</head>
+<body>
+    <div id="background-layer"></div>
+
+	<!-- Page Title -->
+    <div id="title-search-library">
+        <div id="title-search-library-contents">
+            <div id="title-search">
+                <div id="title">
+                    <img src="big_favicon.png" alt="Scuttle Logo" />
+                    <h1 id="app-name">Scuttle</h1>
+                </div>
+
+                <div id="search">
+                    <input type="text" id="search-input" placeholder="Search..." />
+                    <button id="search-get-results-button" class="search-button" data-tooltip="Search">
+                        <i class="fa fa-search"></i>
+                    </button>
+                    <button id="search-and-download-button" class="search-button" data-tooltip="Get best match">
+                        <i class="fa fa-rocket"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="library">
+                <h3>Library</h3>
+
+                <ul id="library-list">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!-- Playlists -->
+    <div id="playlist-section">
+        <div id="playlists">
+            <div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+	<!-- Custom Playbar and Audio -->
+    <div id="playbar-queue">
+        <div id="queue-toggle">
+            <button id="queue-toggle-button">
+                <i class="fa fa-angle-double-down"></i>
+            </button>
+        </div>
+
+        <div id="playbar-queue-contents">
+            <div id="playbar">
+                <audio id="audio-player" hidden>
+                    Your browser does not support the audio element.
+                </audio>
+
+                <div id="now-playing-info">
+                    <h2 id="now-playing-title">Name of track</h2>
+                    <h3 id="now-playing-author">Author</h3>
+                </div>
+
+                <div id="playback-scrubber">
+                    <span id="audio-current-time">0:00</span>
+                    <input type="range" id="audio-progress-bar" min="0" max="100" value="0" step="any">
+                    <span id="audio-duration">0:00</span>
+                </div>
+
+                <div id="playback-buttons">
+                    <button id="previous-button" class="normal-button playback-button" title="Previous">
+                        <i class="fa fa-backward"></i>
+                    </button>
+
+                    <button id="play-pause-button" class="normal-button playback-button" title="Play/Pause">
+                        <i class="fa fa-play"></i>
+                    </button>
+                        
+                    <button id="next-button" class="normal-button playback-button" title="Next">
+                        <i class="fa fa-forward"></i>
+                    </button>
+                </div>                 
+            </div>
+
+            <div id="queue">
+                <h3>Queue</h3>
+                <ul id="queue-list">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+	<!-- <script type="module" src="/static/js/main.js" defer></script> -->
+    <script type="module" src="js/toggle.js"></script>
+    <script type="module" src="js/slider.js"></script>
+    <script type="module" src="js/populate.js"></script>
+    <script type="module" src="js/swipe.js"></script>
+    
+    </body>
+</html>

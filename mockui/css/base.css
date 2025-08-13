@@ -1,0 +1,287 @@
+html, body {
+    min-height: 100vh;
+    height: 100%;
+    margin: 0;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    overflow-y: auto;
+    font-family: var(--ff);
+    -webkit-overflow-scrolling: touch;
+}
+
+/* this just prevents overshooting scrolls and revealing whitespace from the browser, on ios */
+#background-layer {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        var(--bg-2),
+        var(--bg-1)
+    );
+    z-index: -9999;
+}
+
+#title-search-library {
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: var(--space-app-border);
+}
+
+#title-search-library-contents {
+    background: linear-gradient(
+        to bottom,
+        var(--bg-4),
+        var(--bg-3)
+    );
+    border-radius: var(--radius-l);
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+#playbar-queue {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-inline: var(--space-app-border);
+    height: auto;
+    opacity: 1;
+    transition: height 0.5s ease, opacity 0.2s ease;
+}
+
+#playbar-queue-contents {
+    background: linear-gradient(
+        to bottom,
+        var(--bg-3),
+        var(--bg-2)
+    );
+    border-top-left-radius: var(--radius-l);
+    border-top-right-radius: var(--radius-l);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+
+#app-name {
+    color: var(--gray10);
+    font: var(--h1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+    margin: 0;
+}
+
+
+/* buttons */
+.normal-button {
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    padding-inline: var(--space-s);
+    background: transparent;
+    border-radius: var(--radius-s);
+    border: none;
+    color: var(--text-3);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    cursor: pointer;
+}
+.normal-button:hover {
+    background-color: var(--bg-3);
+    color: var(--text-1);
+}
+
+
+/* track items */
+.list-track-item {
+    background: transparent;
+    display: flex;
+    flex-direction: row;
+    /* gap: var(--space-l); */
+    align-items: stretch;
+    justify-content: space-between;
+    margin-inline: var(--space-s);
+    padding-inline: var(--space-m);
+    padding-top: calc(var(--space-m) - 0.2rem);
+    padding-bottom: calc(var(--space-m) - 0.25rem); /*adjust spacing top and bottom to text*/
+    border-radius: var(--radius-l);
+    transition: background-color 0.1s ease, transform 0.1s ease;
+    cursor: pointer;
+}
+
+.list-track-item .foreground {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.list-track-item .foreground .position {
+    min-width: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-right: var(--space-xs);
+}
+.list-track-item .foreground .position .position-value {
+    text-align: right;
+    font: var(--p2);
+    color: var(--text-3);
+}
+
+.list-track-item .foreground .info {
+    flex: 1;
+    justify-content: flex-start;
+    min-width: 0;
+    margin-inline: var(--space-l);
+}
+
+.list-track-item .foreground .info .title {
+    font: var(--p);
+    color: var(--text-1);
+    margin-bottom: var(--space-xs);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.list-track-item .foreground .info .author {
+    font: var(--p2);
+    color: var(--text-3);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.list-track-item .foreground .duration {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+.list-track-item .foreground .duration .duration-value {
+    text-align: right;
+    font: var(--p2);
+    color: var(--text-3);
+}
+
+
+
+
+
+/* Desktop hover styles */
+@media (hover: hover) and (pointer: fine) {
+    .list-track-item:hover {
+        background-color: var(--bg-6);
+        transform: scale(1.01);
+    }
+    .list-track-item:active {
+        transform: scale(0.98);
+    }
+
+    .list-track-item .actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: var(--space-s);
+
+        overflow: hidden;
+        max-width: 0;
+        margin-left: 0;
+        opacity: 0;
+        /*transition: max-width var(--ease-time) var(--ease-smooth), margin 0.1s linear, opacity var(--ease-time) var(--ease-smooth);
+        */
+        transition: all 0.2s ease;
+        pointer-events: none;
+    }
+    .list-track-item:hover .actions {
+        max-width: 100%;
+        flex: 0 0 auto;
+        margin-left: var(--space-l);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .list-track-item .swipe-action {
+        display: none;
+    }
+}
+
+/* Mobile tap styles */
+@media (hover: none) and (pointer: coarse) {
+    .list-track {
+        overflow-x: hidden;
+    }
+
+    .list-track-item {
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        touch-action: pan-y;
+        position: relative;
+    }
+    .list-track-item .foreground {
+        flex: 1 1 auto;
+        transition: transform 0.2s ease-out;
+    }
+
+    /* actions sitting on the sides for left and right swipes */
+    .list-track-item .swipe-action {
+        position: absolute;          /* overlaying the row */
+        top: 0;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        width: 0;                     /* collapsed initially */
+        max-width: 100%;
+        opacity: 0;
+        pointer-events: none;
+        /*transition: max-width 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;*/
+        transition: all 0.2s ease-out;
+        background-color: transparent;
+        color: var(--text-1);
+    }
+
+    .list-track-item .swipe-action.left {
+        left: 0;                     /* expands rightward */
+        border-top-left-radius: var(--radius-s);
+        border-bottom-left-radius: var(--radius-s);
+    }
+
+    .list-track-item .swipe-action.right {
+        right: 0;                    /* expands leftward */
+        border-top-right-radius: var(--radius-s);
+        border-bottom-right-radius: var(--radius-s);
+    }
+
+    .list-track-item .swipe-action.flip-color {
+        background-color: tan;
+        color: black;
+    }
+    
+
+    .actions {
+        display: none;
+    }
+}
+
