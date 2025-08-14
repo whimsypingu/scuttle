@@ -1,6 +1,6 @@
-let isCollapsed = true;
+import { isMobile } from "../../utils/index.js";
 
-const isMobile = window.matchMedia("(max-width: 600px)").matches;
+let isCollapsed = true;
 
 const toggleButton = document.getElementById("queue-toggle-button");
 const container = document.getElementById("playbar-queue");
@@ -9,7 +9,7 @@ const playbar = document.getElementById("playbar");
 //do this once to save the collapsed height
 let totalHeight = 0;
 function measureCollapsedHeight() {
-    if (isMobile) {
+    if (isMobile()) {
         //mobile collapsed height measurement
         const rect = playbar.getBoundingClientRect();
         const styles = getComputedStyle(playbar);
@@ -26,7 +26,6 @@ function measureCollapsedHeight() {
     }
 }
 measureCollapsedHeight();
-
 
 //set the height of the playbar to collapse or exapnded values
 function setHeight() {
@@ -115,7 +114,7 @@ function setQueueToggleMobile() {
 }
 
 
-export function initQueueToggle() {
+function initQueueToggle() {
     setHeight();
     if (isMobile) {
         setQueueToggleMobile();
@@ -124,9 +123,6 @@ export function initQueueToggle() {
     }
 }
 
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
+export function setupToggle() {
     initQueueToggle();
-});
+}

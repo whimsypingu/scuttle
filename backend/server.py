@@ -81,12 +81,11 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # or your ngrok URL for production
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
 app.include_router(audio_router.router)
 app.include_router(queue_router.router)
@@ -97,5 +96,5 @@ app.include_router(websocket_router.router)
 #serve index.html
 @app.get("/", response_class=HTMLResponse)
 def index():
-    return FileResponse("static/index.html")
+    return FileResponse("frontend/index.html")
 
