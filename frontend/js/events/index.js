@@ -29,8 +29,11 @@ async function setupWebsocketEvents() {
     setupWebSocket();
 }
 
+import { logDebug } from "../utils/debug.js";
 async function setupMobileEvents() {
     if (isMobile()) {
+        logDebug("MOBILE ACTIVE");
+
         const { setupSwipeEventListeners } = await import("./mobile/swipe.js");
         setupSwipeEventListeners();
     }
@@ -41,4 +44,5 @@ export async function initEvents() {
     await setupDomEvents();
     await setupWebsocketEvents();
     await setupMobileEvents();
+    logDebug("INIT EVENTS");
 }

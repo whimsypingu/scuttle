@@ -3,7 +3,7 @@
 import { parseTrackFromDataset } from "../../utils/index.js"
 
 import { 
-    playCurrentTrack,
+    //playCurrentTrack,
     renderNowPlaying
 } from "../audio/index.js";
 
@@ -73,7 +73,7 @@ async function onClickPlayButton(domEls, dataset) {
     
     try {
         await queueSetFirstTrack(track);
-        await playCurrentTrack(audioEl, durationEl, ppButtonEl);
+        //await playCurrentTrack(audioEl, durationEl, ppButtonEl);
     } catch (err) {
         console.error("Failed to play audio:", err);
     }

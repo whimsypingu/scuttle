@@ -24,6 +24,7 @@ class DownloadWorker:
                 await self.youtube_client.download(track)
                 await self.audio_database.log_track(track)
                 await self.audio_database.log_download(track)
+                await self.audio_database.log_cache(track)
             except Exception as e:
                 print(f"Error handling track {track}: {e}")
 

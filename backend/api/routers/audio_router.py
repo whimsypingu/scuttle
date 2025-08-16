@@ -32,6 +32,9 @@ async def get_current_audio_stream(req: Request) -> StreamingResponse:
 
     return stream_audio(req=req, track=current_track) #should peek the play_queue and return a fastapi.StreamingResponse of the peeked song
 
-    
 
-
+@router.get("/stream/{youtube_id}")
+async def get_blob(youtube_id: str, req: Request):
+    if not is_downloaded(track=youtube_id):
+        raise HTTPException(status_code=404, detail="Track not downloaded")
+    return stream_audio(req=req, track=youtube_id)

@@ -1,12 +1,13 @@
 from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
+from typing import Union
 
 from backend.core.lib.utils import is_downloaded, get_audio_path, get_audio_size
 from backend.core.models.track import Track
 import backend.globals as G
 
-def stream_audio(req: Request, track: Track) -> StreamingResponse:
+def stream_audio(req: Request, track: Union[Track, str]) -> StreamingResponse:
     #automatically attempts to stream the first song in the play_queue
     if not track:
         raise HTTPException(status_code=404, detail="No track provided.")

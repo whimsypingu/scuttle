@@ -1,4 +1,7 @@
-const remSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+import { 
+    onSwipeLibrary
+} from "../../features/library/controller.js";
+
 
 let startX = 0;
 let deltaX = 0;
@@ -96,7 +99,6 @@ export function setupSwipeEventListeners() {
         }
 
         const absX = Math.min(Math.abs(deltaX), maxSwipe);
-        const maxWidth = `${absX}px`;
 
         //swipe right
         if (deltaX > 0) {
@@ -106,7 +108,7 @@ export function setupSwipeEventListeners() {
         }
     });
 
-    document.addEventListener('touchend', () => {
+    document.addEventListener('touchend', () => {        
         if (!isSwiping || !activeEl) return;
 
         const isValidSwipe = Math.abs(deltaX) >= flipThreshold;
@@ -117,6 +119,7 @@ export function setupSwipeEventListeners() {
 
             if (isValidSwipe) {
                 console.log("queued");
+                onSwipeLibrary(activeEl.dataset, "queue");
             }
         } else {
             //swipe left
@@ -124,6 +127,7 @@ export function setupSwipeEventListeners() {
 
             if (isValidSwipe) {
                 console.log("liked");
+                onSwipeLibrary(activeEl.dataset, "more");
             }
         }
 
@@ -134,7 +138,7 @@ export function setupSwipeEventListeners() {
         activeEl.classList.remove('swiping');
         activeEl = null;
         deltaX = 0;
-    });
+    }, { passive: false });
 
     console.log("Swipe listener active");
 }

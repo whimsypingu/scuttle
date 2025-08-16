@@ -116,7 +116,7 @@ function setQueueToggleMobile() {
 
 function initQueueToggle() {
     setHeight();
-    if (isMobile) {
+    if (isMobile()) {
         setQueueToggleMobile();
     } else {
         setQueueToggleDesktop();

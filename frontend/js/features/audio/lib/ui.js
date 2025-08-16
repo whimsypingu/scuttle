@@ -16,6 +16,7 @@ export function renderNowPlaying(titleEl, authorEl, track) {
 }
 
 
+//current time
 export function setCurrentTimeDisplay(currTimeEl, value) {
     currTimeEl.textContent = formatTime(value);    
 }
@@ -25,12 +26,14 @@ export function syncCurrentTimeDisplay(currTimeEl, audioEl) {
 }
 
 
+//duration
 export function syncDurationDisplay(durationEl, audioEl) {
     const duration = isNaN(audioEl.duration) ? 0 : audioEl.duration;
     durationEl.textContent = formatTime(duration);
 }
 
 
+//audio progress bar
 const fillColor = "var(--text-1)";
 const blankColor = "var(--bg-7)";
 
@@ -39,19 +42,16 @@ export function setProgressBar(progBarEl, percent) {
 }
 export function syncProgressBar(progBarEl, audioEl) {
     const duration = audioEl.duration;
-    if (isNaN(duration) || duration === 0) {
-        progBarEl.value = 0;
-    }
-    else {
-        progBarEl.value = (audioEl.currentTime / audioEl.duration) * 100;    
-    }
+
+    let percent = (audioEl.currentTime / duration) * 100;
     
-    const percentageFilled = progBarEl.value;
-    setProgressBar(progBarEl, percentageFilled);
+    if (isNaN(duration) || duration === 0) {
+        percent = 0;
+    }
+    setProgressBar(progBarEl, percent);
 }
 
-
-
+//play and pause button
 export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
     const icon = ppButtEl.querySelector("i");
 
@@ -62,30 +62,33 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
 
 
 
-let animationFrameId = null;
 
-export function startProgressBarAnimation(audioEl, progBarEl) {
-    function update() {
-        const duration = audioEl.duration;
-        const current = audioEl.currentTime;
 
-        //console.log(`update(): current = ${current}, duration = ${duration}, progress = ${progBarEl.value}`); // Debug
 
-        if (!isNaN(duration) && duration > 0) {
-            progBarEl.value = (current / duration) * 100;
-            //console.log(`update(): progress = ${progBarEl.value}`); // Debug
-        }
+// let animationFrameId = null;
 
-        animationFrameId = requestAnimationFrame(update);
-    }
+// export function startProgressBarAnimation(audioEl, progBarEl) {
+//     function update() {
+//         const duration = audioEl.duration;
+//         const current = audioEl.currentTime;
 
-    stopProgressBarAnimation(); // Avoid duplicates
-    update();
-}
+//         //console.log(`update(): current = ${current}, duration = ${duration}, progress = ${progBarEl.value}`); // Debug
 
-export function stopProgressBarAnimation() {
-    if (animationFrameId !== null) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
-}
+//         if (!isNaN(duration) && duration > 0) {
+//             progBarEl.value = (current / duration) * 100;
+//             //console.log(`update(): progress = ${progBarEl.value}`); // Debug
+//         }
+
+//         animationFrameId = requestAnimationFrame(update);
+//     }
+
+//     stopProgressBarAnimation(); // Avoid duplicates
+//     update();
+// }
+
+// export function stopProgressBarAnimation() {
+//     if (animationFrameId !== null) {
+//         cancelAnimationFrame(animationFrameId);
+//         animationFrameId = null;
+//     }
+// }

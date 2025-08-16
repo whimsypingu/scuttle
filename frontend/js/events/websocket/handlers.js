@@ -5,6 +5,8 @@ import { renderLibraryList } from "../../features/library/index.js";
 
 import { renderQueueUI } from "../../features/queue/controller.js";
 
+import { setLocalQueue } from "../../cache/index.js";
+
 
 //handles websocket messages //later this should be migrated from the backend to ensure consistency
 export const handlers = {
@@ -33,23 +35,29 @@ const domEls = {
     libraryListEl: $(SELECTORS.library.ids.LIST),
 }
 
+//player queue related websocket messages update the state of the local queue (for caching), and also the ui
 function handlePQSF(payload) {
+    setLocalQueue(payload.content);
     renderQueueUI(domEls, payload.content);
 }
 
 function handlePQIN(payload) {
+    setLocalQueue(payload.content);
     renderQueueUI(domEls, payload.content);
 }
 
 function handlePQPU(payload) {
+    setLocalQueue(payload.content);
     renderQueueUI(domEls, payload.content);
 }
 
 function handlePQPO(payload) {
+    setLocalQueue(payload.content);
     renderQueueUI(domEls, payload.content);
 }
 
 function handlePQRE(payload) {
+    setLocalQueue(payload.content);
     renderQueueUI(domEls, payload.content);
 }
 

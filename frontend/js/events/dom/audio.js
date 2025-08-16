@@ -4,30 +4,38 @@ import { SELECTORS, $ } from "../../dom/index.js";
 
 import { 
     onAudioEnded, 
-    syncProgressBarWithAudio, 
+    onTimeUpdate,
+
     onNextButtonClick, 
     onPlayPauseButtonClick, 
     onPreviousButtonClick,
-    scrubStartSeek,
-    scrubPreviewSeekTime,
-    scrubCommitSeek
+    
+    startScrubSeek,
+    inputScrubSeek,
+    commitScrubSeek,
 } from "../../features/audio/controller.js";
 
 export function setupAudioEventListeners() {
+    //const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
     const domEls = {
         audioEl: $(SELECTORS.audio.ids.PLAYER),
+        titleEl: $(SELECTORS.audio.ids.TITLE),
+        authorEl: $(SELECTORS.audio.ids.AUTHOR),
+
+        currTimeEl: $(SELECTORS.audio.ids.CURRENT_TIME),
+        progBarEl: $(SELECTORS.audio.ids.PROGRESS_BAR),
+        durationEl: $(SELECTORS.audio.ids.DURATION),
+
         ppButtonEl: $(SELECTORS.audio.ids.PLAY_PAUSE_BUTTON),
+
         nextButtonEl: $(SELECTORS.audio.ids.NEXT_BUTTON),
         prevButtonEl: $(SELECTORS.audio.ids.PREVIOUS_BUTTON),
-        durationEl: $(SELECTORS.audio.ids.DURATION),
-        currTimeEl: $(SELECTORS.audio.ids.CURRENT_TIME),
-        progBarEl: $(SELECTORS.audio.ids.PROGRESS_BAR)
     };
 
     //hook up event listeners
     //autoplay
     domEls.audioEl.addEventListener("ended", () => onAudioEnded(domEls));
-    domEls.audioEl.addEventListener("timeupdate", () => syncProgressBarWithAudio(domEls));
+    domEls.audioEl.addEventListener("timeupdate", () => onTimeUpdate(domEls));
     
     //user input
     domEls.nextButtonEl.addEventListener("click", () => onNextButtonClick(domEls));
@@ -35,7 +43,7 @@ export function setupAudioEventListeners() {
     domEls.prevButtonEl.addEventListener("click", () => onPreviousButtonClick(domEls));
 
     //scrubber logic
-    domEls.progBarEl.addEventListener("pointerdown", () => scrubStartSeek());
-    domEls.progBarEl.addEventListener("input", () => scrubPreviewSeekTime(domEls));
-    domEls.progBarEl.addEventListener("pointerup", () => scrubCommitSeek(domEls));
+    domEls.progBarEl.addEventListener("pointerdown", () => startScrubSeek(domEls));
+    domEls.progBarEl.addEventListener("input", () => inputScrubSeek(domEls));
+    window.addEventListener("pointerup", () => commitScrubSeek(domEls));
 }
