@@ -21,8 +21,6 @@ import {
 import { logDebug } from "../../utils/debug.js";
 import { peekLocalQueue, popLocalQueue } from "../../cache/localqueue.js";
 
-
-
 //autoplay
 export async function onAudioEnded(domEls) {
     const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
@@ -51,7 +49,7 @@ export async function onAudioEnded(domEls) {
         //5. make optimistic ui changes
         resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
-
+        
         //6. play audio
         await playLoadedTrack(audioEl);
 
@@ -92,7 +90,7 @@ export async function onNextButtonClick(domEls) {
         //5. make optimistic ui changes
         resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
-
+        
         //6. play audio
         await playLoadedTrack(audioEl);
 

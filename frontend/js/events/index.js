@@ -8,8 +8,10 @@ import { setupToggle } from "./dom/toggle.js";
 
 import { setupWebSocket } from "./websocket/websocket.js";
 
-import { isMobile } from "../utils/index.js"; 
+import { registerMediaSessionHandlers } from "./platform/mediaSession.js";
 
+import { isMobile } from "../utils/index.js"; 
+import { logDebug } from "../utils/debug.js";
 
 async function bootstrapAll() {
     bootstrapLibrary();
@@ -29,7 +31,6 @@ async function setupWebsocketEvents() {
     setupWebSocket();
 }
 
-import { logDebug } from "../utils/debug.js";
 async function setupMobileEvents() {
     if (isMobile()) {
         logDebug("MOBILE ACTIVE");
@@ -39,10 +40,15 @@ async function setupMobileEvents() {
     }
 }
 
+function setupPlatformEvents() {
+    registerMediaSessionHandlers();
+}
+
 export async function initEvents() {
     await bootstrapAll();
     await setupDomEvents();
     await setupWebsocketEvents();
     await setupMobileEvents();
+    setupPlatformEvents();
     logDebug("INIT EVENTS");
 }

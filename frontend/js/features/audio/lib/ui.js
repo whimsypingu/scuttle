@@ -61,7 +61,6 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
 }
 
 
-
 //helper function to set ui to whatever the song is, and sync up time displays
 export function resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl) {
     renderNowPlaying(titleEl, authorEl, track);
@@ -71,3 +70,5 @@ export function resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl
     syncProgressBar(progBarEl, audioEl);
     syncDurationDisplay(durationEl, audioEl);
 }
+
+
