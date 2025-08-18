@@ -5,16 +5,17 @@ import {
 } from "../queue/index.js";
 
 import { 
-    cleanupCurrentAudio,
     loadTrack,
+    playLoadedTrack,
+    cleanupCurrentAudio,
+
     setCurrentTimeDisplay, 
     syncCurrentTimeDisplay, 
     updatePlayPauseButtonDisplay, 
     setProgressBar,
     syncProgressBar, 
-    playLoadedTrack,
-    renderNowPlaying,
-    syncDurationDisplay
+
+    resetUI
 } from "./index.js";
 
 import { logDebug } from "../../utils/debug.js";
@@ -27,35 +28,37 @@ export async function onAudioEnded(domEls) {
     const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
 
     try {
+        //instantaneously update everything, and then send the update to the backend
         //1. make changes to local queue
         popLocalQueue();
         const track = peekLocalQueue();
+        logDebug("Next track:", track);
 
-        //2. load in the blob
+        //2. clean
         await cleanupCurrentAudio(audioEl);
+
+        //3. handle empty track
+        if (!track) {
+            logDebug("No track found in queue");
+            resetUI(null, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
+            updatePlayPauseButtonDisplay(ppButtonEl, false);
+            return;
+        }
+
+        //4. load new track
         await loadTrack(audioEl, track);
 
-        logDebug("metadata_loaded"); //debug
-
-        //3. make optimistic ui changes
-        renderNowPlaying(titleEl, authorEl, track);
-
-        audioEl.currentTime = 0;
-        syncCurrentTimeDisplay(currTimeEl, audioEl);
-        syncProgressBar(progBarEl, audioEl);
-        syncDurationDisplay(durationEl, audioEl);
-
+        //5. make optimistic ui changes
+        resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
-        
-        //4. play audio
+
+        //6. play audio
         await playLoadedTrack(audioEl);
 
-        //5. send changes to server (returns websocket message to sync ui)
+        //7. send changes to server (returns websocket message to sync ui)
         await queuePopTrack();
-
     } catch (err) {
-        logDebug("Failure");
-        console.error("Failed to play audio:", err);
+        logDebug("Failed to play audio:", err);
     }
 }
 
@@ -70,59 +73,60 @@ export async function onNextButtonClick(domEls) {
         //1. make changes to local queue
         popLocalQueue();
         const track = peekLocalQueue();
+        logDebug("Next track:", track);
 
-        logDebug("local_track:", track);
-
-        //2. load in blob
+        //2. clean
         await cleanupCurrentAudio(audioEl);
+
+        //3. handle empty track
+        if (!track) {
+            logDebug("No track found in queue");
+            resetUI(null, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
+            updatePlayPauseButtonDisplay(ppButtonEl, false);
+            return;
+        }
+
+        //4. load new track
         await loadTrack(audioEl, track);
-        
-        logDebug("loaded_metadata"); //debug
 
-        //3. make optimistic ui changes
-        renderNowPlaying(titleEl, authorEl, track);
-
-        audioEl.currentTime = 0;
-        syncCurrentTimeDisplay(currTimeEl, audioEl);
-        syncProgressBar(progBarEl, audioEl);
-        syncDurationDisplay(durationEl, audioEl);
-
+        //5. make optimistic ui changes
+        resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
 
-        //4. play audio
+        //6. play audio
         await playLoadedTrack(audioEl);
 
-        //5. send changes to server (returns websocket message to sync ui)
+        //7. send changes to server (returns websocket message to sync ui)
         await queuePopTrack();
-
     } catch (err) {
-        logDebug("Failure");
-        console.error("Failed to play audio:", err);
+        logDebug("Failed to play audio:", err);
     }
 }
 
 //play or pause
 export async function onPlayPauseButtonClick(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl, ppButtonEl } = domEls;
 
     console.error(audioEl.paused);
 
-    //edge case where item is in queue but not yet loaded into audio element.    
-    if (!audioEl.src || audioEl.readyState === 0) {
-        console.warn("No audio source set, attempting blob load");
+    //1. check for track
+    const track = peekLocalQueue();
+    if (!track) return;
 
-        const track = peekLocalQueue();
+    //2. load in edge case where item is in queue but not yet loaded into audio element.    
+    if (!audioEl.src || audioEl.readyState === 0) {
+        logDebug("No audio source set somehow, attempting load");
         await loadTrack(audioEl, track);
     }
 
-    //click handler
+    //3. handle click
     if (audioEl.paused) {
         try {
             await playLoadedTrack(audioEl);            
             updatePlayPauseButtonDisplay(ppButtonEl, true);
         } catch {
             updatePlayPauseButtonDisplay(ppButtonEl, false);
-            logDebug("play_failed");
+            logDebug("Play failed");
         }
     } else {
         audioEl.pause();
@@ -130,9 +134,9 @@ export async function onPlayPauseButtonClick(domEls) {
     }
 }
 
-//previous
+//previous --gonna become a mess when previous track is allowed
 export function onPreviousButtonClick(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl, currTimeEl, progBarEl } = domEls;
 
     audioEl.currentTime = 0;
     syncCurrentTimeDisplay(currTimeEl, audioEl);
@@ -146,7 +150,7 @@ let isSeeking = false;
 //time update
 export function onTimeUpdate(domEls) {
     if (!isSeeking) {
-        const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+        const { audioEl, currTimeEl, progBarEl } = domEls;
 
         syncCurrentTimeDisplay(currTimeEl, audioEl);
         syncProgressBar(progBarEl, audioEl);
@@ -155,7 +159,7 @@ export function onTimeUpdate(domEls) {
 
 //start scrub seek, pointer down on progress bar
 export function startScrubSeek(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl } = domEls;
 
     if (!audioEl.src || audioEl.readyState === 0) return; // nothing loaded, abort
     isSeeking = true;
@@ -165,7 +169,7 @@ export function startScrubSeek(domEls) {
 export function inputScrubSeek(domEls) {
     if (!isSeeking) return;
     
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl, currTimeEl, progBarEl } = domEls;
 
     const seekTime = (progBarEl.value / 100) * audioEl.duration;
     setCurrentTimeDisplay(currTimeEl, seekTime);
@@ -176,7 +180,7 @@ export function inputScrubSeek(domEls) {
 export function commitScrubSeek(domEls) {
     if (!isSeeking) return;
     
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl, currTimeEl, progBarEl } = domEls;
 
     const seekTime = (progBarEl.value / 100) * audioEl.duration;
     audioEl.currentTime = seekTime; //set and sync

@@ -3,10 +3,6 @@
 
 import { postRequest, getResponse } from "../../../utils/index.js";
 
-import { popLocalQueue, pushLocalQueue, removeLocalQueueAt, setLocalQueueFirst } from "../../../cache/localqueue.js";
-import { addBlobToCache, cacheContainsBlob } from "../../../cache/index.js";
-
-
 import { logDebug } from "../../../utils/debug.js";
 
 
@@ -16,21 +12,6 @@ export async function queueSetFirstTrack(track) {
     console.log("queueSetFirstTrack status:", response.status);
 
     logDebug("queueSetFirstTrack");
-
-    // //3. fire and forget, if not yet already in cache, cache the blob
-    // (async () => {
-    //     try {
-    //         if (!(await cacheContainsBlob(track))) {
-    //             const blobResponse = await getResponse(`/audio/stream/${track.youtube_id}`);
-    //             if (blobResponse.ok) {
-    //                 const blob = await blobResponse.blob();
-    //                 await addBlobToCache(track, blob);
-    //             }
-    //         }
-    //     } catch (err) {
-    //         console.warn("Failed to cache blob:", err);
-    //     }
-    // })();
 }
 
 
@@ -39,7 +20,7 @@ export async function queuePushTrack(track) {
     const response = await postRequest(`/queue/push`, { track });
     console.log("queuePushTrack status:", response.status);
 
-    //2. fire and forget, if not yet already in cache, cache the blob
+    //2. fire and forget for caching purposes (service worker will eat this uppp)
     fetch(`/audio/stream/${track.youtube_id}`).catch((err) => {
         logDebug("queuePushTrack prefetch failed:", err);
     })

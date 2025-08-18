@@ -2,11 +2,6 @@ import { initEvents } from "./events/index.js";
 
 import { logDebug } from "./utils/debug.js";
 
-// window.addEventListener("DOMContentLoaded", () => {
-// 	logDebug("HELLO");
-// 	initEvents();
-// });
-
 
 window.addEventListener("DOMContentLoaded", async () => {
     logDebug("HELLO WORLD");

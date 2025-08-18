@@ -1,5 +1,5 @@
 import { 
-    onSwipeLibrary
+    onSwipe
 } from "../../features/library/controller.js";
 
 
@@ -119,7 +119,7 @@ export function setupSwipeEventListeners() {
 
             if (isValidSwipe) {
                 console.log("queued");
-                onSwipeLibrary(activeEl.dataset, "queue");
+                onSwipe(activeEl.dataset, "queue"); //this works for both library and queue??
             }
         } else {
             //swipe left
@@ -127,7 +127,7 @@ export function setupSwipeEventListeners() {
 
             if (isValidSwipe) {
                 console.log("liked");
-                onSwipeLibrary(activeEl.dataset, "more");
+                onSwipe(activeEl.dataset, "more");
             }
         }
 

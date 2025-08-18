@@ -12,6 +12,10 @@ export function peekLocalQueue() {
     return localQueue[0] || null;
 }
 
+export function getLocalQueue() {
+    return localQueue;
+}
+
 
 // Basic setters (for re-syncing with backend)
 export function setLocalQueue(content) {

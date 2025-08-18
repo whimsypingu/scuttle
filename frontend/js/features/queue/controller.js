@@ -38,59 +38,82 @@ export async function renderQueueUI(domEls, tracks) {
 
 //clicking the queue list will check for this
 export async function onClickQueueList(e, domEls) {
-    //check button clicked
+    //check what was clicked
     const button = e.target.closest("button");
     const li = e.target.closest("li.list-track-item");
     const dataset = li?.dataset;
 
+    //handle button or whole row pressed
     if (button) {
         if (button.classList.contains("queue-button")) {
-            console.log("queued", li?.dataset);
-
+            logDebug("Queue clicked");
             await onClickQueueButton(dataset);
+
         } else if (button.classList.contains("more-button")) {
-            console.log("more //BUILD ME", li?.dataset);
+            logDebug("more //BUILD ME", li?.dataset);
         }
     } else if (li) {
-        console.log("list item clicked:", li.dataset)
-
+        logDebug("Play clicked");
         await onClickPlayButton(domEls, dataset);
     }
+
 }
 
 
 //helpers
 async function onClickPlayButton(domEls, dataset) {
-    const audioEl = domEls.audioEl;
-    const ppButtonEl = domEls.ppButtonEl;
-    const durationEl = domEls.durationEl;
+    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
 
+    //0. parse data
     const track = parseTrackFromDataset(dataset);
+
     if (!track) {
-        console.error("Missing track data attributes in dataset");
+        logDebug("Missing track data attributes in dataset");
         return;
     }
-    
+
     try {
+        //1. make changes to local queue
+        setLocalQueueFirst(track);
+
+        //2. load in the audio
+        await cleanupCurrentAudio(audioEl);
+        await loadTrack(audioEl, track);
+
+        //3. make optimistic ui changes
+        resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
+        updatePlayPauseButtonDisplay(ppButtonEl, true);
+        
+        //4. play audio
+        await playLoadedTrack(audioEl);
+
+        //5. send changes to server (returns websocket message to sync ui)
         await queueSetFirstTrack(track);
-        //await playCurrentTrack(audioEl, durationEl, ppButtonEl);
+
     } catch (err) {
-        console.error("Failed to play audio:", err);
+        logDebug("Failed to play audio:", err);
     }
 }
 
 
 async function onClickQueueButton(dataset) {
+    //0. parse data
     const track = parseTrackFromDataset(dataset);
+
     if (!track) {
-        console.error("Missing track data attributes in dataset");
+        logDebug("Missing track data attributes in dataset");
         return;
     }
 
+    //1. update queue (local and backend)
     try {
+        pushLocalQueue(track);
         await queuePushTrack(track);
     } catch (err) {
-        console.error("Failed to queue audio:", err);
+        logDebug("Failed to queue audio:", err);
     }
 }
 
+
+
+//onSwipe is defined in library and i think works for both... consider moving to a separate swipe function

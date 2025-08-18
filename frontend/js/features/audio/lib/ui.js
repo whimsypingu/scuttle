@@ -62,33 +62,12 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
 
 
 
+//helper function to set ui to whatever the song is, and sync up time displays
+export function resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl) {
+    renderNowPlaying(titleEl, authorEl, track);
 
-
-
-// let animationFrameId = null;
-
-// export function startProgressBarAnimation(audioEl, progBarEl) {
-//     function update() {
-//         const duration = audioEl.duration;
-//         const current = audioEl.currentTime;
-
-//         //console.log(`update(): current = ${current}, duration = ${duration}, progress = ${progBarEl.value}`); // Debug
-
-//         if (!isNaN(duration) && duration > 0) {
-//             progBarEl.value = (current / duration) * 100;
-//             //console.log(`update(): progress = ${progBarEl.value}`); // Debug
-//         }
-
-//         animationFrameId = requestAnimationFrame(update);
-//     }
-
-//     stopProgressBarAnimation(); // Avoid duplicates
-//     update();
-// }
-
-// export function stopProgressBarAnimation() {
-//     if (animationFrameId !== null) {
-//         cancelAnimationFrame(animationFrameId);
-//         animationFrameId = null;
-//     }
-// }
+    audioEl.currentTime = 0;
+    syncCurrentTimeDisplay(currTimeEl, audioEl);
+    syncProgressBar(progBarEl, audioEl);
+    syncDurationDisplay(durationEl, audioEl);
+}
