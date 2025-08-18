@@ -9,9 +9,10 @@ PLAY_QUEUE_NAME = "play_queue"
 AUDIO_DATABASE_NAME = "audio_database"
 YOUTUBE_CLIENT_NAME = "youtube_client"
 
-#database
-DB_FILE = Path("backend") / "data" / "audio.db"
-DOWNLOAD_DIR = Path("backend") / "data" / "downloads"
+#
+ROOT_DIR = Path(__file__).resolve().parent.parent
+DB_FILE = ROOT_DIR / "backend" / "data" / "audio.db"
+DOWNLOAD_DIR = ROOT_DIR / "backend" / "data" / "downloads"
 
 
 

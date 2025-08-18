@@ -1,5 +1,13 @@
 //static/js/features/audio/utils.js
 
+
+// if you want supprot for fuckass ios then rebuild cacheing with cache api as well as indexeddb. apple is gay
+
+
+
+
+
+
 let currentLoadId = 0; // Global or module-level
 //let currentLoadPromise = null;
 
@@ -136,6 +144,22 @@ let currentLoadId = 0; // Global or module-level
 // }
 
 
+import { logDebug } from "../../../utils/debug.js";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 let currentLoadPromise = null;
@@ -147,15 +171,21 @@ export async function loadAudioWithId(audioEl, blob) {
 
     // cancel any existing load before starting a new one
     if (currentLoadPromise && typeof currentLoadPromise.cancel === "function") {
+        logDebug("cancelling previous load promise");
         currentLoadPromise.cancel();
     }
 
     let finished = false;
     const objectUrl = URL.createObjectURL(blob);
+    logDebug("create blob objectUrl:", objectUrl);
 
     const promise = new Promise((resolve, reject) => {
         const cleanup = () => {
             audioEl.removeEventListener("error", onError);
+            audioEl.removeEventListener("stalled", onStalled);
+            audioEl.removeEventListener("abort", onAbort);
+            audioEl.removeEventListener("suspend", onSuspend);
+
             if (!finished) URL.revokeObjectURL(objectUrl);
             if (currentLoadPromise === promise) {
                 currentLoadPromise = null;
@@ -164,27 +194,45 @@ export async function loadAudioWithId(audioEl, blob) {
 
         const onError = (err) => {
             if (finished) return;
+            logDebug("audio error", err, "readyState:", audioEl.readyState, "dur:", audioEl.duration);
             finished = true;
             cleanup();
             reject(err || new Error("Failed to load audio from blob"));
         };
 
+        const maxWaitMs = 3000;
+        const start = Date.now();
         const checkReadyState = () => {
             if (finished) return;
+            logDebug("checkReadyState:", audioEl.readyState, "dur:", audioEl.duration)
             if (audioEl.readyState >= 4) {
                 finished = true;
                 cleanup();
                 resolve(objectUrl);
+            } else if (Date.now() - start > maxWaitMs) {
+                finished = true;
+                cleanup();
+                logDebug("Timed out waiting for readyState:", audioEl.readyState, "dur:", audioEl.duration);
+                reject(new Error("Timed out waiting for readyState >= 4"));
             } else {
                 setTimeout(checkReadyState, 50);
             }
         };
 
+        const onStalled = () => logDebug("audio stalled");
+        const onAbort   = () => logDebug("audio aborted");
+        const onSuspend = () => logDebug("audio suspended");
+
         audioEl.addEventListener("error", onError);
+        audioEl.addEventListener("stalled", onStalled);
+        audioEl.addEventListener("abort", onAbort);
+        audioEl.addEventListener("suspend", onSuspend);
+
 
         // small delay after cleanup for iOS
         setTimeout(() => {
             if (finished) return; // if cancelled during delay, bail
+            logDebug("setting src", objectUrl);
             audioEl.src = objectUrl;
             audioEl.load();
             checkReadyState();
@@ -194,6 +242,7 @@ export async function loadAudioWithId(audioEl, blob) {
     // attach cancel
     promise.cancel = () => {
         if (finished) return;
+        logDebug("cancel called during load, src:", objectUrl, "readyState:", audioEl.readyState);
         finished = true;
         URL.revokeObjectURL(objectUrl);
         if (currentLoadPromise === promise) {
@@ -208,14 +257,21 @@ export async function loadAudioWithId(audioEl, blob) {
 export async function cleanupCurrentAudio(audioEl) {
     if (!audioEl.src) return;
 
+    logDebug("before cleanupCurrentAudio", "src:", audioEl.src, "readyState:", audioEl.readyState, "dur:", audioEl.duration);
+
     audioEl.pause();
     try {
         URL.revokeObjectURL(audioEl.src);
-    } catch {}
+        logDebug("revoked objectURL", audioEl.src);
+    } catch (e) {
+        logDebug("revokeObjectURL failed", e);
+    }
     audioEl.removeAttribute("src");
 
     // tiny delay for iOS to settle
     await new Promise(r => setTimeout(r, 100));
+
+    logDebug("after cleanupCurrentAudio", "src:", audioEl.src, "readyState:", audioEl.readyState, "dur:", audioEl.duration);
 }
 
 
@@ -236,79 +292,78 @@ export async function cleanupCurrentAudio(audioEl) {
 //
 
 
-export function setAudioSourceFromBlob(audioElement, blob) {
-    const url = URL.createObjectURL(blob);
-    audioElement.src = url;
-    return url;
-}
+// export function setAudioSourceFromBlob(audioElement, blob) {
+//     const url = URL.createObjectURL(blob);
+//     audioElement.src = url;
+//     return url;
+// }
 
-import { logDebug } from "../../../utils/debug.js";
-export function waitForAudioMetadata(audioElement, timeoutMs = 10000) {
-    return new Promise((resolve, reject) => {
-        //1. validity check, isFinite is required for iOS (cringe)
-        const isValidDuration = () => (
-            isFinite(audioElement.duration) &&
-            !isNaN(audioElement.duration) &&
-            audioElement.duration > 0
-        );
+// export function waitForAudioMetadata(audioElement, timeoutMs = 10000) {
+//     return new Promise((resolve, reject) => {
+//         //1. validity check, isFinite is required for iOS (cringe)
+//         const isValidDuration = () => (
+//             isFinite(audioElement.duration) &&
+//             !isNaN(audioElement.duration) &&
+//             audioElement.duration > 0
+//         );
 
-        //2. if already valid, resolve immediately
-        if (isValidDuration()) {
-            return resolve();
-        }
+//         //2. if already valid, resolve immediately
+//         if (isValidDuration()) {
+//             return resolve();
+//         }
 
-        //3. event handlers
-        const onLoaded = () => {
-            if (isValidDuration()) {
-                cleanup();
-                resolve();
-            }
-        };
-        const onCanPlay = () => {
-            if (isValidDuration()) {
-                cleanup();
-                resolve();
-            }
-        };
-        const onError = () => {
-            cleanup();
-            reject(new Error("failed to load metadata"));
-        };
-        const onTimeout = () => {
-            cleanup();
-            reject(new Error("timed out waiting for metadata"));
-        };
+//         //3. event handlers
+//         const onLoaded = () => {
+//             if (isValidDuration()) {
+//                 cleanup();
+//                 resolve();
+//             }
+//         };
+//         const onCanPlay = () => {
+//             if (isValidDuration()) {
+//                 cleanup();
+//                 resolve();
+//             }
+//         };
+//         const onError = () => {
+//             cleanup();
+//             reject(new Error("failed to load metadata"));
+//         };
+//         const onTimeout = () => {
+//             cleanup();
+//             reject(new Error("timed out waiting for metadata"));
+//         };
 
-        //4. attach listeners
-        logDebug("waiting for metadata");
+//         //4. attach listeners
+//         logDebug("waiting for metadata");
 
-        // audioElement.addEventListener("loadedmetadata", () => logDebug("Metadata loaded:", audio.duration));
-        // audioElement.addEventListener("error", e => logDebug("Audio error:", e));
-        // audioElement.addEventListener("play", () => logDebug("Playback started"));
+//         // audioElement.addEventListener("loadedmetadata", () => logDebug("Metadata loaded:", audio.duration));
+//         // audioElement.addEventListener("error", e => logDebug("Audio error:", e));
+//         // audioElement.addEventListener("play", () => logDebug("Playback started"));
 
-        audioElement.addEventListener("loadedmetadata", onLoaded);
-        audioElement.addEventListener("canplay", onCanPlay);
-        audioElement.addEventListener("error", onError);
-        const timer = setTimeout(onTimeout, timeoutMs);
+//         audioElement.addEventListener("loadedmetadata", onLoaded);
+//         audioElement.addEventListener("canplay", onCanPlay);
+//         audioElement.addEventListener("error", onError);
+//         const timer = setTimeout(onTimeout, timeoutMs);
 
-        const cleanup = () => {
-            audioElement.removeEventListener("loadedmetadata", onLoaded);
-            audioElement.removeEventListener("canplay", onCanPlay);
-            audioElement.removeEventListener("error", onError);
-            clearTimeout(timer);
-        }
-    });
-}
+//         const cleanup = () => {
+//             audioElement.removeEventListener("loadedmetadata", onLoaded);
+//             audioElement.removeEventListener("canplay", onCanPlay);
+//             audioElement.removeEventListener("error", onError);
+//             clearTimeout(timer);
+//         }
+//     });
+// }
 
 
-export async function playAudioWithCleanup(audioElement, url) {
-    try {
-        await audioElement.play();
-        audioElement.onended = () => {
-            URL.revokeObjectURL(url);
-        };
-    } catch (e) {
-        console.error("Audio playback failed:", e);
-        URL.revokeObjectURL(url);
-    }
-}
+// export async function playAudioWithCleanup(audioElement, url) {
+//     try {
+//         await audioElement.play();
+//         audioElement.onended = () => {
+//             URL.revokeObjectURL(url);
+//         };
+//     } catch (e) {
+//         console.error("Audio playback failed:", e);
+//         URL.revokeObjectURL(url);
+//     }
+// }

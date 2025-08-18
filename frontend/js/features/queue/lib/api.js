@@ -8,6 +8,8 @@ import { addBlobToCache, cacheContainsBlob } from "../../../cache/index.js";
 
 
 import { logDebug } from "../../../utils/debug.js";
+
+
 export async function queueSetFirstTrack(track) {
     //1. inform the backend of changes in the frontend
     const response = await postRequest(`/queue/set-first`, { track });
@@ -38,19 +40,9 @@ export async function queuePushTrack(track) {
     console.log("queuePushTrack status:", response.status);
 
     //2. fire and forget, if not yet already in cache, cache the blob
-    (async () => {
-        try {
-            if (!(await cacheContainsBlob(track))) {
-                const blobResponse = await getResponse(`/audio/stream/${track.youtube_id}`);
-                if (blobResponse.ok) {
-                    const blob = await blobResponse.blob();
-                    await addBlobToCache(track, blob);
-                }
-            }
-        } catch (err) {
-            console.warn("Failed to cache blob:", err);
-        }
-    })();
+    fetch(`/audio/stream/${track.youtube_id}`).catch((err) => {
+        logDebug("queuePushTrack prefetch failed:", err);
+    })
 }
 
 

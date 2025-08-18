@@ -64,7 +64,7 @@ async function onClickPlayButton(domEls, dataset) {
         setLocalQueueFirst(track);
 
         //2. load in the blob
-        cleanupCurrentAudio(audioEl);
+        await cleanupCurrentAudio(audioEl);
         await loadTrack(audioEl, track);
 
         logDebug("metadata_loaded"); //debug

@@ -34,7 +34,7 @@ async def get_current_audio_stream(req: Request) -> StreamingResponse:
 
 
 @router.get("/stream/{youtube_id}")
-async def get_blob(youtube_id: str, req: Request):
+async def get_blob(youtube_id: str, req: Request, full: bool = False):
     if not is_downloaded(track=youtube_id):
         raise HTTPException(status_code=404, detail="Track not downloaded")
-    return stream_audio(req=req, track=youtube_id)
+    return stream_audio(req=req, track=youtube_id, full=full)

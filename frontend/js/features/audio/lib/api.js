@@ -11,7 +11,7 @@ export async function getCurrentAudioStream() {
         console.log("getCurrentAudioStream status:", response.status);
 
         if (response.status === 204) return null; //edge case when queue is exhausted and no tracks left
-        if (!response.ok) {
+        if (!response.ok) { 
             console.warn("Failed to get audio stream");
             return null;
         }
@@ -33,7 +33,7 @@ export async function getAudioStream(track) {
             return null;
         }
 
-        return await response.blob();
+        return response; //return the entire Response and dont throw away headers
     } catch (err) {
         console.error("Error fetching audio stream:", err);
         return null;

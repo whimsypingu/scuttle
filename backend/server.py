@@ -98,3 +98,8 @@ app.include_router(websocket_router.router)
 def index():
     return FileResponse("frontend/index.html")
 
+#start up the service worker
+@app.get("/sw.js", include_in_schema=False)
+async def get_service_worker():
+    sw_path = G.ROOT_DIR / "sw.js"
+    return FileResponse(sw_path, media_type="application/javascript")
