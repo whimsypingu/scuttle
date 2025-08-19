@@ -32,6 +32,7 @@
     border-radius: var(--radius-l);
     transition: background-color 0.1s ease, transform 0.1s ease;
     cursor: pointer;
+    position: relative;
 }
 
 .list-track-item .foreground {
@@ -110,15 +111,69 @@
 
 
 
+/*switching from detection in css to js device detection, see setMobile.js*/
 
+body.desktop .list-track-item:hover {
+    background-color: var(--bg-6);
+    transform: scale(1.01);
+}
+body.desktop .list-track-item:active {
+    transform: scale(0.98);
+}
+
+body.desktop .list-track-item .position {
+    flex: 0 0 auto;
+}
+body.desktop .list-track-item .info {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+}
+body.desktop .list-track-item .duration {
+    flex: 0 0 auto;
+}
+
+body.desktop .list-track-item .actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-s);
+
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    background: linear-gradient(
+        to right,
+        transparent,
+        green,
+        green,
+        green
+    );
+    color: var(--text-1);
+
+    padding-inline: 0;
+    border-top-right-radius: var(--radius-l);
+    border-bottom-right-radius: var(--radius-l);    
+}
+body.desktop .list-track-item:hover .actions {
+    width: calc(8 * var(--space-l)); /* yolo spacing */
+    opacity: 1;
+    padding-inline: var(--space-l);
+    pointer-events: auto;
+}
+
+body.desktop .list-track-item .swipe-action {
+    display: none;
+}
 
 
 /* Desktop hover styles */
-@media (hover: hover) and (pointer: fine) {
-    .list-track-item {
-        position: relative;
-    }
-
+/*@media (hover: hover) and (pointer: fine) {
     .list-track-item:hover {
         background-color: var(--bg-6);
         transform: scale(1.01);
@@ -167,7 +222,7 @@
         border-bottom-right-radius: var(--radius-l);    
     }
     .list-track-item:hover .actions {
-        width: calc(8 * var(--space-l)); /* yolo spacing */
+        width: calc(8 * var(--space-l)); /* yolo spacing *
         opacity: 1;
         padding-inline: var(--space-l);
         pointer-events: auto;
@@ -176,10 +231,71 @@
     .list-track-item .swipe-action {
         display: none;
     }
+}*/
+
+
+body.mobile .list-track {
+    overflow-x: hidden;
 }
 
+body.mobile .list-track-item {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: pan-y;
+}
+body.mobile .list-track-item .foreground {
+    flex: 1 1 auto;
+    transition: transform 0.2s ease-out;
+}
+
+/* actions sitting on the sides for left and right swipes */
+body.mobile .list-track-item .swipe-action {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+        
+    width: 0;
+    min-width: 0;
+    max-width: 100%;
+        
+    opacity: 0;
+    pointer-events: none;
+        
+    will-change: transform, width, opacity;
+    transition: transform 0.2s ease-out, width 0.2s ease-out, opacity 0.2s ease-out;
+
+    background-color: transparent;
+    color: var(--text-1);
+}
+
+body.mobile .list-track-item .swipe-action.left {
+    left: 0;
+    border-top-left-radius: var(--radius-s);
+    border-bottom-left-radius: var(--radius-s);
+}
+
+body.mobile .list-track-item .swipe-action.right {
+    right: 0;
+    border-top-right-radius: var(--radius-s);
+    border-bottom-right-radius: var(--radius-s);
+}
+
+body.mobile .list-track-item .swipe-action.flip-color {
+    background-color: tan;
+    color: black;
+}
+    
+body.mobile .actions {
+    display: none;
+}
+
+
 /* Mobile tap styles */
-@media (hover: none) and (pointer: coarse) {
+/*@media (hover: none) and (pointer: coarse) {
     .list-track {
         overflow-x: hidden;
     }
@@ -188,40 +304,44 @@
         -webkit-tap-highlight-color: transparent;
         user-select: none;
         touch-action: pan-y;
-        position: relative;
     }
     .list-track-item .foreground {
         flex: 1 1 auto;
         transition: transform 0.2s ease-out;
     }
 
-    /* actions sitting on the sides for left and right swipes */
+    /* actions sitting on the sides for left and right swipes *
     .list-track-item .swipe-action {
-        position: absolute;          /* overlaying the row */
+        position: absolute;
         top: 0;
         height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
         overflow: hidden;
-        width: 0;                     /* collapsed initially */
+        
+        width: 0;
+        min-width: 0;
         max-width: 100%;
+        
         opacity: 0;
         pointer-events: none;
-        /*transition: max-width 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;*/
-        transition: all 0.2s ease-out;
+        
+        will-change: transform, width, opacity;
+        transition: transform 0.2s ease-out, width 0.2s ease-out, opacity 0.2s ease-out;
+
         background-color: transparent;
         color: var(--text-1);
     }
 
     .list-track-item .swipe-action.left {
-        left: 0;                     /* expands rightward */
+        left: 0;
         border-top-left-radius: var(--radius-s);
         border-bottom-left-radius: var(--radius-s);
     }
 
     .list-track-item .swipe-action.right {
-        right: 0;                    /* expands leftward */
+        right: 0;
         border-top-right-radius: var(--radius-s);
         border-bottom-right-radius: var(--radius-s);
     }
@@ -235,5 +355,4 @@
     .actions {
         display: none;
     }
-}
-
+}*/

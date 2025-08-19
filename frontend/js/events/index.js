@@ -10,6 +10,8 @@ import { setupWebSocket } from "./websocket/websocket.js";
 
 import { registerMediaSessionHandlers } from "./platform/mediaSession.js";
 
+import { setLayoutDesktop, setLayoutMobile } from "./mobile/setMobile.js";
+
 import { isMobile } from "../utils/index.js"; 
 import { logDebug } from "../utils/debug.js";
 
@@ -35,8 +37,12 @@ async function setupMobileEvents() {
     if (isMobile()) {
         logDebug("MOBILE ACTIVE");
 
+        setLayoutMobile();
+
         const { setupSwipeEventListeners } = await import("./mobile/swipe.js");
         setupSwipeEventListeners();
+    } else {
+        setLayoutDesktop();
     }
 }
 
