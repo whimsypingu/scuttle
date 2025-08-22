@@ -4,7 +4,6 @@ export {
 } from "./lib/api.js";
 
 export { 
-    renderNowPlaying,
     setCurrentTimeDisplay, 
     syncCurrentTimeDisplay, 
     syncDurationDisplay,
@@ -12,7 +11,8 @@ export {
     syncProgressBar, 
     updatePlayPauseButtonDisplay,
 
-    resetUI
+    resetUI,
+    updateMediaSession
 } from "./lib/ui.js";
 
 
@@ -52,7 +52,18 @@ export async function playLoadedTrack(audioEl) {
         await audioEl.play();
         logDebug("playback success");
     } catch (err) {
-        logDebug("playback failed:", err);
+        logDebug("playback failed, retrying:", err);
+
+        // retry after a small delay
+        setTimeout(async () => {
+            try {
+                await audioEl.play();
+                logDebug("playback success on retry");
+            } catch (retryErr) {
+                logDebug("playback failed again:", retryErr);
+                // At this point, it really requires a user gesture
+            }
+        }, 200);
     }
 }
 

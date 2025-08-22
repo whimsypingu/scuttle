@@ -15,6 +15,8 @@ function measureCollapsedHeight() {
         const styles = getComputedStyle(playbar);
         const marginTop = parseFloat(styles.marginTop) || 0;
         totalHeight = rect.height + marginTop;
+        console.log("test", rect.height, marginTop);
+        console.log(window.getComputedStyle(playbar).height);
     } else {
         //desktop collapsed height measurement
         const rect = playbar.getBoundingClientRect();

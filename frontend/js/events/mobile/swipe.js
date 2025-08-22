@@ -1,6 +1,9 @@
+import { domEls } from "../../dom/selectors.js";
+
 import { 
     onSwipe
 } from "../../features/library/controller.js";
+
 
 
 let startX = 0;
@@ -109,25 +112,25 @@ export function setupSwipeEventListeners() {
     });
 
     document.addEventListener('touchend', () => {        
-        if (!isSwiping || !activeEl) return;
+        //unconditionally set bg to 0 to try to catch leaky ui
+        if (!activeEl) return;
+        setBg("left");
+        setBg("right");
 
+        if (!isSwiping) return;
         const isValidSwipe = Math.abs(deltaX) >= flipThreshold;
 
         if (deltaX > 0) {
             //swipe to the right
-            setBg("left");
-
             if (isValidSwipe) {
                 console.log("queued");
-                onSwipe(activeEl.dataset, "queue"); //this works for both library and queue??
+                onSwipe(domEls, activeEl.dataset, "queue"); //this works for both library and queue??
             }
         } else {
             //swipe left
-            setBg("right");
-
             if (isValidSwipe) {
                 console.log("liked");
-                onSwipe(activeEl.dataset, "more");
+                onSwipe(domEls, activeEl.dataset, "more");
             }
         }
 

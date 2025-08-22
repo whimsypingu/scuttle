@@ -9,16 +9,18 @@ import {
 
     updatePlayPauseButtonDisplay,
 
-    resetUI
+    resetUI,
+    updateMediaSession
 } from "../audio/index.js";
 
 import { 
     queuePushTrack,
-    queueSetFirstTrack
+    queueSetFirstTrack,
+    redrawQueueUI
 } from "../queue/index.js";
 
 import { logDebug } from "../../utils/debug.js";
-import { pushLocalQueue, setLocalQueueFirst } from "../../cache/localqueue.js";
+import { getLocalQueue, pushLocalQueue, setLocalQueueFirst } from "../../cache/localqueue.js";
 
 
 
@@ -33,7 +35,7 @@ export async function onClickLibraryList(e, domEls) {
     if (button) {
         if (button.classList.contains("queue-button")) {
             logDebug("Queue clicked");
-            await onClickQueueButton(dataset);
+            await onClickQueueButton(domEls, dataset);
 
         } else if (button.classList.contains("more-button")) {
             logDebug("more //BUILD ME", li?.dataset);
@@ -47,7 +49,7 @@ export async function onClickLibraryList(e, domEls) {
 
 //helpers
 async function onClickPlayButton(domEls, dataset) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 
     //0. parse data
     const track = parseTrackFromDataset(dataset);
@@ -58,7 +60,7 @@ async function onClickPlayButton(domEls, dataset) {
     }
 
     try {
-        //1. make changes to local queue
+        //1. make changes to local queue, which triggers queue ui update
         setLocalQueueFirst(track);
 
         //2. load in the audio
@@ -66,7 +68,9 @@ async function onClickPlayButton(domEls, dataset) {
         await loadTrack(audioEl, track);
 
         //3. make optimistic ui changes
-        resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
+        updateMediaSession(track);
+        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        resetUI(audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
         //4. play audio
@@ -80,7 +84,9 @@ async function onClickPlayButton(domEls, dataset) {
     }
 }
 
-async function onClickQueueButton(dataset) {
+async function onClickQueueButton(domEls, dataset) {
+    const { titleEl, authorEl, queueListEl } = domEls;
+
     //0. parse data
     const track = parseTrackFromDataset(dataset);
 
@@ -92,6 +98,8 @@ async function onClickQueueButton(dataset) {
     //1. update queue (local and backend)
     try {
         pushLocalQueue(track);
+        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+
         await queuePushTrack(track);
     } catch (err) {
         logDebug("Failed to queue audio:", err);
@@ -102,8 +110,8 @@ async function onClickQueueButton(dataset) {
 
 
 //which action to do "queue", "more"
-export async function onSwipe(dataset, action) {
-    //const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+export async function onSwipe(domEls, dataset, action) {
+    const { titleEl, authorEl, queueListEl } = domEls;
 
     //0. parse data
     const track = parseTrackFromDataset(dataset);
@@ -118,6 +126,7 @@ export async function onSwipe(dataset, action) {
         try {
             pushLocalQueue(track);
             await queuePushTrack(track);
+            redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
 
             logDebug("Queue swiped");
         } catch {

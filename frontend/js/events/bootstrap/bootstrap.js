@@ -1,6 +1,5 @@
-import { SELECTORS, $ } from "../../dom/selectors.js";
-import { getQueueContent } from "../../features/queue/index.js";
-import { renderQueueUI } from "../../features/queue/controller.js";
+import { domEls } from "../../dom/selectors.js";
+import { getQueueContent, redrawQueueUI } from "../../features/queue/index.js";
 
 import { getLibraryContent, renderLibraryList } from "../../features/library/index.js";
 
@@ -10,13 +9,7 @@ export async function bootstrapQueue() {
         const data = await getQueueContent();
         console.log(data.content);
 
-        const domEls = {
-            queueListEl: $(SELECTORS.queue.ids.LIST),
-            titleEl: $(SELECTORS.audio.ids.TITLE),
-            authorEl: $(SELECTORS.audio.ids.AUTHOR),
-        }
-
-        renderQueueUI(domEls, data.content);
+        redrawQueueUI(domEls.queueListEl, domEls.titleEl, domEls.authorEl, data.content);
     } catch (err) {
         console.error("Bootstrap failed", err);
     }
@@ -27,8 +20,7 @@ export async function bootstrapLibrary() {
         const data = await getLibraryContent();
         console.log(data.content);
 
-        const libraryListEl = $(SELECTORS.library.ids.LIST);
-        renderLibraryList(libraryListEl, data.content);
+        renderLibraryList(domEls.libraryListEl, data.content);
     } catch (err) {
         console.error("Bootstrap failed", err);
     }

@@ -7,7 +7,8 @@ export async function onSearchInput(e) {
     const q = e.target.value.trim();
     console.log("Search query:", q);
 
-    await search(q);
+    const data = await search(q);
+    console.log("data:", data);
 }
 
 
@@ -21,5 +22,6 @@ export async function onSearchEnter(e) {
 
 	if (!q) return;
 
-    await deepSearch(q);
+    const data = await deepSearch(q);
+    console.log("data:", data);
 }

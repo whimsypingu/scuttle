@@ -85,11 +85,28 @@ html, body {
     font: var(--h1);
 }
 
-* {
-    box-sizing: border-box;
-}
-
 h1, h2, h3, h4, h5, h6, p {
     margin: 0;
 }
 
+
+/* Global: remove tap flash */
+* {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+}
+
+/* Reset native button/link pressed styles */
+a, button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: none;
+    border: none;
+    outline: none;
+}
+
+/* Optional: remove long-press callout on images/links */
+img, a {
+    -webkit-touch-callout: none;
+}

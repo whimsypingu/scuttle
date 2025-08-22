@@ -4,9 +4,12 @@ from backend.core.lib.utils import get_audio_path
 from backend.core.models.track import Track
 from backend.core.youtube.client import YouTubeClient 
 
+#pip install pytest, pip install pytest-asyncio
+
 @pytest.mark.asyncio
 async def test_download_success(tmp_path: Path):
     client = YouTubeClient(
+        name="test",
         base_dir=tmp_path,
         dl_format="mp3"
     )
@@ -18,7 +21,7 @@ async def test_download_success(tmp_path: Path):
         duration=213
     )
 
-    result = await client.download(track=track, timeout=60)
+    result = await client.robust_download(track=track)
 
     audio_path = get_audio_path(track=track, base_dir=tmp_path)
 
@@ -31,12 +34,13 @@ async def test_download_success(tmp_path: Path):
 @pytest.mark.asyncio
 async def test_search_success(tmp_path: Path):
     client = YouTubeClient(
+        name="test",
         base_dir=tmp_path
     )
 
     query = "rick astley never gonna give you up"
 
-    results = await client.search(q=query, limit=3, timeout=60)
+    results = await client.robust_search(q=query)
 
     assert results, "Search returned no results"
     assert len(results) == 3, f"Epected 3 results, got {len(results)}"

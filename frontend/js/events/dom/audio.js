@@ -1,6 +1,6 @@
 //static/js/events/dom/audio.js
 
-import { SELECTORS, $ } from "../../dom/index.js";
+import { domEls } from "../../dom/index.js";
 
 import { 
     onAudioEnded, 
@@ -16,22 +16,6 @@ import {
 } from "../../features/audio/controller.js";
 
 export function setupAudioEventListeners() {
-    //const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
-    const domEls = {
-        audioEl: $(SELECTORS.audio.ids.PLAYER),
-        titleEl: $(SELECTORS.audio.ids.TITLE),
-        authorEl: $(SELECTORS.audio.ids.AUTHOR),
-
-        currTimeEl: $(SELECTORS.audio.ids.CURRENT_TIME),
-        progBarEl: $(SELECTORS.audio.ids.PROGRESS_BAR),
-        durationEl: $(SELECTORS.audio.ids.DURATION),
-
-        ppButtonEl: $(SELECTORS.audio.ids.PLAY_PAUSE_BUTTON),
-
-        nextButtonEl: $(SELECTORS.audio.ids.NEXT_BUTTON),
-        prevButtonEl: $(SELECTORS.audio.ids.PREVIOUS_BUTTON),
-    };
-
     //hook up event listeners
     //autoplay
     domEls.audioEl.addEventListener("ended", () => onAudioEnded(domEls));

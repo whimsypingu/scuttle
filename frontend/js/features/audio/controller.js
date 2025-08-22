@@ -15,19 +15,24 @@ import {
     setProgressBar,
     syncProgressBar, 
 
+    updateMediaSession,
     resetUI
 } from "./index.js";
 
+import { redrawQueueUI } from "../queue/index.js";
+
 import { logDebug } from "../../utils/debug.js";
-import { peekLocalQueue, popLocalQueue } from "../../cache/localqueue.js";
+import { getLocalQueue, peekLocalQueue, popLocalQueue } from "../../cache/localqueue.js";
+
+
 
 //autoplay
 export async function onAudioEnded(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 
     try {
         //instantaneously update everything, and then send the update to the backend
-        //1. make changes to local queue
+        //1. make changes to local , which will trigger queue ui update
         popLocalQueue();
         const track = peekLocalQueue();
         logDebug("Next track:", track);
@@ -38,7 +43,7 @@ export async function onAudioEnded(domEls) {
         //3. handle empty track
         if (!track) {
             logDebug("No track found in queue");
-            resetUI(null, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
+            resetUI(audioEl, currTimeEl, progBarEl, durationEl);
             updatePlayPauseButtonDisplay(ppButtonEl, false);
             return;
         }
@@ -47,7 +52,9 @@ export async function onAudioEnded(domEls) {
         await loadTrack(audioEl, track);
 
         //5. make optimistic ui changes
-        resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
+        updateMediaSession(track);
+        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        resetUI(audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
         //6. play audio
@@ -62,13 +69,13 @@ export async function onAudioEnded(domEls) {
 
 //next
 export async function onNextButtonClick(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 
     console.error(audioEl.paused);
 
     try {
         //instantaneously update everything, and then send the update to the backend
-        //1. make changes to local queue
+        //1. make changes to local, which will trigger queue ui update
         popLocalQueue();
         const track = peekLocalQueue();
         logDebug("Next track:", track);
@@ -79,7 +86,7 @@ export async function onNextButtonClick(domEls) {
         //3. handle empty track
         if (!track) {
             logDebug("No track found in queue");
-            resetUI(null, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
+            resetUI(audioEl, currTimeEl, progBarEl, durationEl);
             updatePlayPauseButtonDisplay(ppButtonEl, false);
             return;
         }
@@ -88,7 +95,9 @@ export async function onNextButtonClick(domEls) {
         await loadTrack(audioEl, track);
 
         //5. make optimistic ui changes
-        resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
+        updateMediaSession(track);
+        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        resetUI(audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
         //6. play audio

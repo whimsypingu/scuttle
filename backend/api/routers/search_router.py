@@ -1,6 +1,6 @@
 import traceback #debugging
 
-from fastapi import APIRouter, Request, Query
+from fastapi import APIRouter, Request, Query, Response
 from fastapi.responses import JSONResponse
 from typing import Optional
 
@@ -30,7 +30,7 @@ async def search(req: Request, q: Optional[str] = Query(None)):
 
 
 @router.get("/deep")
-async def search(req: Request, q: Optional[str] = Query(None)):
+async def deep_search(req: Request, q: Optional[str] = Query(None)):
     """
     Search for tracks via ytdlp
 
@@ -46,9 +46,16 @@ async def search(req: Request, q: Optional[str] = Query(None)):
 
     #search_queue.push()
 
+    if not q or len(q) == 0:
+        return Response(status_code=200)
+
     yt = req.app.state.yt
-    results = await yt.search(q)
+    results = await yt.robust_search(q)
 
     content = [track.to_json() for track in results]
     return JSONResponse(content={"content": content}, status_code=200)
+
+
+#@router.get("/download")
+#async def download_search(req: Request, q: str):
 

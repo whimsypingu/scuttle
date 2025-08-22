@@ -24,13 +24,17 @@ export function registerMediaSessionHandlers() {
         prevButtonEl: $(SELECTORS.audio.ids.PREVIOUS_BUTTON),
     };
 
-    domEls.audioEl.addEventListener("playing", () => {
+    document.addEventListener("trackChangedMediaSession", (e) => {
         if (!("mediaSession" in navigator)) return;
+
+        const { title, artist } = e.detail;
+
+        logDebug("queueUpdated:", title, artist);
 
         //set metadata
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: domEls.titleEl.textContent,
-            artist: domEls.authorEl.textContent,
+            title: title,
+            artist: artist,
             artwork: [
                 { 
                     src: "/frontend/assets/logo.png", 

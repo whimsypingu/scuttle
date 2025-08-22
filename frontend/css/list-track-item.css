@@ -178,9 +178,11 @@ body.mobile .list-track {
 }
 
 body.mobile .list-track-item {
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
     touch-action: pan-y;
+}
+body.mobile .list-track-item * {
+    -webkit-tap-highlight-color: transparent; /*prevent blue highlight on mobile*/
+    user-select: none;
 }
 body.mobile .list-track-item .foreground {
     flex: 1 1 auto;

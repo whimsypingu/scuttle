@@ -3,37 +3,41 @@
 import { parseTrackFromDataset } from "../../utils/index.js"
 
 import { 
-    //playCurrentTrack,
-    renderNowPlaying
+    loadTrack, 
+    playLoadedTrack,
+    cleanupCurrentAudio,
+
+    updatePlayPauseButtonDisplay,
+
+    resetUI,
+    updateMediaSession
 } from "../audio/index.js";
 
 import { 
     queuePushTrack,
     queueSetFirstTrack,
+    renderNowPlaying,
     renderQueueList
 } from "./index.js";
 
 
 
-//ui update
-export async function renderQueueUI(domEls, tracks) {
-    const queueListEl = domEls.queueListEl;
+// //ui update
+// export async function renderQueueUI(domEls, tracks) {
+//     const { queueListEl, titleEl, authorEl } = domEls;
 
-    const titleEl = domEls.titleEl;
-    const authorEl = domEls.authorEl;
+//     if (!Array.isArray(tracks) || tracks.length === 0) {
+//         renderNowPlaying(titleEl, authorEl, null);
+//         renderQueueList(queueListEl, null);
+//         return;
+//     }
 
-    if (!Array.isArray(tracks) || tracks.length === 0) {
-        renderNowPlaying(titleEl, authorEl, null);
-        renderQueueList(queueListEl, null);
-        return;
-    }
+//     const currTrack = tracks[0];
+//     renderNowPlaying(titleEl, authorEl, currTrack);
 
-    const currTrack = tracks[0];
-    renderNowPlaying(titleEl, authorEl, currTrack);
-
-    const remainingQueue = tracks.slice(1);
-    renderQueueList(queueListEl, remainingQueue);
-}
+//     const remainingQueue = tracks.slice(1);
+//     renderQueueList(queueListEl, remainingQueue);
+// }
 
 
 //clicking the queue list will check for this
@@ -47,7 +51,7 @@ export async function onClickQueueList(e, domEls) {
     if (button) {
         if (button.classList.contains("queue-button")) {
             logDebug("Queue clicked");
-            await onClickQueueButton(dataset);
+            await onClickQueueButton(domEls, dataset);
 
         } else if (button.classList.contains("more-button")) {
             logDebug("more //BUILD ME", li?.dataset);
@@ -62,7 +66,7 @@ export async function onClickQueueList(e, domEls) {
 
 //helpers
 async function onClickPlayButton(domEls, dataset) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl } = domEls;
+    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 
     //0. parse data
     const track = parseTrackFromDataset(dataset);
@@ -81,6 +85,8 @@ async function onClickPlayButton(domEls, dataset) {
         await loadTrack(audioEl, track);
 
         //3. make optimistic ui changes
+        updateMediaSession(track);
+        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
         resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
@@ -96,7 +102,9 @@ async function onClickPlayButton(domEls, dataset) {
 }
 
 
-async function onClickQueueButton(dataset) {
+async function onClickQueueButton(domEls, dataset) {
+    const { titleEl, authorEl, queueListEl } = domEls;
+
     //0. parse data
     const track = parseTrackFromDataset(dataset);
 
@@ -108,6 +116,8 @@ async function onClickQueueButton(dataset) {
     //1. update queue (local and backend)
     try {
         pushLocalQueue(track);
+        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+
         await queuePushTrack(track);
     } catch (err) {
         logDebug("Failed to queue audio:", err);

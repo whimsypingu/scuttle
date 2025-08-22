@@ -92,3 +92,24 @@ export const SELECTORS = {
 		}
 	}
 };
+
+
+//const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
+export const domEls = {
+    audioEl: $(SELECTORS.audio.ids.PLAYER),
+
+    currTimeEl: $(SELECTORS.audio.ids.CURRENT_TIME),
+    progBarEl: $(SELECTORS.audio.ids.PROGRESS_BAR),
+	durationEl: $(SELECTORS.audio.ids.DURATION),
+
+    ppButtonEl: $(SELECTORS.audio.ids.PLAY_PAUSE_BUTTON),
+
+    nextButtonEl: $(SELECTORS.audio.ids.NEXT_BUTTON),
+    prevButtonEl: $(SELECTORS.audio.ids.PREVIOUS_BUTTON),
+
+    titleEl: $(SELECTORS.audio.ids.TITLE),
+    authorEl: $(SELECTORS.audio.ids.AUTHOR),
+    queueListEl: $(SELECTORS.queue.ids.LIST),
+
+    libraryListEl: $(SELECTORS.library.ids.LIST)
+};

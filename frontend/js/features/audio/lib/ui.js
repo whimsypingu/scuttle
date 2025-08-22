@@ -3,18 +3,6 @@
 import { formatTime } from "../../../utils/index.js";
 
 
-//renders the top element of the queue here
-export function renderNowPlaying(titleEl, authorEl, track) {
-    if (!track) {
-        titleEl.textContent = "---";
-        authorEl.textContent = "---";
-        return;
-    }
-
-    titleEl.textContent = track.title || "Unknown Title";
-    authorEl.textContent = track.uploader || "Unknown Artist";
-}
-
 
 //current time
 export function setCurrentTimeDisplay(currTimeEl, value) {
@@ -62,9 +50,7 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
 
 
 //helper function to set ui to whatever the song is, and sync up time displays
-export function resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl) {
-    renderNowPlaying(titleEl, authorEl, track);
-
+export function resetUI(audioEl, currTimeEl, progBarEl, durationEl) {
     audioEl.currentTime = 0;
     syncCurrentTimeDisplay(currTimeEl, audioEl);
     syncProgressBar(progBarEl, audioEl);
@@ -72,3 +58,11 @@ export function resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl
 }
 
 
+export function updateMediaSession(track) {
+    document.dispatchEvent(new CustomEvent("trackChangedMediaSession", {
+        detail: {
+            title: track.title,
+            artist: track.uploader
+        }
+    }));
+}

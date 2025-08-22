@@ -54,14 +54,3 @@ export function setLocalQueueFirst(track) {
         localQueue.push(track);
     }
 }
-
-
-
-/*
-async function persistQueue() {
-    if (dirty) {
-        await Cache.set('queueContents', localQueue);
-        dirty = false;
-    }
-}
-*/

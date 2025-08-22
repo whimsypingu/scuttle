@@ -163,8 +163,20 @@
 /* horizontal text adjustments to estimate center by feel */
 #play-pause-button i {
     display: inline-block;
+    transform: translateX(1px);
+}
+/* adjust specifically for desktop and mobile */
+#play-pause-button i.fa-pause {
+    transform: translateX(0px);
+}
+body.mobile #play-pause-button i {
     transform: translateX(2px);
 }
+body.mobile #play-pause-button i.fa-pause {
+    transform: translateX(0px);
+}
+
+
 #previous-button i {
     display: inline-block;
     transform: translateX(-2px);
@@ -175,8 +187,8 @@
 }
 
 
-
-@media (max-width: 600px) {
+/*couldnt figure out how to get this to obey body.mobile without breaking the spacing of the playbar for whatever reason*/
+@media (max-width: 768px) {
     #queue-toggle {
         display: none;
     }
@@ -208,11 +220,13 @@
         
         align-items: flex-start;
         padding: 0;
+        text-align: left;
     }
     #playbar-queue.expanded #now-playing-info {
         align-items: center;
         width: 100%;
         padding-inline: var(--space-xxl);
+        text-align: center;
     }
 
     /* scrubber */
@@ -290,3 +304,113 @@
 
 
 
+
+/*
+body.mobile #queue-toggle {
+    display: none;
+}
+
+/* collapsed /
+body.mobile #playbar-queue:not(.expanded) #playbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: var(--space-s);
+
+    padding-inline: var(--space-xl);
+    padding-top: calc(var(--space-xl) - 0.2rem);
+    
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+
+    transition: all 0.3s ease;
+}
+    
+/* info moves *
+body.mobile #playbar-queue:not(.expanded) #now-playing-info {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    display: flex;
+    flex-direction: column;
+       
+    align-items: flex-start;
+    padding: 0;
+}
+body.mobile #playbar-queue.expanded #now-playing-info {
+    align-items: center;
+    width: 100%;
+    padding-inline: var(--space-xxl);
+}
+
+/* scrubber *
+body.mobile #playback-scrubber {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xl);
+}
+body.mobile #playbar-queue:not(.expanded) #playback-scrubber {
+    grid-column: 1 / -1;
+    grid-row: 2 / 3;
+    width: auto;
+    padding: 0;
+    margin-top: var(--space-l);
+}
+body.mobile #playbar-queue.expanded #playback-scrubber {
+    width: 100%;
+    padding-inline: var(--space-xxl);
+    margin-top: var(--space-xxl);
+}
+body.mobile #playbar-queue:not(.expanded) #playback-scrubber span {
+    display: none;
+}
+
+/* buttons *
+body.mobile #playbar-queue:not(.expanded) #playback-buttons {
+    margin: 0;
+    padding: 0;
+}
+body.mobile #playbar-queue.expanded #playback-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+    gap: var(--space-m);
+    padding: var(--space-s);
+    margin-top: var(--space-xxl);
+    margin-inline: var(--space-m);
+}
+
+body.mobile .playback-button {
+    min-width: var(--mobile-button-m);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+
+    background: transparent;
+    color: var(--text-1);
+    font: var(--mobile-button-font);
+}
+
+body.mobile #playbar-queue:not(.expanded) #play-pause-button {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    align-self: stretch;
+    justify-self: stretch;
+        
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+body.mobile #playbar-queue.expanded #play-pause-button {
+    background-color: var(--text-1);
+    color: var(--bg-3);
+}
+
+/* Hide prev and next buttons *
+body.mobile #playbar-queue:not(.expanded) #previous-button,
+body.mobile #playbar-queue:not(.expanded) #next-button {
+    display: none;
+}*/
