@@ -1,6 +1,8 @@
 //static/js/features/search/controller.js
 
-import { search, deepSearch } from "./index.js";
+import { search, deepSearch, downloadSearch } from "./index.js";
+import { logDebug } from "../../utils/debug.js";
+
 
 //typing in the search bar
 export async function onSearchInput(e) {
@@ -18,10 +20,37 @@ export async function onSearchEnter(e) {
 	e.preventDefault(); //prevent form submit just in case
 
     const q = e.target.value.trim();
-    console.log("Searched:", q);
+    logDebug("Deep search:", q);
 
 	if (!q) return;
 
     const data = await deepSearch(q);
-    console.log("data:", data);
+    logDebug("data:", data);
+}
+
+export async function onDeepSearchButtonClick(domEls) {
+    const { searchInputEl } = domEls;
+
+    const q = searchInputEl.value.trim();
+    logDebug("Deep search:", q);
+
+    if (!q) return;
+    
+    const data = await deepSearch(q);
+    logDebug("data:", data);
+}
+
+
+
+//download search
+export async function onDownloadSearchButtonClick(domEls) {
+    const { searchInputEl } = domEls;
+
+    const q = searchInputEl.value.trim();
+    logDebug("Download search:", q);
+
+    if (!q) return;
+    
+    const data = await downloadSearch(q);
+    logDebug("data:", data);
 }

@@ -113,3 +113,11 @@ export const domEls = {
 
     libraryListEl: $(SELECTORS.library.ids.LIST)
 };
+
+
+export const searchDomEls = {
+	searchInputEl: $(SELECTORS.search.ids.INPUT),
+
+	deepSearchButtonEl: $(SELECTORS.search.ids.SEARCH_GET_RESULTS_BUTTON),
+	downloadSearchButtonEl: $(SELECTORS.search.ids.SEARCH_AND_DOWNLOAD_BUTTON)
+}

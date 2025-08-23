@@ -1,10 +1,12 @@
 import traceback #debugging
 
-from fastapi import APIRouter, Request, Query, Response
+from fastapi import APIRouter, HTTPException, Request, Query, Response
 from fastapi.responses import JSONResponse
 from typing import Optional
 
 from backend.api.schemas.search_schemas import *
+from backend.core.lib.utils import is_downloaded
+from backend.core.models.download_job import DownloadJob
 import backend.globals as G
 
 router = APIRouter(prefix="/search")
@@ -56,6 +58,29 @@ async def deep_search(req: Request, q: Optional[str] = Query(None)):
     return JSONResponse(content={"content": content}, status_code=200)
 
 
-#@router.get("/download")
-#async def download_search(req: Request, q: str):
+
+@router.get("/download")
+async def download_search(req: Request, q: str):
+    """
+    Get best search and automatically begin download
+
+    Args:
+        q (str, optional): The search query string
+
+    Returns:
+        JSONResponse: Track
+    """
+    if not q or not q.strip():
+        return JSONResponse(content={"status": "empty query"}, status_code=400)
+
+    queue_manager = req.app.state.queue_manager
+
+    download_queue = queue_manager.get(G.DOWNLOAD_QUEUE_NAME)
+
+    job = DownloadJob(query=q)
+    await download_queue.push(job)
+
+    return JSONResponse(content={"status": "queued"}, status_code=200)
+
+
 

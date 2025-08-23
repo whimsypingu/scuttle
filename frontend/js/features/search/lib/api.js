@@ -18,3 +18,11 @@ export async function deepSearch(q) {
     const data = await response.json();
     return data;
 }
+
+
+export async function downloadSearch(q) {
+    const response = await getResponse(`/search/download?q=${encodeURIComponent(q)}`);
+
+    const data = await response.json();
+    return data;
+}

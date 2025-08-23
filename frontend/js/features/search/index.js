@@ -1,1 +1,1 @@
-export { search, deepSearch } from "./lib/api.js";
+export { search, deepSearch, downloadSearch } from "./lib/api.js";

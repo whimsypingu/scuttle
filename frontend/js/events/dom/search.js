@@ -1,19 +1,21 @@
-import { SELECTORS, $ } from "../../dom/index.js";
+import { searchDomEls } from "../../dom/index.js";
 
 import { debounce } from "../../utils/index.js";
 
 import { 
     onSearchEnter,
-    onSearchInput
+    onSearchInput,
+
+    onDeepSearchButtonClick,
+    onDownloadSearchButtonClick,
 } from "../../features/search/controller.js";
 
 
-
-const domEls = {
-    searchInput: $(SELECTORS.search.ids.INPUT)
-};
-
 export function setupSearchEventListeners() {
-    domEls.searchInput.addEventListener("input", debounce((e) => onSearchInput(e), 300));
-    domEls.searchInput.addEventListener("keydown", (e) => onSearchEnter(e));
+    searchDomEls.searchInputEl.addEventListener("input", debounce((e) => onSearchInput(e), 300));
+    searchDomEls.searchInputEl.addEventListener("keydown", (e) => onSearchEnter(e));
+
+    searchDomEls.deepSearchButtonEl.addEventListener("click", () => onDeepSearchButtonClick(searchDomEls));
+    
+    searchDomEls.downloadSearchButtonEl.addEventListener("click", () => onDownloadSearchButtonClick(searchDomEls));
 }
