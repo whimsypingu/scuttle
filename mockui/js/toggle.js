@@ -5,7 +5,6 @@ const isMobile = window.matchMedia("(max-width: 600px)").matches;
 const toggleButton = document.getElementById("queue-toggle-button");
 const container = document.getElementById("playbar-queue");
 const playbar = document.getElementById("playbar");
-const queueList = document.getElementById("queue-list");
 
 //do this once to save the collapsed height
 let totalHeight = 0;
@@ -48,28 +47,6 @@ function setQueueToggleDesktop() {
         isCollapsed = !isCollapsed;
         setHeight();
     });
-}
-
-
-//swipe gestures
-function fadeToggle(collapsed) {
-    const children = playbar.querySelectorAll(':scope > *');
-
-    // fade out children
-    children.forEach(el => {
-        el.style.opacity - "0";
-        el.style.transition = "opacity 1s ease";
-    });
-
-    setTimeout(() => {
-        isCollapsed = collapsed;
-        setHeight(); // your layout change
-
-        // fade in children
-        children.forEach(el => {
-            el.style.opacity = "1";
-        });
-    }, 300);
 }
 
 function setQueueToggleMobile() {

@@ -1,12 +1,13 @@
 from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
+from typing import Union
 
 from backend.core.lib.utils import is_downloaded, get_audio_path, get_audio_size
 from backend.core.models.track import Track
 import backend.globals as G
 
-def stream_audio(req: Request, track: Track) -> StreamingResponse:
+def stream_audio(req: Request, track: Union[Track, str], full: False) -> StreamingResponse:
     #automatically attempts to stream the first song in the play_queue
     if not track:
         raise HTTPException(status_code=404, detail="No track provided.")
@@ -18,7 +19,7 @@ def stream_audio(req: Request, track: Track) -> StreamingResponse:
     file_size = get_audio_size(track=track)
 
     range_header = req.headers.get("range")
-    if range_header:
+    if range_header and not full:
         #parse range heade: ex. bytes=0-1023
         range_value = range_header.strip().lower()
         if not range_value.startswith("bytes="):
@@ -77,4 +78,8 @@ def stream_audio(req: Request, track: Track) -> StreamingResponse:
             "Content-Type": "audio/mpeg",
         }
 
-        return StreamingResponse(iter_file(file_path), headers=headers)
+        return StreamingResponse(
+            iter_file(file_path), 
+            status_code=200, 
+            headers=headers
+        )

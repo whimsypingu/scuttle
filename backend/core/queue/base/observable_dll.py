@@ -52,6 +52,9 @@ class ObservableQueue(Generic[T], ABC):
         # return item
 
     # ===== Public Read-only APIs =====
+    def __iter__(self):
+        return iter(self._dll)
+
     def peek(self) -> Optional[T]:
         return self._dll.peek()
 

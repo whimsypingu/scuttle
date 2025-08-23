@@ -33,6 +33,7 @@ class AudioDatabase:
 
         self.TRACKS_TABLE = "tracks"
         self.DOWNLOADS_TABLE = "downloads"
+        self.CACHE_TABLE = "cache"
 
         #generate
         is_new = not self._filepath.exists()
@@ -118,6 +119,14 @@ class AudioDatabase:
                     FOREIGN KEY (youtube_id) REFERENCES {self.TRACKS_TABLE}(youtube_id) ON DELETE CASCADE
                 );
             ''')
+            await self._execute(f'''
+                CREATE TABLE IF NOT EXISTS {self.CACHE_TABLE} (
+                    youtube_id TEXT PRIMARY KEY,
+                    last_accessed DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    access_count INTEGER DEFAULT 0,
+                    FOREIGN KEY (youtube_id) REFERENCES {self.DOWNLOADS_TABLE}(youtube_id) ON DELETE CASCADE
+                );
+            ''')
 
 
     async def view_all(self):
@@ -137,6 +146,15 @@ class AudioDatabase:
                     print(dict(row))
             else:
                 print("(no downloads found)")
+
+            print("\n=== CACHE TABLE ===")
+            cache = await self._fetchall(f"SELECT * FROM {self.CACHE_TABLE};")
+            if cache:
+                for row in cache:
+                    print(dict(row))
+            else:
+                print("(no cache found)")
+
 
 
     async def log_track(self, track: Track):
@@ -158,6 +176,18 @@ class AudioDatabase:
             await self._execute(f'''
                 INSERT OR IGNORE INTO {self.DOWNLOADS_TABLE} (youtube_id, downloaded_at)
                 VALUES (?, CURRENT_TIMESTAMP)
+            ''', (track.youtube_id,))
+
+
+    async def log_cache(self, track: Track):
+        async with self._lock:
+            #upserts into cache with access count
+            await self._execute(f'''
+                INSERT INTO {self.CACHE_TABLE} (youtube_id, last_accessed, access_count)
+                VALUES (?, CURRENT_TIMESTAMP, 0)
+                ON CONFLICT (youtube_id) DO UPDATE SET
+                    last_accessed = CURRENT_TIMESTAMP,
+                    access_count = access_count + 1;
             ''', (track.youtube_id,))
 
 

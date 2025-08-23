@@ -81,12 +81,11 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # or your ngrok URL for production
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
 app.include_router(audio_router.router)
 app.include_router(queue_router.router)
@@ -97,5 +96,10 @@ app.include_router(websocket_router.router)
 #serve index.html
 @app.get("/", response_class=HTMLResponse)
 def index():
-    return FileResponse("static/index.html")
+    return FileResponse("frontend/index.html")
 
+#start up the service worker
+@app.get("/sw.js", include_in_schema=False)
+async def get_service_worker():
+    sw_path = G.ROOT_DIR / "sw.js"
+    return FileResponse(sw_path, media_type="application/javascript")

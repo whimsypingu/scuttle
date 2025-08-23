@@ -3,43 +3,80 @@ from pathlib import Path
 from backend.core.lib.utils import get_audio_path
 from backend.core.models.track import Track
 from backend.core.youtube.client import YouTubeClient 
+import os
+
+#pip install pytest, pip install pytest-asyncio. in venv\Scripts\activate.bat set PYTHONPATH=C:\rootdir, consider swapping to pip install -e
+#python -m pip install -U yt-dlp. for breakages
 
 @pytest.mark.asyncio
-async def test_download_success(tmp_path: Path):
+async def test_download_by_id(tmp_path: Path):
     client = YouTubeClient(
+        name="test",
         base_dir=tmp_path,
         dl_format="mp3"
     )
 
-    track = Track(
-        youtube_id="dQw4w9WgXcQ",  # Rickroll for test
-        title="Rick Astley - Never Gonna Give You Up",
-        uploader="RickAstleyVEVO",
-        duration=213
-    )
+    # track = Track(
+    #     youtube_id="dQw4w9WgXcQ",  # Rickroll for test
+    #     title="Rick Astley - Never Gonna Give You Up",
+    #     uploader="RickAstleyVEVO",
+    #     duration=213
+    # )
+    youtube_id = "dQw4w9WgXcQ"
 
-    result = await client.download(track=track, timeout=60)
+    track = await client.download_by_id(id=youtube_id)
 
-    audio_path = get_audio_path(track=track, base_dir=tmp_path)
+    audio_path = get_audio_path(track=youtube_id, base_dir=tmp_path)
+    
+    print(f"Contents of {tmp_path}:")
+    for f in os.listdir(tmp_path):
+        file_path = tmp_path / f
+        if file_path.is_file():
+            print(f" - {f} | size: {file_path.stat().st_size} bytes | suffix: {file_path.suffix}")
 
-    assert result is True
-    assert audio_path.exists()  
-    assert audio_path.suffix == ".mp3"
-    assert audio_path.stat().st_size > 00
+    assert isinstance(track, Track), "Download by query failed"
+    assert audio_path.exists(), "Audio file was not created"
+    assert audio_path.suffix == ".mp3", "Downloaded file has wrong extension"
+    assert audio_path.stat().st_size > 0, "Downloaded file is empty"
 
 
 @pytest.mark.asyncio
-async def test_search_success(tmp_path: Path):
+async def test_download_by_query(tmp_path: Path):
     client = YouTubeClient(
+        name="test",
+        base_dir=tmp_path,
+        dl_format="mp3"
+    )
+
+    query = "rick astley never gonna give you up"
+
+    track = await client.download_by_query(q=query)
+
+    search_results = await client.robust_search(q=query, limit=1)
+    assert search_results, "Search returned no results"
+    expected_track = search_results[0]
+
+    audio_path = get_audio_path(track=track.youtube_id, base_dir=tmp_path, audio_format="mp3")
+
+    assert isinstance(track, Track), "Download by query failed"
+    assert audio_path.exists(), "Audio file was not created"
+    assert audio_path.suffix == ".mp3", "Downloaded file has wrong extension"
+    assert audio_path.stat().st_size > 0, "Downloaded file is empty"
+
+
+@pytest.mark.asyncio
+async def test_robust_search(tmp_path: Path):
+    client = YouTubeClient(
+        name="test",
         base_dir=tmp_path
     )
 
     query = "rick astley never gonna give you up"
 
-    results = await client.search(q=query, limit=3, timeout=60)
+    results = await client.robust_search(q=query)
 
     assert results, "Search returned no results"
-    assert len(results) == 3, f"Epected 3 results, got {len(results)}"
+    assert len(results) == 3, f"Expected 3 results, got {len(results)}"
 
     for i, track in enumerate(results):
         assert isinstance(track, Track), f"Result {i} is not a Track"

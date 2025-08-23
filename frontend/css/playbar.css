@@ -1,0 +1,416 @@
+#queue-toggle {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    background-color: transparent;
+}
+#queue-toggle-button {
+    font-size: var(--font-xs);
+    border: none;
+    background-color: var(--bg-3);
+    border-top-left-radius: var(--radius-l);
+    border-top-right-radius: var(--radius-l);
+    padding-top: var(--space-xxs);
+    padding-bottom: var(--space-xxs);
+    padding-inline: var(--space-l);
+    margin-inline: var(--space-xl);
+    display: inline-block;
+    transition: transform 0.5s ease, color 0.5s ease;
+    color: var(--text-3);
+    cursor: pointer;
+}
+#queue-toggle-button:hover {
+    color: var(--text-2);
+}
+#playbar-queue.expanded #queue-toggle-button i {
+    transform: rotate(0deg);
+}
+#playbar-queue:not(.expanded) #queue-toggle-button i {
+    transform: rotate(180deg);
+}
+
+
+#playbar {
+    background: linear-gradient(
+        to bottom,
+        var(--bg-5),
+        var(--bg-4)
+    );
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: var(--space-content-margin);
+    padding: var(--space-xl);
+    border-radius: var(--radius-l);
+}
+
+/* Title and Author */
+#now-playing-info {
+    text-align: center;
+    width: 100%;
+    padding-inline: var(--space-xxl);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#now-playing-title {
+    font: var(--h2);
+    color: var(--text-1);
+    margin-bottom: var(--space-xs);
+
+    width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+#now-playing-author {
+    font: var(--p);
+    color: var(--text-3);
+
+    width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Scrubber and Times */
+#playback-scrubber {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-s);
+    max-width: 50rem;
+    width: 80%;
+    padding-inline: var(--space-l);
+    margin-top: var(--space-l);
+}
+
+#playback-scrubber span {
+    flex: 0 0 auto;
+    width: 5ch;
+    font-variant-numeric: tabular-nums; /*center the text so it doesnt jiggle and push the bar*/
+    text-align: center;
+    font: var(--p2);
+    color: var(--text-3);
+}
+
+#audio-progress-bar {
+    -webkit-appearance: none; /* buggy chrome thumb default override */
+    appearance: none;
+    flex: 1;
+    width: 100%;
+    height: var(--playbar-h);
+    border-radius: var(--radius-l);
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    touch-action: pan-x;
+    background-color: var(--bg-7);
+}
+
+/* Track */
+#audio-progress-bar::-webkit-slider-runnable-track {
+    height: var(--thumb-h);
+    border-radius: var(--radius-l);
+}
+#audio-progress-bar::-moz-range-track {
+    height: var(--thumb-h);
+    border-radius: var(--radius-l);
+}
+
+/* Thumb (the circle you drag) */
+#audio-progress-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: var(--thumb-h);
+    width: var(--thumb-h);
+    border-radius: 50%;
+    background: var(--text-1); /*var(--text-1);*/
+    opacity: 0;
+    border: none;
+    z-index: 2;
+    cursor: pointer;
+}
+
+#audio-progress-bar::-moz-range-thumb {
+    height: var(--thumb-h);
+    width: var(--thumb-h);
+    border-radius: 50%;
+    background: var(--text-1);
+    opacity: 0;
+    border: none;
+    z-index: 2;
+    cursor: pointer;
+}
+
+/* Control Buttons */
+#playback-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+    gap: var(--space-s);
+    margin-top: var(--space-s);
+}
+.playback-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+/* horizontal text adjustments to estimate center by feel */
+#play-pause-button i {
+    display: inline-block;
+    transform: translateX(1px);
+}
+/* adjust specifically for desktop and mobile */
+#play-pause-button i.fa-pause {
+    transform: translateX(0px);
+}
+body.mobile #play-pause-button i {
+    transform: translateX(2px);
+}
+body.mobile #play-pause-button i.fa-pause {
+    transform: translateX(0px);
+}
+
+
+#previous-button i {
+    display: inline-block;
+    transform: translateX(-2px);
+}
+#next-button i {
+    display: inline-block;
+    transform: translateX(3px);
+}
+
+
+/*couldnt figure out how to get this to obey body.mobile without breaking the spacing of the playbar for whatever reason*/
+@media (max-width: 768px) {
+    #queue-toggle {
+        display: none;
+    }
+
+    /* collapsed */
+    #playbar-queue:not(.expanded) #playbar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: var(--space-s);
+
+        padding-inline: var(--space-xl);
+        padding-top: calc(var(--space-xl) - 0.2rem);
+
+        padding-bottom: 0;
+        margin-bottom: 0;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+
+        transition: all 0.3s ease;
+    }
+    
+    /* info moves */
+    #playbar-queue:not(.expanded) #now-playing-info {
+        grid-column: 1 / 2;
+        grid-row: 1 / 2;
+        display: flex;
+        flex-direction: column;
+        
+        align-items: flex-start;
+        padding: 0;
+        text-align: left;
+    }
+    #playbar-queue.expanded #now-playing-info {
+        align-items: center;
+        width: 100%;
+        padding-inline: var(--space-xxl);
+        text-align: center;
+    }
+
+    /* scrubber */
+    #playback-scrubber {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-xl);
+    }
+    #playbar-queue:not(.expanded) #playback-scrubber {
+        grid-column: 1 / -1;
+        grid-row: 2 / 3;
+        width: auto;
+        padding: 0;
+        margin-top: var(--space-l);
+    }
+    #playbar-queue.expanded #playback-scrubber {
+        width: 100%;
+        padding-inline: var(--space-xxl);
+        margin-top: var(--space-xxl);
+    }
+    #playbar-queue:not(.expanded) #playback-scrubber span {
+        display: none;
+    }
+
+    /* buttons */
+    #playbar-queue:not(.expanded) #playback-buttons {
+        margin: 0;
+        padding: 0;
+    }
+    #playbar-queue.expanded #playback-buttons {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        flex: 1;
+        justify-content: center;
+        gap: var(--space-m);
+        padding: var(--space-s);
+        margin-top: var(--space-xxl);
+        margin-inline: var(--space-m);
+    }
+
+    .playback-button {
+        min-width: var(--mobile-button-m);
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+
+        background: transparent;
+        color: var(--text-1);
+        font: var(--mobile-button-font);
+    }
+
+    #playbar-queue:not(.expanded) #play-pause-button {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+        align-self: stretch;
+        justify-self: stretch;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #playbar-queue.expanded #play-pause-button {
+        background-color: var(--text-1);
+        color: var(--bg-3);
+    }
+
+    /* Hide prev and next buttons */
+    #playbar-queue:not(.expanded) #previous-button,
+    #playbar-queue:not(.expanded) #next-button {
+        display: none;
+    }
+}
+
+
+
+
+
+/*
+body.mobile #queue-toggle {
+    display: none;
+}
+
+/* collapsed /
+body.mobile #playbar-queue:not(.expanded) #playbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: var(--space-s);
+
+    padding-inline: var(--space-xl);
+    padding-top: calc(var(--space-xl) - 0.2rem);
+    
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+
+    transition: all 0.3s ease;
+}
+    
+/* info moves *
+body.mobile #playbar-queue:not(.expanded) #now-playing-info {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    display: flex;
+    flex-direction: column;
+       
+    align-items: flex-start;
+    padding: 0;
+}
+body.mobile #playbar-queue.expanded #now-playing-info {
+    align-items: center;
+    width: 100%;
+    padding-inline: var(--space-xxl);
+}
+
+/* scrubber *
+body.mobile #playback-scrubber {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xl);
+}
+body.mobile #playbar-queue:not(.expanded) #playback-scrubber {
+    grid-column: 1 / -1;
+    grid-row: 2 / 3;
+    width: auto;
+    padding: 0;
+    margin-top: var(--space-l);
+}
+body.mobile #playbar-queue.expanded #playback-scrubber {
+    width: 100%;
+    padding-inline: var(--space-xxl);
+    margin-top: var(--space-xxl);
+}
+body.mobile #playbar-queue:not(.expanded) #playback-scrubber span {
+    display: none;
+}
+
+/* buttons *
+body.mobile #playbar-queue:not(.expanded) #playback-buttons {
+    margin: 0;
+    padding: 0;
+}
+body.mobile #playbar-queue.expanded #playback-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+    gap: var(--space-m);
+    padding: var(--space-s);
+    margin-top: var(--space-xxl);
+    margin-inline: var(--space-m);
+}
+
+body.mobile .playback-button {
+    min-width: var(--mobile-button-m);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+
+    background: transparent;
+    color: var(--text-1);
+    font: var(--mobile-button-font);
+}
+
+body.mobile #playbar-queue:not(.expanded) #play-pause-button {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    align-self: stretch;
+    justify-self: stretch;
+        
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+body.mobile #playbar-queue.expanded #play-pause-button {
+    background-color: var(--text-1);
+    color: var(--bg-3);
+}
+
+/* Hide prev and next buttons *
+body.mobile #playbar-queue:not(.expanded) #previous-button,
+body.mobile #playbar-queue:not(.expanded) #next-button {
+    display: none;
+}*/

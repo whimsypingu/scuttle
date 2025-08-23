@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from backend.core.lib.utils import is_downloaded
 from backend.api.schemas.queue_schemas import *
+from backend.core.models.download_job import DownloadJob
 import backend.globals as G
 
 router = APIRouter(prefix="/queue")
@@ -29,6 +30,7 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
         HTTPException: Returns 500 if any unexpected error occurs during processing.
     """
     track = body.track
+    job = DownloadJob(track=track)
 
     queue_manager = req.app.state.queue_manager
 
@@ -41,8 +43,8 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
             await play_queue.set_first(track)
         else:
             await play_queue.insert_next(track)
-            if not download_queue.contains(track):
-                await download_queue.insert_next(track)
+            if not download_queue.contains(job):
+                await download_queue.insert_next(job)
     
         return Response(status_code=204)
     except Exception as e:
@@ -68,6 +70,7 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
         HTTPException: Returns 500 if any unexpected error occurs during processing.
     """
     track = body.track
+    job = DownloadJob(track=track)
 
     queue_manager = req.app.state.queue_manager
     
@@ -79,8 +82,8 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
         await play_queue.push(track)
 
         if not is_downloaded(track=track):
-            if not download_queue.contains(track):
-                await download_queue.push(track)
+            if not download_queue.contains(job):
+                await download_queue.push(job)
         
         return Response(status_code=204)
     except Exception as e:

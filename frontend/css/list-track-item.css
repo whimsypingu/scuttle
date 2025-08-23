@@ -1,0 +1,235 @@
+
+/* buttons */
+.normal-button {
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    padding-inline: var(--space-s);
+    background: transparent;
+    border-radius: var(--radius-s);
+    border: none;
+    color: var(--text-3);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    cursor: pointer;
+}
+.normal-button:hover {
+    background-color: var(--bg-3);
+    color: var(--text-1);
+}
+
+
+/* track items */
+.list-track-item {
+    background: transparent;
+    display: flex;
+    flex-direction: row;
+    /* gap: var(--space-l); */
+    align-items: stretch;
+    justify-content: space-between;
+    margin-inline: var(--space-s);
+    padding-inline: var(--space-m);
+    padding-top: calc(var(--space-m) - 0.2rem);
+    padding-bottom: calc(var(--space-m) - 0.25rem); /*adjust spacing top and bottom to text*/
+    border-radius: var(--radius-l);
+    transition: background-color 0.1s ease, transform 0.1s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.list-track-item .foreground {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.list-track-item .foreground .position {
+    min-width: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-right: var(--space-xs);
+}
+.list-track-item .foreground .position .position-value {
+    text-align: right;
+    font: var(--p2);
+    color: var(--text-3);
+}
+
+.list-track-item .foreground .info {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    min-width: 0;
+    margin-inline: var(--space-l);
+}
+
+.list-track-item .foreground .info .title {
+    font: var(--p);
+    color: var(--text-1);
+    margin-bottom: var(--space-xs);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.list-track-item .foreground .info .author {
+    font: var(--p2);
+    color: var(--text-3);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.list-track-item .foreground .duration {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+.list-track-item .foreground .duration .duration-value {
+    text-align: right;
+    font: var(--p2);
+    color: var(--text-3);
+}
+
+/* nothing in tracklist */
+.list-track-empty-item {
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline: var(--space-s);
+    padding-inline: var(--space-m);
+    padding-top: calc(var(--space-m) - 0.2rem);
+    padding-bottom: calc(var(--space-m) - 0.25rem); /*adjust spacing top and bottom to text*/
+    border-radius: var(--radius-l);
+    transition: background-color 0.1s ease, transform 0.1s ease;
+    cursor: none;
+    color: var(--text-3);
+}
+
+
+
+/*switching from detection in css to js device detection, see setMobile.js*/
+
+body.desktop .list-track-item:hover {
+    background-color: var(--bg-6);
+    transform: scale(1.01);
+}
+body.desktop .list-track-item:active {
+    transform: scale(0.98);
+}
+
+body.desktop .list-track-item .position {
+    flex: 0 0 auto;
+}
+body.desktop .list-track-item .info {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+}
+body.desktop .list-track-item .duration {
+    flex: 0 0 auto;
+}
+
+body.desktop .list-track-item .actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-s);
+
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    background: linear-gradient(
+        to right,
+        transparent,
+        green,
+        green,
+        green
+    );
+    color: var(--text-1);
+
+    padding-inline: 0;
+    border-top-right-radius: var(--radius-l);
+    border-bottom-right-radius: var(--radius-l);    
+}
+body.desktop .list-track-item:hover .actions {
+    width: calc(8 * var(--space-l)); /* yolo spacing */
+    opacity: 1;
+    padding-inline: var(--space-l);
+    pointer-events: auto;
+}
+
+body.desktop .list-track-item .swipe-action {
+    display: none;
+}
+
+
+/*mobile styles for swipe support */
+body.mobile .list-track {
+    overflow-x: hidden;
+}
+
+body.mobile .list-track-item {
+    touch-action: pan-y;
+}
+body.mobile .list-track-item * {
+    -webkit-tap-highlight-color: transparent; /*prevent blue highlight on mobile*/
+    user-select: none;
+}
+body.mobile .list-track-item .foreground {
+    flex: 1 1 auto;
+    transition: transform 0.2s ease-out;
+}
+
+/* actions sitting on the sides for left and right swipes */
+body.mobile .list-track-item .swipe-action {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+        
+    width: 0;
+    min-width: 0;
+    max-width: 100%;
+        
+    opacity: 0;
+    pointer-events: none;
+        
+    will-change: transform, width, opacity;
+    transition: transform 0.2s ease-out, width 0.2s ease-out, opacity 0.2s ease-out;
+
+    background-color: transparent;
+    color: var(--text-1);
+}
+
+body.mobile .list-track-item .swipe-action.left {
+    left: 0;
+    border-top-left-radius: var(--radius-s);
+    border-bottom-left-radius: var(--radius-s);
+}
+
+body.mobile .list-track-item .swipe-action.right {
+    right: 0;
+    border-top-right-radius: var(--radius-s);
+    border-bottom-right-radius: var(--radius-s);
+}
+
+body.mobile .list-track-item .swipe-action.flip-color {
+    background-color: tan;
+    color: black;
+}
+    
+body.mobile .actions {
+    display: none;
+}
