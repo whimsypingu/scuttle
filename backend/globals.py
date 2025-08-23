@@ -17,10 +17,10 @@ DOWNLOAD_DIR = ROOT_DIR / "backend" / "data" / "downloads"
 
 
 #ytdlp extraction query arguments and core audio formatting
-AUDIO_FORMAT_FILTER = "bestaudio[ext=m4a]/bestaudio/best"
+AUDIO_FORMAT_FILTER = "bestaudio/best" #"bestaudio[ext=m4a]/bestaudio/best"
 AUDIO_FORMAT = "mp3"
-AUDIO_QUALITY = "192K"
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ..." #"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+AUDIO_QUALITY = 0 #"192K"
+USER_AGENT = "Mozilla/5.0"# (Windows NT 10.0; Win64; x64) ..." #"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
 STREAM_CHUNK_SIZE = 1024 * 1024 #1MB
 
 #ytdlp search and download handling arguments

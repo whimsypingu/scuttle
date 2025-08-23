@@ -23,6 +23,8 @@ class YouTubeClientAction(str, Enum):
 YTCA = YouTubeClientAction #alias for convenience in this file
 
 
+
+#if this fucker breaks just run: python -m pip install -U yt-dlp (goated software btw up with ffmpeg)
 class YouTubeClient:
     def __init__(
         self,
@@ -41,10 +43,10 @@ class YouTubeClient:
 
         self._event_bus = event_bus
 
-        self.dl_format_filter = dl_format_filter or "bestaudio[ext=m4a]/bestaudio/best"
+        self.dl_format_filter = dl_format_filter or "bestaudio/best"
         self.dl_format = dl_format or "mp3"
-        self.dl_quality = dl_quality or "192K"
-        self.dl_user_agent = dl_user_agent or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+        self.dl_quality = dl_quality or "0"
+        self.dl_user_agent = dl_user_agent or "Mozilla/5.0" #"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
 
         self.dl_temp_format = "%(ext)s"
         
@@ -81,13 +83,11 @@ class YouTubeClient:
 
         #NOTE: using --reload on fastapi server boot cucks asyncio create_subprocess
         try:
-            print("[DEBUG]: Right before trying the command")
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-            print("[DEBUG]: Process has finished")
         except Exception as e:
             print(f"[ERROR]: Failed to start subprocess: {type(e).__name__}: {e}")
 
@@ -155,20 +155,13 @@ class YouTubeClient:
         """
         #cmd line search
         delim = "\x1f"
-        # cmd = [
-        #     "yt-dlp",
-        #     f'"ytsearch{limit}:{q}"',
-        #     "--format", f'"{self.dl_format_filter}"', #defeat SABR fragmentation streaming from yt, GitHub issue 12482
-        #     "--user-agent", f'"{self.dl_user_agent}"',
-        #     "--skip-download",
-        #     "--print", f'"%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s"'
-        # ]
         cmd = [
             "yt-dlp",
             f'ytsearch{limit}:{q}',
             "--format", self.dl_format_filter, #defeat SABR fragmentation streaming from yt, GitHub issue 12482
             "--user-agent", self.dl_user_agent,
-            "--skip-download",
+            "--no-download",
+            "--no-cache-dir", #prevents using stale cached DASH fragments
             "--print", f"%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s"
         ]
         print(f"Running command: {' '.join(cmd)}")
@@ -209,7 +202,11 @@ class YouTubeClient:
             print(f"[ERROR] Failed to search {q}: {e}")
             results = []
         
-        await self._emit_event(action=YTCA.SEARCH, payload={"content": results})
+        print(f"[DEBUG] Searching '{q}' with limit={limit}")
+        
+        #only emit when fetching multiple results
+        if limit > 1:
+            await self._emit_event(action=YTCA.SEARCH, payload={"content": results})
         return results
 
 
@@ -255,6 +252,7 @@ class YouTubeClient:
         url = f"https://www.youtube.com/watch?v={id}"
 
         #cmd line download
+        delim = "\x1f"
         cmd = [
             "yt-dlp",
             "-x", #audio only
@@ -264,8 +262,12 @@ class YouTubeClient:
             "--user-agent", self.dl_user_agent,
             "--quiet",
             "--no-playlist",
+            "--no-cache-dir", #prevents using stale cached DASH fragments
+            "--retries", "10",
             "--fragment-retries", "3", #network robustness for missing packets
+            "--retry-sleep", "linear=1::5",
             "-o", str(temp_path), #ytdlp requires temporary format
+            "--print", f"after_move:%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s", #complete print after download
             url
         ]
         print(f"Running command: {' '.join(cmd)}")
@@ -279,40 +281,42 @@ class YouTubeClient:
         
             elapsed = time.time() - start_time
             print(f"[INFO] Downloaded {id} in {elapsed:.2f}s")
+
+            # Parse metadata from stdout
+            line = out.strip().splitlines()[0]  # first line
+            youtube_id, title, uploader, duration = line.split(delim)
+            track = Track(
+                youtube_id=youtube_id,
+                title=title or "Unknown Title",
+                uploader=uploader or "Unknown Uploader",
+                duration=int(duration) if duration.isdigit() else 0
+            )
+
             await self._emit_event(action=YTCA.DOWNLOAD, payload={})
-            return True
+            return track
 
         except Exception as e:
             print(f"[ERROR] Failed to download {id}: {e}")
             await self._emit_event(action=YTCA.DOWNLOAD, payload={})
-            return False
-
-    async def robust_download(
-        self,
-        track: Track,
-        timeout: int = 60,
-        max_attempts: int = 3,
-        base_delay: int = 1,
-        factor: int = 2,
-        max_delay: int = 20
-    ) -> bool:
-        """
-        Robust wrapper around `download` with retries and exponential backoff.
-        Returns False if all attempts fail.
-        """
-        func_kwargs = dict(track=track, timeout=timeout)
-        try:
-            # Use the retry helper to call the raw , consider using ytdlp built-in retries
-            return await self._retry_async(
-                self.download,
-                max_attempts=max_attempts,
-                base_delay=base_delay,
-                factor=factor,
-                max_delay=max_delay,
-                **func_kwargs
-            )
-        except Exception as e:
-            print(f"[ERROR] Robust download for {track} failed after retries: {e}")
-            return False
-
+            return None
         
+
+    async def download_by_query(
+        self,
+        q: str,
+        timeout: int = 60,
+    ) -> bool:
+        
+        result = await self.robust_search(q=q, limit=1, timeout=timeout) #doesnt emit when searching 1 item
+
+        if not result:
+            print(f"[WARN]: No results found for query: {q}")
+            return False
+        
+        id = result[0].youtube_id
+        print(f"[DEBUG] Result: {result}, ID: {id}")
+
+        track = await self.download_by_id(id=id, timeout=timeout)
+        print(f"[DEBUG] Track: {track}")
+
+        return track
