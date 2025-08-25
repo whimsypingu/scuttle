@@ -21,8 +21,9 @@
     <link rel="stylesheet" href="css/title_and_search.css">
     <link rel="stylesheet" href="css/playbar.css">
     <link rel="stylesheet" href="css/queue.css">
-    <link rel="stylesheet" href="css/library.css">
+    <!-- <link rel="stylesheet" href="css/library.css"> -->
     <link rel="stylesheet" href="css/scrollbars.css">
+    <link rel="stylesheet" href="css/playlist.css">
 </head>
 <body>
     <div id="background-layer"></div>
@@ -47,11 +48,29 @@
                 </div>
             </div>
 
-            <div id="library">
-                <h3>Library</h3>
+            <div id="library" class="playlist">
+                <h3 class="playlist-header">Library</h3>
 
-                <ul id="library-list">
+                <ul id="library-list" class="list-track playlist-content">
                 </ul>
+            </div>
+
+            <div id="playlists">
+                <div id="playlist-1" class="playlist">
+                    <h3 class="playlist-header">playlist 1</h3>
+
+                    <ul class="list-track playlist-content">
+
+                    </ul>
+                </div>
+
+                <div id="playlist-2" class="playlist">
+                    <h3 class="playlist-header">playlist 2</h3>
+
+                    <ul class="list-track playlist-content">
+                        
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -122,6 +141,7 @@
     <script type="module" src="js/slider.js"></script>
     <script type="module" src="js/populate.js"></script>
     <script type="module" src="js/swipe.js"></script>
+    <script type="module" src="js/collapsePlaylist.js"></script>
     
     </body>
 </html>

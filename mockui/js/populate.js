@@ -1,6 +1,6 @@
 export function populateMockLibraryItems() {
     const ul = document.getElementById("library-list");
-    ul.className = "list-track";
+    ul.classList.add("list-track");
 
     for (let i = 0; i < 20; i++) {
         const li = document.createElement("li");
@@ -42,7 +42,7 @@ export function populateMockLibraryItems() {
 
 export function populateMockQueueItems() {
     const ul = document.getElementById("queue-list");
-    ul.className = "list-track";
+    ul.classList.add("list-track");
 
     for (let i = 0; i < 20; i++) {
         const li = document.createElement("li");

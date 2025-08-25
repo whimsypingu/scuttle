@@ -4,7 +4,8 @@
         var(--bg-6),
         var(--bg-5)
     );
-    margin: var(--space-content-margin);
+    margin-top: var(--space-content-margin);
+    margin-inline: var(--space-content-margin);
     border-radius: var(--radius-l);
     padding: var(--space-xl);
     flex-grow: 1;

@@ -31,6 +31,9 @@ html, body {
     margin-right: auto;
     padding: var(--space-app-border);
 }
+body.mobile #title-search-library {
+    padding: 0;
+}
 
 #title-search-library-contents {
     background: linear-gradient(
@@ -63,6 +66,9 @@ html, body {
     /*height: 600px; /*debug*/
     opacity: 1;
     transition: height 0.5s ease, opacity 0.2s ease;
+}
+body.mobile #playbar-queue {
+    padding-inline: 0;
 }
 
 #playbar-queue-contents {

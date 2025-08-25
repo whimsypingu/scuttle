@@ -34,9 +34,13 @@
 #library-list {
     margin: 0;
     padding: 0;
-    height: 35vh;
-    overflow-y: auto;
+    /* height: 35vh;
+    overflow-y: auto; */
     display: flex;
     flex-direction: column;
     gap: var(--space-m);
 }
+
+/* .playlist .playlist-content {
+    max-height: 0;
+} */
