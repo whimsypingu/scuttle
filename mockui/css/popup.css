@@ -1,0 +1,73 @@
+#popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 10000;
+}
+
+#popup-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#popup {
+    background: linear-gradient(
+        to bottom,
+        var(--bg-5),
+        var(--bg-4)
+    );
+    padding: var(--space-xxl);
+    border-radius: 12px;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    min-width: 250px;
+    width: 60vw;
+    max-height: 70vh;
+}
+
+#popup-overlay.active #popup {
+    transform: translateY(0);
+}
+
+
+/* popup content dynamically injected */
+#popup-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xxl);
+    overflow-y: auto;
+    max-height: 80vh;
+}
+
+#popup-content .popup-message {
+    font: var(--h1);
+    color: var(--text-2);
+}
+
+#popup-content .popup-save-cancel {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: var(--space-l);
+}
+
+.popup-save-cancel .menu-button {
+    flex: 0 0 auto;
+    width: 8ch;
+}
+
+@media(max-width: 768px) {
+    #popup {
+        width: 80vw;
+    }
+    .popup-save-cancel .menu-button {
+        min-width: var(--mobile-button-m);
+    }
+}

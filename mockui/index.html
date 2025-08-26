@@ -19,11 +19,16 @@
 	<link rel="stylesheet" href="css/variables.css ">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/title_and_search.css">
+
+    <link rel="stylesheet" href="css/menu_input.css">
+    <link rel="stylesheet" href="css/menu_button.css">
+
     <link rel="stylesheet" href="css/playbar.css">
     <link rel="stylesheet" href="css/queue.css">
     <!-- <link rel="stylesheet" href="css/library.css"> -->
     <link rel="stylesheet" href="css/scrollbars.css">
     <link rel="stylesheet" href="css/playlist.css">
+    <link rel="stylesheet" href="css/popup.css">
 </head>
 <body>
     <div id="background-layer"></div>
@@ -38,11 +43,11 @@
                 </div>
 
                 <div id="search">
-                    <input type="text" id="search-input" placeholder="Search..." />
-                    <button id="search-get-results-button" class="search-button" data-tooltip="Search">
+                    <input type="text" id="search-input" class="menu-input" placeholder="Search..." />
+                    <button id="search-get-results-button" class="search-button menu-button" data-tooltip="Search">
                         <i class="fa fa-search"></i>
                     </button>
-                    <button id="search-and-download-button" class="search-button" data-tooltip="Get best match">
+                    <button id="search-and-download-button" class="search-button menu-button" data-tooltip="Get best match">
                         <i class="fa fa-rocket"></i>
                     </button>
                 </div>
@@ -76,16 +81,11 @@
     </div>
 
     
-
-    <!-- Playlists -->
-    <div id="playlist-section">
-        <div id="playlists">
-            <div>
-
-            </div>
+    <div id="popup-overlay" class="hidden">
+        <div id="popup">
+            <div id="popup-content"></div>
         </div>
     </div>
-
 
 
 	<!-- Custom Playbar and Audio -->
@@ -142,6 +142,7 @@
     <script type="module" src="js/populate.js"></script>
     <script type="module" src="js/swipe.js"></script>
     <script type="module" src="js/collapsePlaylist.js"></script>
+    <script type="module" src="js/popup.js"></script>
     
     </body>
 </html>
