@@ -22,8 +22,12 @@
     <link rel="stylesheet" href="/frontend/css/scrollbars.css">
     <link rel="stylesheet" href="/frontend/css/title-search.css">
 
+    <link rel="stylesheet" href="/frontend/css/menu-input.css">
+    <link rel="stylesheet" href="/frontend/css/menu-button.css">
+
     <link rel="stylesheet" href="/frontend/css/playlists.css">
     <link rel="stylesheet" href="/frontend/css/list-track-item.css">
+    <link rel="stylesheet" href="/frontend/css/create-playlist.css">
 
     <link rel="stylesheet" href="/frontend/css/playbar.css">
     <link rel="stylesheet" href="/frontend/css/queue.css">
@@ -61,11 +65,11 @@
                 </div>
 
                 <div id="search">
-                    <input type="text" id="search-input" placeholder="Search..." />
-                    <button id="search-get-results-button" class="search-button" data-tooltip="Search">
+                    <input type="text" id="search-input" class="menu-input" placeholder="Search..." />
+                    <button id="search-get-results-button" class="search-button menu-button" data-tooltip="Search">
                         <i class="fa fa-search"></i>
                     </button>
-                    <button id="search-and-download-button" class="search-button" data-tooltip="Get best match">
+                    <button id="search-and-download-button" class="search-button menu-button" data-tooltip="Get best match">
                         <i class="fa fa-rocket"></i>
                     </button>
                 </div>
@@ -81,23 +85,28 @@
                     </ul>
                 </div>
 
-                <div id="playlist-1" class="playlist">
+                <div id="liked" class="playlist">
                     <div class="list-header">
-                        <h3 class="list-title">ios is aids</h3>
+                        <h3 class="list-title">Liked</h3>
                     </div>
 
                     <ul class="list-track">
                     </ul>
                 </div>
 
-                <div id="playlist-2" class="playlist">
-                    <div class="list-header">
-                        <h3 class="list-title">fuck css</h3>
-                    </div>
+                <div id="create-playlist">
+                    <button id="create-playlist-button">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <ul class="list-track">  
-                    </ul>
-                </div>                
+
+    <div id="popup-overlay">
+        <div id="popup">
+            <div id="popup-content">
             </div>
         </div>
     </div>

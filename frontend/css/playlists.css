@@ -26,6 +26,8 @@
     padding-top: calc(var(--space-xl) - 0.1rem); /*adjust spacing top and bottom to text*/
     padding-bottom: var(--space-xl);
 
+    width: 100%;
+
     border-radius: var(--radius-m);
     background: linear-gradient(
         160deg, 

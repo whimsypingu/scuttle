@@ -1,0 +1,30 @@
+.menu-input {
+    font: var(--p);
+    background-color: var(--bg-7);
+    border: 1px solid var(--bg-3);
+    color: var(--text-2);
+    border-radius: 9999px;
+    outline: none;
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    padding-inline: var(--space-m);
+    margin: 0;
+    transition: border-color 0.1s ease, background-color 0.1s ease;
+}
+.menu-input::placeholder {
+    color: var(--text-3);
+}
+.menu-input:hover {
+    background-color: var(--bg-8);
+    border-color: var(--bg-5);
+}
+.menu-input:focus {
+    border-color: var(--text-2);
+}
+
+@media (max-width: 768px) {
+    .menu-input {
+        height: var(--mobile-button-m);
+        padding-inline: var(--space-xl);
+    }
+}
