@@ -3,6 +3,7 @@ export {
 } from "./lib/api.js";
 
 export {
-    renderLibraryList 
+    renderLibraryList,
+    renderPlaylist
 } from "./lib/ui.js";
 

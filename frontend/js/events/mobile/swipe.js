@@ -2,7 +2,7 @@ import { domEls } from "../../dom/selectors.js";
 
 import { 
     onSwipe
-} from "../../features/library/controller.js";
+} from "../../features/playlist/controller.js";
 
 
 

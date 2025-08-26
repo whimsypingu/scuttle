@@ -55,6 +55,18 @@ export const SELECTORS = {
 		},
 	},
 
+	playlists: {
+		ids: {
+			BODY: "playlists",
+		},
+		classes: {
+			PLAYLIST: "playlist",
+
+			HEADER: "list-header",
+
+		}
+	},
+
 	library: {
 		ids: {
 			NAME: "library-name",
@@ -111,7 +123,9 @@ export const domEls = {
     authorEl: $(SELECTORS.audio.ids.AUTHOR),
     queueListEl: $(SELECTORS.queue.ids.LIST),
 
-    libraryListEl: $(SELECTORS.library.ids.LIST)
+    libraryListEl: $(SELECTORS.library.ids.LIST),
+
+	playlistsEl: $(SELECTORS.playlists.ids.BODY),
 };
 
 

@@ -24,8 +24,9 @@ import { getLocalQueue, pushLocalQueue, setLocalQueueFirst } from "../../cache/l
 
 
 
+
 //clicking the library list will check for this
-export async function onClickLibraryList(e, domEls) {
+export async function onClickPlaylist(e, domEls) {
     //check what was clicked
     const button = e.target.closest("button");
     const li = e.target.closest("li.list-track-item");

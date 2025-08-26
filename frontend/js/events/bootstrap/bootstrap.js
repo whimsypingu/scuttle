@@ -1,7 +1,7 @@
 import { domEls } from "../../dom/selectors.js";
 import { getQueueContent, redrawQueueUI } from "../../features/queue/index.js";
 
-import { getLibraryContent, renderLibraryList } from "../../features/library/index.js";
+import { getLibraryContent, renderLibraryList } from "../../features/playlist/index.js";
 
 
 export async function bootstrapQueue() {

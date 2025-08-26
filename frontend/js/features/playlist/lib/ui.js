@@ -24,4 +24,23 @@ export function renderLibraryList(libraryListEl, tracks) {
 
 
 
+//renders a list of tracks in the ui
+export function renderPlaylist(playlistEl, tracks) {
+    playlistEl.innerHTML = "";
+
+    if (!tracks?.length) {
+        const item = buildTrackListEmptyItem();
+        playlistEl.appendChild(item);
+        return;
+    }
+    
+    //build rows
+    tracks.forEach(track => {
+        const item = buildTrackListItem(track);
+        playlistEl.appendChild(item);
+    });
+}
+
+
+
 

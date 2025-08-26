@@ -1,7 +1,7 @@
 //static/js/events/websocket/handlers.js
 
 import { $, SELECTORS } from "../../dom/index.js";
-import { renderLibraryList } from "../../features/library/index.js";
+import { renderLibraryList } from "../../features/playlist/index.js";
 
 
 import { setLocalQueue } from "../../cache/index.js";

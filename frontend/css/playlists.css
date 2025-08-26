@@ -5,16 +5,17 @@
         var(--bg-4)
     );
     margin-inline: var(--space-content-margin);
-    margin-top: var(--space-content-margin);
+    margin-bottom: var(--space-content-margin);
     border-radius: var(--radius-l);
 
     /* padding: var(--space-xl); */
     padding: 0;
 
-    transition: all 0.3s ease;
+    transition: all 0.5s ease;
 }
 .playlist.expanded {
-    margin: 0;
+    margin-inline: 0;
+    border-radius: 0;
 }
 
 
@@ -31,13 +32,20 @@
         #8B0000, /* dark red */
         #FF6347  /* tomato */
     );
+
+    transition: all 0.3s ease;
 }
+.playlist.expanded .list-header {
+    border-radius: 0;
+}
+
 
 .playlist .list-header h3 {
     text-align: left;
     font: var(--h1);
     color: var(--text-2);
 }
+
 
 .playlist .list-track {
     margin: 0;
@@ -46,10 +54,17 @@
     overflow-y: auto;
     overflow-x: hidden; */
 
+    overflow: hidden;
+
     display: flex;
     flex-direction: column;
     gap: var(--space-m);
 
-    max-height: 0;
-    transition: max-height 0.2s ease, margin 0.2s ease;
+    height: 0;
+    transition: height 0.5s ease, margin 0.5s ease;
+}
+
+.playlist.expanded .list-track {
+    
+    margin-block: var(--space-l);
 }
