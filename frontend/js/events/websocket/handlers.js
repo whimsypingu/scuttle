@@ -18,6 +18,8 @@ export const handlers = {
     },
     audio_database: {
         search: handleADSE,
+        fetch_likes: handleADFL,
+        
         download: handleADDO
     },
     youtube_client: {
@@ -51,14 +53,22 @@ function handlePQRE(payload) {
 
 const libraryListEl = $(SELECTORS.library.ids.LIST)
 
-export function handleADSE(payload) {
+function handleADSE(payload) {
     renderPlaylist(libraryListEl, payload.content);
 }
 
-export function handleADDO(payload) {
+function handleADDO(payload) {
     renderPlaylist(libraryListEl, payload.content);
 }
 
-export function handleYTSE(payload) {
+function handleYTSE(payload) {
     renderPlaylist(libraryListEl, payload.content);
+}
+
+
+//whenever liked list gets updated in the backend sync up
+const likedListEl = $(SELECTORS.liked.ids.LIST)
+
+function handleADFL(payload) {
+    renderPlaylist(likedListEl, payload.content);
 }

@@ -1,11 +1,16 @@
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+
+from backend.api.schemas.audio_schemas import ToggleLikeRequest
 
 from backend.core.audio.stream import stream_audio
 from backend.core.lib.utils import is_downloaded
 
 from backend.core.models.download_job import DownloadJob
 import backend.globals as G
+
+from backend.core.database.audio_database import AudioDatabase
+
 
 router = APIRouter(prefix="/audio")
 
@@ -27,3 +32,17 @@ async def get_audio_stream(id: str, req: Request, full: bool = False):
             
         raise HTTPException(status_code=503, detail="Track is downloading, try again shortly")
     return stream_audio(req=req, track_or_id=id, full=full)
+
+
+@router.post("/toggle_like")
+async def toggle_track_like(body: ToggleLikeRequest, req: Request):
+    """
+    toggles like
+    """
+    id = body.id
+    
+    db: AudioDatabase = req.app.state.db
+
+    await db.toggle_like(id)
+
+    return JSONResponse(content={"status": "toggled"}, status_code=200)

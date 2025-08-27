@@ -3,7 +3,7 @@
 let likedSet = new Set();
 let likedList = [];
 
-export function toggleLikeTrack(track) {
+export function toggleLocalLikes(track) {
 
     const id = track.id;
 
@@ -24,7 +24,21 @@ export function toggleLikeTrack(track) {
 }
 
 
+
 //getters
-export function getLikedTracks() {
+export function getLocalLikes() {
     return likedList;
+}
+
+
+
+//for now just sets the whole thing
+export function setLocalLikes(tracks) {
+    likedSet.clear();
+    likedList = [];
+
+    for (const track of tracks) {
+        likedSet.add(track.id);
+        likedList.push(track);
+    }
 }

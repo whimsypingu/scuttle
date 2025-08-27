@@ -12,7 +12,8 @@ export {
 
 
 export {
-    toggleLikeTrack,
+    toggleLocalLikes,
 
-    getLikedTracks
+    getLocalLikes,
+    setLocalLikes
 } from "./liked.js";

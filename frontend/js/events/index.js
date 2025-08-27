@@ -1,4 +1,4 @@
-import { bootstrapLibrary, bootstrapQueue } from "./bootstrap/bootstrap.js";
+import { bootstrapAll } from "./bootstrap/bootstrap.js";
 
 import { setupAudioEventListeners } from "./dom/audio.js";
 import { setupPlaylistEventListeners } from "./dom/playlists.js";
@@ -15,11 +15,6 @@ import { setLayoutDesktop, setLayoutMobile } from "./mobile/setMobile.js";
 import { isMobile } from "../utils/index.js"; 
 import { logDebug } from "../utils/debug.js";
 import { setupPopupListeners } from "./dom/popup.js";
-
-async function bootstrapAll() {
-    bootstrapLibrary();
-    bootstrapQueue();
-}
 
 
 async function setupDomEvents() {

@@ -24,9 +24,11 @@ import {
     pushLocalQueue, 
     setLocalQueueFirst,
 
-    toggleLikeTrack,
-    getLikedTracks
+    toggleLocalLikes,
+    getLocalLikes,
 } from "../../cache/index.js";
+
+import { toggleLike } from "./lib/api.js";
 
 import { logDebug } from "../../utils/debug.js";
 import { renderPlaylist } from "./lib/ui.js";
@@ -136,7 +138,7 @@ export async function onSwipe(domEls, dataset, action) {
             pushLocalQueue(track);
             redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
 
-            await queuePushTrack(track);
+            await queuePushTrack(track); //backend
 
             logDebug("Queue swiped");
         } catch (err) {
@@ -144,10 +146,10 @@ export async function onSwipe(domEls, dataset, action) {
         }
     } else if (action === "like") {
         try {
-            toggleLikeTrack(track);
-            renderPlaylist(likedListEl, getLikedTracks());
+            toggleLocalLikes(track);
+            renderPlaylist(likedListEl, getLocalLikes());
 
-            //await likedPushTrack(track);
+            await toggleLike(track.id); //backend
             
             logDebug("Like swiped");
         } catch (err) {

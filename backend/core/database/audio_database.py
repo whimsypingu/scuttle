@@ -14,6 +14,11 @@ from enum import Enum
 class AudioDatabaseAction(str, Enum):
     SEARCH = "search"
 
+    FETCH_LIKES = "fetch_likes"
+
+    CREATE_PLAYLIST = "create_playlist"
+    ADD_TO_PLAYLIST = "add_to_playlist"
+
 ADA = AudioDatabaseAction #alias
 
 
@@ -33,7 +38,12 @@ class AudioDatabase:
 
         self.TRACKS_TABLE = "tracks"
         self.DOWNLOADS_TABLE = "downloads"
-        self.CACHE_TABLE = "cache"
+        self.LIKES_TABLE = "likes"
+
+        #self.SEARCHES_TABLE = "searches"
+
+        self.PLAYLISTS_TABLE = "playlists"
+        self.PLAYLIST_TRACKS_TABLE = "playlist_tracks"
 
         #generate
         is_new = not self._filepath.exists()
@@ -120,11 +130,30 @@ class AudioDatabase:
                 );
             ''')
             await self._execute(f'''
-                CREATE TABLE IF NOT EXISTS {self.CACHE_TABLE} (
+                CREATE TABLE IF NOT EXISTS {self.LIKES_TABLE} (
                     id TEXT PRIMARY KEY,
-                    last_accessed DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    access_count INTEGER DEFAULT 0,
-                    FOREIGN KEY (id) REFERENCES {self.DOWNLOADS_TABLE}(id) ON DELETE CASCADE
+                    liked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (id) REFERENCES {self.TRACKS_TABLE}(id) ON DELETE CASCADE
+                );
+            ''')
+
+            #playlists
+            await self._execute(f'''
+                CREATE TABLE IF NOT EXISTS {self.PLAYLISTS_TABLE} (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            ''')
+            await self._execute(f'''
+                CREATE TABLE IF NOT EXISTS {self.PLAYLIST_TRACKS_TABLE} (
+                    playlist_id INTEGER NOT NULL,
+                    position INTEGER NOT NULL,
+                    track_id TEXT NOT NULL,
+                    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (playlist_id) REFERENCES {self.PLAYLISTS_TABLE}(id) ON DELETE CASCADE,
+                    FOREIGN KEY (track_id) REFERENCES {self.TRACKS_TABLE}(id) ON DELETE CASCADE,
+                    PRIMARY KEY (playlist_id, position)
                 );
             ''')
 
@@ -147,14 +176,21 @@ class AudioDatabase:
             else:
                 print("(no downloads found)")
 
-            print("\n=== CACHE TABLE ===")
-            cache = await self._fetchall(f"SELECT * FROM {self.CACHE_TABLE};")
-            if cache:
-                for row in cache:
+            print("\n=== PLAYLISTS TABLE ===")
+            playlists = await self._fetchall(f"SELECT * FROM {self.PLAYLISTS_TABLE};")
+            if playlists:
+                for row in playlists:
                     print(dict(row))
             else:
-                print("(no cache found)")
+                print("(no playlists found)")
 
+            print("\n=== PLAYLIST_TRACKS TABLE ===")
+            playlist_tracks = await self._fetchall(f"SELECT * FROM {self.PLAYLIST_TRACKS_TABLE};")
+            if playlist_tracks:
+                for row in playlist_tracks:
+                    print(dict(row))
+            else:
+                print("(no playlist tracks found)")
 
 
     async def log_track(self, track: Track):
@@ -162,7 +198,7 @@ class AudioDatabase:
             await self._execute(f'''
                 INSERT OR REPLACE INTO {self.TRACKS_TABLE}
                 (id, title, uploader, duration)
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?, ?);
             ''', (
                 track.id,
                 track.title,
@@ -171,24 +207,12 @@ class AudioDatabase:
             ))
 
 
-    async def log_download(self, track: Track):
+    async def log_download(self, id: str):
         async with self._lock:
             await self._execute(f'''
                 INSERT OR IGNORE INTO {self.DOWNLOADS_TABLE} (id, downloaded_at)
-                VALUES (?, CURRENT_TIMESTAMP)
-            ''', (track.id,))
-
-
-    async def log_cache(self, track: Track):
-        async with self._lock:
-            #upserts into cache with access count
-            await self._execute(f'''
-                INSERT INTO {self.CACHE_TABLE} (id, last_accessed, access_count)
-                VALUES (?, CURRENT_TIMESTAMP, 0)
-                ON CONFLICT (id) DO UPDATE SET
-                    last_accessed = CURRENT_TIMESTAMP,
-                    access_count = access_count + 1;
-            ''', (track.id,))
+                VALUES (?, CURRENT_TIMESTAMP);
+            ''', (id,))
 
 
     async def search(self, q: str) -> List[Track]:
@@ -199,7 +223,7 @@ class AudioDatabase:
                     SELECT t.id, t.title, t.uploader, t.duration 
                     FROM {self.TRACKS_TABLE} t
                     INNER JOIN {self.DOWNLOADS_TABLE} d ON t.id = d.id
-                    ORDER BY d.downloaded_at DESC
+                    ORDER BY d.downloaded_at DESC;
                 """
                 params = ()
             
@@ -210,7 +234,7 @@ class AudioDatabase:
                 FROM {self.TRACKS_TABLE} t
                 LEFT JOIN {self.DOWNLOADS_TABLE} d ON t.id = d.id
                 WHERE title LIKE ? COLLATE NOCASE OR uploader LIKE ? COLLATE NOCASE
-                ORDER BY d.downloaded_at DESC, t.title COLLATE NOCASE
+                ORDER BY d.downloaded_at DESC, t.title COLLATE NOCASE;
                 """
                 params = (pattern, pattern)
 
@@ -229,3 +253,99 @@ class AudioDatabase:
     
             return [track.to_json() for track in content]
 
+
+    #likes
+    async def toggle_like(self, id: str):
+        async with self._lock:
+            #check if already in db
+            row = await self._fetchone(f'''
+                SELECT 1 FROM {self.LIKES_TABLE}
+                WHERE id = ?;
+            ''', (id,))
+
+            if row:
+                await self._execute(f'''
+                    DELETE FROM {self.LIKES_TABLE}
+                    WHERE id = ?;
+                ''', (id,))
+            else:
+                await self._execute(f'''
+                    INSERT INTO {self.LIKES_TABLE} (id) VALUES (?);
+                ''', (id,))
+
+    async def fetch_liked_tracks(self):
+        async with self._lock:
+            rows = await self._fetchall(f'''
+                SELECT t.id, t.title, t.uploader, t.duration
+                FROM {self.LIKES_TABLE} l
+                JOIN {self.TRACKS_TABLE} t ON l.id = t.id
+                ORDER BY t.title COLLATE NOCASE;
+            ''')
+            content = [Track(**row) for row in rows]
+            await self._emit_event(action=ADA.FETCH_LIKES, payload={"content": content})
+    
+            return [track.to_json() for track in content]
+
+
+
+
+
+
+
+    #playlists
+    async def create_playlist(self, name: str):
+        async with self._lock:
+            row = await self._fetchone(f'''
+                INSERT INTO {self.PLAYLISTS_TABLE} (name) 
+                VALUES (?)
+                RETURNING id;
+            ''', (name,))
+
+            content = {"id": row["id"], "name": name}
+            await self._emit_event(action=ADA.CREATE_PLAYLIST, payload={"content": content})
+
+            return content
+        
+    async def add_track_to_playlist(self, playlist_id: int, track_id: str, position: int = None):
+        async with self._lock:
+            if position is None:
+                row = await self._fetchone(f'''
+                    SELECT COALESCE(MAX(position), 0) + 1 AS next_pos
+                    FROM {self.PLAYLIST_TRACKS_TABLE}
+                    WHERE playlist_id = ?;
+                ''', (playlist_id,))
+                position = row["next_pos"]
+            else:
+                await self._execute(f'''
+                    UPDATE {self.PLAYLIST_TRACKS_TABLE}
+                    SET position = position + 1
+                    WHERE playlist_id = ? AND position >= ?;
+                ''', (playlist_id, position))
+            
+            #handle insertion
+            await self._execute(f'''
+                INSERT INTO {self.PLAYLIST_TRACKS_TABLE} (playlist_id, track_id, position)
+                VALUES (?, ?, ?);
+            ''', (playlist_id, track_id, position))
+
+            #fetch updated playlist
+            rows = await self._fetchall(f'''
+                SELECT pt.position, t.id AS track_id, t.title, t.uploader, t.duration
+                FROM {self.PLAYLIST_TRACKS_TABLE} pt
+                JOIN {self.TRACKS_TABLE} t ON pt.track_id = t.id
+                WHERE pt.playlist_id = ?
+                ORDER BY pt.position;
+            ''', (playlist_id,))
+            content = [
+                Track(
+                    id=row["id"], 
+                    title=row["title"],
+                    uploader=row["uploader"],
+                    duration=row["duration"]
+                )
+                for row in rows
+            ]
+
+            await self._emit_event(action=ADA.ADD_TO_PLAYLIST, payload={"content": content})
+    
+            return [track.to_json() for track in content]

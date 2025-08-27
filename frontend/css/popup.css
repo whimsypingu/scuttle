@@ -26,8 +26,6 @@
     border-radius: 12px;
     transform: translateY(20px);
     transition: transform 0.3s ease;
-    min-width: 250px;
-    min-height: 250px;
     width: 60vw;
     max-height: 70vh;
 }

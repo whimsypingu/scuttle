@@ -1,5 +1,7 @@
 export {
-    getLibraryContent
+    getLibraryContent,
+    getLikedContent,
+    toggleLike,
 } from "./lib/api.js";
 
 export {
