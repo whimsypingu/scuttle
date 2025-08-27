@@ -2,17 +2,17 @@
 
 //helper for parsing
 export function parseTrackFromDataset(dataset) {
-    const youtubeId = dataset.youtubeId;
+    const id = dataset.id;
     const title = dataset.title;
     const uploader = dataset.uploader;
     const duration = parseInt(dataset.duration);
 
-    if (!youtubeId || !title || !uploader || isNaN(duration)) {
+    if (!id || !title || !uploader || isNaN(duration)) {
         console.error("Null track data");
         return null;
     }
     
-    return { youtube_id: youtubeId, title, uploader, duration };
+    return { id, title, uploader, duration };
 }
 
 

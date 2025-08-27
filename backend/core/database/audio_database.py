@@ -106,7 +106,7 @@ class AudioDatabase:
         async with self._lock:
             await self._execute(f'''
                 CREATE TABLE IF NOT EXISTS {self.TRACKS_TABLE} (
-                    youtube_id TEXT PRIMARY KEY,
+                    id TEXT PRIMARY KEY,
                     title TEXT NOT NULL,
                     uploader TEXT,
                     duration INTEGER
@@ -114,17 +114,17 @@ class AudioDatabase:
             ''')
             await self._execute(f'''
                 CREATE TABLE IF NOT EXISTS {self.DOWNLOADS_TABLE} (
-                    youtube_id TEXT PRIMARY KEY,
+                    id TEXT PRIMARY KEY,
                     downloaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (youtube_id) REFERENCES {self.TRACKS_TABLE}(youtube_id) ON DELETE CASCADE
+                    FOREIGN KEY (id) REFERENCES {self.TRACKS_TABLE}(id) ON DELETE CASCADE
                 );
             ''')
             await self._execute(f'''
                 CREATE TABLE IF NOT EXISTS {self.CACHE_TABLE} (
-                    youtube_id TEXT PRIMARY KEY,
+                    id TEXT PRIMARY KEY,
                     last_accessed DATETIME DEFAULT CURRENT_TIMESTAMP,
                     access_count INTEGER DEFAULT 0,
-                    FOREIGN KEY (youtube_id) REFERENCES {self.DOWNLOADS_TABLE}(youtube_id) ON DELETE CASCADE
+                    FOREIGN KEY (id) REFERENCES {self.DOWNLOADS_TABLE}(id) ON DELETE CASCADE
                 );
             ''')
 
@@ -161,10 +161,10 @@ class AudioDatabase:
         async with self._lock:
             await self._execute(f'''
                 INSERT OR REPLACE INTO {self.TRACKS_TABLE}
-                (youtube_id, title, uploader, duration)
+                (id, title, uploader, duration)
                 VALUES (?, ?, ?, ?)
             ''', (
-                track.youtube_id,
+                track.id,
                 track.title,
                 track.uploader,
                 track.duration
@@ -174,21 +174,21 @@ class AudioDatabase:
     async def log_download(self, track: Track):
         async with self._lock:
             await self._execute(f'''
-                INSERT OR IGNORE INTO {self.DOWNLOADS_TABLE} (youtube_id, downloaded_at)
+                INSERT OR IGNORE INTO {self.DOWNLOADS_TABLE} (id, downloaded_at)
                 VALUES (?, CURRENT_TIMESTAMP)
-            ''', (track.youtube_id,))
+            ''', (track.id,))
 
 
     async def log_cache(self, track: Track):
         async with self._lock:
             #upserts into cache with access count
             await self._execute(f'''
-                INSERT INTO {self.CACHE_TABLE} (youtube_id, last_accessed, access_count)
+                INSERT INTO {self.CACHE_TABLE} (id, last_accessed, access_count)
                 VALUES (?, CURRENT_TIMESTAMP, 0)
-                ON CONFLICT (youtube_id) DO UPDATE SET
+                ON CONFLICT (id) DO UPDATE SET
                     last_accessed = CURRENT_TIMESTAMP,
                     access_count = access_count + 1;
-            ''', (track.youtube_id,))
+            ''', (track.id,))
 
 
     async def search(self, q: str) -> List[Track]:
@@ -196,9 +196,9 @@ class AudioDatabase:
             if not q:
                 #no filtering, return all entries from downloads
                 query = f"""
-                    SELECT t.youtube_id, t.title, t.uploader, t.duration 
+                    SELECT t.id, t.title, t.uploader, t.duration 
                     FROM {self.TRACKS_TABLE} t
-                    INNER JOIN {self.DOWNLOADS_TABLE} d ON t.youtube_id = d.youtube_id
+                    INNER JOIN {self.DOWNLOADS_TABLE} d ON t.id = d.id
                     ORDER BY d.downloaded_at DESC
                 """
                 params = ()
@@ -206,9 +206,9 @@ class AudioDatabase:
             else:
                 pattern = f"%{q.lower()}%"
                 query = f"""
-                SELECT t.youtube_id, t.title, t.uploader, t.duration
+                SELECT t.id, t.title, t.uploader, t.duration
                 FROM {self.TRACKS_TABLE} t
-                LEFT JOIN {self.DOWNLOADS_TABLE} d ON t.youtube_id = d.youtube_id
+                LEFT JOIN {self.DOWNLOADS_TABLE} d ON t.id = d.id
                 WHERE title LIKE ? COLLATE NOCASE OR uploader LIKE ? COLLATE NOCASE
                 ORDER BY d.downloaded_at DESC, t.title COLLATE NOCASE
                 """
@@ -217,7 +217,7 @@ class AudioDatabase:
             rows = await self._fetchall(query, params)
             content = [
                 Track(
-                    youtube_id=row["youtube_id"], 
+                    id=row["id"], 
                     title=row["title"],
                     uploader=row["uploader"],
                     duration=row["duration"]

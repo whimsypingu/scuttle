@@ -25,7 +25,7 @@ export async function getCurrentAudioStream() {
 
 export async function getAudioStream(track) {
     try {
-        const response = await getResponse(`/audio/stream/${track.youtube_id}`);
+        const response = await getResponse(`/audio/stream/${track.id}`);
         console.log("getAudioStream status:", response.status);
 
         if (!response.ok) {

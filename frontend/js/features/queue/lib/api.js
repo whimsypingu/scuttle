@@ -21,7 +21,7 @@ export async function queuePushTrack(track) {
     console.log("queuePushTrack status:", response.status);
 
     //2. fire and forget for caching purposes (service worker will eat this uppp)
-    fetch(`/audio/stream/${track.youtube_id}`).catch((err) => {
+    fetch(`/audio/stream/${track.id}`).catch((err) => {
         logDebug("queuePushTrack prefetch failed:", err);
     })
 }

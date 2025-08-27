@@ -39,7 +39,7 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
 
     try:
         #queueing logic for replacing first item in queue if available
-        if is_downloaded(track=track):
+        if is_downloaded(track_or_id=track):
             await play_queue.set_first(track)
         else:
             await play_queue.insert_next(track)
@@ -81,7 +81,7 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
         #normal queueing logic
         await play_queue.push(track)
 
-        if not is_downloaded(track=track):
+        if not is_downloaded(track_or_id=track):
             if not download_queue.contains(job):
                 await download_queue.push(job)
         

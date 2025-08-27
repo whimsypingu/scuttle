@@ -24,9 +24,9 @@ export async function loadTrack(audioEl, track) {
     if (!track) return false;
 
     //2. point src to backend url, service worker intercepts with caching logic
-    audioEl.src = `/audio/stream/${track.youtube_id}`;
+    audioEl.src = `/audio/stream/${track.id}`;
 
-    const srcPath = `/audio/stream/${track.youtube_id}`;
+    const srcPath = `/audio/stream/${track.id}`;
     console.log("audioEl.src (before assignment):", srcPath);
     const fullUrl = new URL(srcPath, window.location.href).href;
     console.log("audioEl.src absolute URL:", fullUrl);

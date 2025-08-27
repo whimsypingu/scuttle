@@ -7,16 +7,16 @@ from backend.core.lib.utils import is_downloaded, get_audio_path, get_audio_size
 from backend.core.models.track import Track
 import backend.globals as G
 
-def stream_audio(req: Request, track: Union[Track, str], full: False) -> StreamingResponse:
-    #automatically attempts to stream the first song in the play_queue
-    if not track:
+def stream_audio(req: Request, track_or_id: Union[Track, str], full: False) -> StreamingResponse:
+    #checks for status
+    if not track_or_id:
         raise HTTPException(status_code=404, detail="No track provided.")
     
-    if not is_downloaded(track=track):
+    if not is_downloaded(track_or_id=track_or_id):
         raise HTTPException(status_code=404, detail="Track not downloaded.")
 
-    file_path = get_audio_path(track=track)
-    file_size = get_audio_size(track=track)
+    file_path = get_audio_path(track_or_id=track_or_id)
+    file_size = get_audio_size(track_or_id=track_or_id)
 
     range_header = req.headers.get("range")
     if range_header and not full:

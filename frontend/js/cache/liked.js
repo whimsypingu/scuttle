@@ -5,7 +5,7 @@ let likedList = [];
 
 export function toggleLikeTrack(track) {
 
-    const id = track.youtube_id;
+    const id = track.id;
 
     console.log("ID:", id);
     console.log("has:", likedSet.has(id));
@@ -14,7 +14,7 @@ export function toggleLikeTrack(track) {
     if (likedSet.has(id)) {
         //unlike
         likedSet.delete(id);
-        const index = likedList.findIndex(t => t.youtube_id === id);
+        const index = likedList.findIndex(t => t.id === id);
         if (index !== -1) likedList.splice(index, 1);
     } else {
         //like

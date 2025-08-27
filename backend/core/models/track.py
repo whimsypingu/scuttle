@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 class Track(BaseModel):
-    youtube_id: str
+    id: str
     title: str
     uploader: str
     duration: int
