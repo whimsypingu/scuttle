@@ -123,14 +123,12 @@ export function setupSwipeEventListeners() {
         if (deltaX > 0) {
             //swipe to the right
             if (isValidSwipe) {
-                console.log("queued");
                 onSwipe(domEls, activeEl.dataset, "queue"); //this works for both library and queue??
             }
         } else {
             //swipe left
             if (isValidSwipe) {
-                console.log("liked");
-                onSwipe(domEls, activeEl.dataset, "more");
+                onSwipe(domEls, activeEl.dataset, "like");
             }
         }
 

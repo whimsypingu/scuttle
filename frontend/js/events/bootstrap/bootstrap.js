@@ -1,7 +1,7 @@
 import { domEls } from "../../dom/selectors.js";
 import { getQueueContent, redrawQueueUI } from "../../features/queue/index.js";
 
-import { getLibraryContent, renderLibraryList } from "../../features/playlist/index.js";
+import { getLibraryContent, renderPlaylist } from "../../features/playlist/index.js";
 
 
 export async function bootstrapQueue() {
@@ -20,7 +20,7 @@ export async function bootstrapLibrary() {
         const data = await getLibraryContent();
         console.log(data.content);
 
-        renderLibraryList(domEls.libraryListEl, data.content);
+        renderPlaylist(domEls.libraryListEl, data.content);
     } catch (err) {
         console.error("Bootstrap failed", err);
     }

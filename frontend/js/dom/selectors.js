@@ -55,18 +55,6 @@ export const SELECTORS = {
 		},
 	},
 
-	playlists: {
-		ids: {
-			BODY: "playlists",
-			CREATE: "create-playlist-button",
-		},
-		classes: {
-			PLAYLIST: "playlist",
-
-			HEADER: "list-header",
-		}
-	},
-
 	popup: {
 		ids: {
 			OVERLAY: "popup-overlay",
@@ -77,16 +65,31 @@ export const SELECTORS = {
 		},
 	},
 
-	library: {
+	playlists: {
 		ids: {
-			NAME: "library-name",
-			LIST: "library-list",
+			BODY: "playlists",
+
+			LIBRARY: "library",
+			LIKED: "liked",
+
+			CREATE: "create-playlist-button",
 		},
 		classes: {
-			//?
-			ITEM: "library-item",
-			FIELD: "library-field",
-			ACTIONS: "library-actions",
+			PLAYLIST: "playlist",
+
+			HEADER: "list-header",
+		}
+	},
+
+	library: {
+		ids: {
+			LIST: "library-list",
+		},
+	},
+
+	liked: {
+		ids: {
+			LIST: "liked-list",
 		},
 	},
 
@@ -136,11 +139,11 @@ export const domEls = {
 	//queue
 	queueListEl: $(SELECTORS.queue.ids.LIST),
 
-	//library
-    libraryListEl: $(SELECTORS.library.ids.LIST),
-
-	//playlist
+	//playlists
 	playlistsEl: $(SELECTORS.playlists.ids.BODY),
+
+	libraryListEl: $(SELECTORS.library.ids.LIST),
+	likedListEl: $(SELECTORS.liked.ids.LIST),
 };
 
 

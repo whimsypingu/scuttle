@@ -1,7 +1,7 @@
 //static/js/events/websocket/handlers.js
 
 import { $, SELECTORS } from "../../dom/index.js";
-import { renderLibraryList } from "../../features/playlist/index.js";
+import { renderPlaylist } from "../../features/playlist/index.js";
 
 
 import { setLocalQueue } from "../../cache/index.js";
@@ -23,15 +23,6 @@ export const handlers = {
     youtube_client: {
         search: handleYTSE,
     }
-}
-
-
-const domEls = {
-    queueListEl: $(SELECTORS.queue.ids.LIST),
-    titleEl: $(SELECTORS.audio.ids.TITLE),
-    authorEl: $(SELECTORS.audio.ids.AUTHOR),
-
-    libraryListEl: $(SELECTORS.library.ids.LIST),
 }
 
 //player queue related websocket messages update the state of the local queue (for caching), and also the ui
@@ -61,13 +52,13 @@ function handlePQRE(payload) {
 const libraryListEl = $(SELECTORS.library.ids.LIST)
 
 export function handleADSE(payload) {
-    renderLibraryList(libraryListEl, payload.content);
+    renderPlaylist(libraryListEl, payload.content);
 }
 
 export function handleADDO(payload) {
-    renderLibraryList(libraryListEl, payload.content);
+    renderPlaylist(libraryListEl, payload.content);
 }
 
 export function handleYTSE(payload) {
-    renderLibraryList(libraryListEl, payload.content);
+    renderPlaylist(libraryListEl, payload.content);
 }

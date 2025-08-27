@@ -19,9 +19,17 @@ import {
     redrawQueueUI
 } from "../queue/index.js";
 
-import { logDebug } from "../../utils/debug.js";
-import { getLocalQueue, pushLocalQueue, setLocalQueueFirst } from "../../cache/localqueue.js";
+import { 
+    getLocalQueue, 
+    pushLocalQueue, 
+    setLocalQueueFirst,
 
+    toggleLikeTrack,
+    getLikedTracks
+} from "../../cache/index.js";
+
+import { logDebug } from "../../utils/debug.js";
+import { renderPlaylist } from "./lib/ui.js";
 
 
 
@@ -112,7 +120,7 @@ async function onClickQueueButton(domEls, dataset) {
 
 //which action to do "queue", "more"
 export async function onSwipe(domEls, dataset, action) {
-    const { titleEl, authorEl, queueListEl } = domEls;
+    const { titleEl, authorEl, queueListEl, likedListEl } = domEls;
 
     //0. parse data
     const track = parseTrackFromDataset(dataset);
@@ -126,12 +134,24 @@ export async function onSwipe(domEls, dataset, action) {
     if (action === "queue") {
         try {
             pushLocalQueue(track);
-            await queuePushTrack(track);
             redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
 
+            await queuePushTrack(track);
+
             logDebug("Queue swiped");
-        } catch {
-            logDebug("Queue failed");
+        } catch (err) {
+            logDebug("Queue failed", err);
+        }
+    } else if (action === "like") {
+        try {
+            toggleLikeTrack(track);
+            renderPlaylist(likedListEl, getLikedTracks());
+
+            //await likedPushTrack(track);
+            
+            logDebug("Like swiped");
+        } catch (err) {
+            logDebug("Like failed", err);
         }
     } else if (action === "more") {
         logDebug("more //BUILD ME", track);
