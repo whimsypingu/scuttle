@@ -14,6 +14,7 @@ import { setLayoutDesktop, setLayoutMobile } from "./mobile/setMobile.js";
 
 import { isMobile } from "../utils/index.js"; 
 import { logDebug } from "../utils/debug.js";
+import { setupPopupListeners } from "./dom/popup.js";
 
 async function bootstrapAll() {
     bootstrapLibrary();
@@ -23,7 +24,10 @@ async function bootstrapAll() {
 
 async function setupDomEvents() {
     setupAudioEventListeners();
+
     setupPlaylistEventListeners();
+    setupPopupListeners();
+
     setupQueueEventListeners();
     setupSearchEventListeners();
     setupToggle();

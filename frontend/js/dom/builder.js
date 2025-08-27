@@ -78,63 +78,20 @@ export function buildTrackListEmptyItem() {
 }
 
 
-/*
-//helper that makes a track list item
-export function buildTrackListItem(track, context) {
-    const item = createElem("li", 
-        { class: `${SELECTORS.track.classes.ITEM} ${SELECTORS[context].classes.ITEM}` }
-    );
 
-    //track fields
-    // Title
-    const titleDiv = createElem("div", {
-        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
-        textContent: track.title || "Untitled",
-    });
-    item.appendChild(titleDiv);
+export function buildCreatePlaylistPopup() {
+    const popup = document.createElement("div");
+    popup.className = "popup-content";
+    
+    popup.innerHTML = `
+        <h3 class="popup-message">Create Playlist</h3>
 
-    // Uploader
-    const uploaderDiv = createElem("div", {
-        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
-        textContent: track.uploader || "Unknown artist",
-    });
-    item.appendChild(uploaderDiv);
+        <input class="menu-input" type="text" placeholder="New name">
 
-    // Duration (formatted)
-    const durationDiv = createElem("div", {
-        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
-        textContent: formatTime(track.duration),
-    });
-    item.appendChild(durationDiv);
-
-
-    //action buttons
-    const trackDataset = prepareDataset(track);
-    const playIcon = createElem("i", { class: "fa fa-play" });
-    const playButton = createElem("button", {
-        class: SELECTORS.actions.classes.PLAY_BUTTON,
-        dataset: {
-            ...trackDataset,
-            action: "play"
-        },
-        type: "button",
-    }, [playIcon]);
-
-    const queueIcon = createElem("i", { class: "fa fa-plus" });
-    const queueButton = createElem("button", {
-        class: SELECTORS.actions.classes.QUEUE_BUTTON,
-        dataset: {
-            ...trackDataset,
-            action: "queue"
-        },
-        type: "button",
-    }, [queueIcon]);
-
-    const actions = createElem("div", 
-        { class: `${SELECTORS[context].classes.FIELD} ${SELECTORS[context].classes.ACTIONS}` }, 
-        [playButton, queueButton]
-    );
-    item.appendChild(actions);
-
-    return item;
-}*/
+        <div class="popup-actions">
+            <button class="menu-button green create-playlist">Save</button>
+            <button class="menu-button cancel">Cancel</button>
+        </div>
+    `;
+    return popup
+}

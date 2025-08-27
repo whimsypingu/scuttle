@@ -58,13 +58,23 @@ export const SELECTORS = {
 	playlists: {
 		ids: {
 			BODY: "playlists",
+			CREATE: "create-playlist-button",
 		},
 		classes: {
 			PLAYLIST: "playlist",
 
 			HEADER: "list-header",
-
 		}
+	},
+
+	popup: {
+		ids: {
+			OVERLAY: "popup-overlay",
+			POPUP: "popup",
+		},
+		classes: {
+			//
+		},
 	},
 
 	library: {
@@ -108,7 +118,8 @@ export const SELECTORS = {
 
 //const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 export const domEls = {
-    audioEl: $(SELECTORS.audio.ids.PLAYER),
+    //audio and playbar
+	audioEl: $(SELECTORS.audio.ids.PLAYER),
 
     currTimeEl: $(SELECTORS.audio.ids.CURRENT_TIME),
     progBarEl: $(SELECTORS.audio.ids.PROGRESS_BAR),
@@ -121,10 +132,14 @@ export const domEls = {
 
     titleEl: $(SELECTORS.audio.ids.TITLE),
     authorEl: $(SELECTORS.audio.ids.AUTHOR),
-    queueListEl: $(SELECTORS.queue.ids.LIST),
 
+	//queue
+	queueListEl: $(SELECTORS.queue.ids.LIST),
+
+	//library
     libraryListEl: $(SELECTORS.library.ids.LIST),
 
+	//playlist
 	playlistsEl: $(SELECTORS.playlists.ids.BODY),
 };
 
@@ -134,4 +149,11 @@ export const searchDomEls = {
 
 	deepSearchButtonEl: $(SELECTORS.search.ids.SEARCH_GET_RESULTS_BUTTON),
 	downloadSearchButtonEl: $(SELECTORS.search.ids.SEARCH_AND_DOWNLOAD_BUTTON)
-}
+};
+
+export const popupDomEls = {
+	createPlaylistButtonEl: $(SELECTORS.playlists.ids.CREATE),
+
+	popupOverlayEl: $(SELECTORS.popup.ids.OVERLAY),
+	popupEl: $(SELECTORS.popup.ids.POPUP),
+};
