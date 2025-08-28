@@ -8,7 +8,7 @@ export {
     popLocalQueue,
     removeLocalQueueAt,
     setLocalQueueFirst
-} from "./localqueue.js";
+} from "./queue.js";
 
 
 export {
@@ -16,4 +16,11 @@ export {
 
     getLocalLikes,
     setLocalLikes
-} from "./liked.js";
+} from "./likes.js";
+
+
+export {
+    createLocalPlaylist,
+    setLocalPlaylists,
+    getPlaylistById
+} from "./playlists.js";

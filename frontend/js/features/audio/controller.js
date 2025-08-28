@@ -22,7 +22,7 @@ import {
 import { redrawQueueUI } from "../queue/index.js";
 
 import { logDebug } from "../../utils/debug.js";
-import { getLocalQueue, peekLocalQueue, popLocalQueue } from "../../cache/localqueue.js";
+import { getLocalQueue, peekLocalQueue, popLocalQueue } from "../../cache/index.js";
 
 
 

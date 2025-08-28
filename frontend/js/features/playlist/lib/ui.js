@@ -1,23 +1,48 @@
 //static/js/features/library/ui.js
 
+import { buildNewPlaylist } from "../../../dom/builder.js";
 import { buildTrackListItem, buildTrackListEmptyItem } from "../../../dom/index.js";
 
 
+//adds a new empty playlist element inside the custom playlists section
+export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = null) {
+    //check if it's already there, then dont do anything
+    let existingEl = customPlaylistEl.querySelector(`[data-id="${id}]`);
+    if (existingEl) {
+        return;
+    }
 
-//renders a list of tracks in the ui
-export function renderPlaylist(playlistEl, tracks) {
-    playlistEl.innerHTML = "";
+    //try selecting the temp, if it exists, then update the id
+    existingEl = customPlaylistEl.querySelector(`[data-id="${tempId}"]`);
+    if (existingEl) {
+        existingEl.dataset.id = id;
+        return;
+        
+    }
+
+    //neither the expected nor the temp id version exists yet
+    const playlistEl = buildNewPlaylist(name, id);
+    customPlaylistEl.appendChild(playlistEl);
+
+    const listEl = playlistEl.querySelector(".list-track");
+    return listEl;
+}
+
+
+//renders a list of tracks in a playlist
+export function renderPlaylist(listEl, tracks) { //rename to renderList
+    listEl.innerHTML = "";
 
     if (!tracks?.length) {
         const item = buildTrackListEmptyItem();
-        playlistEl.appendChild(item);
+        listEl.appendChild(item);
         return;
     }
     
     //build rows
     tracks.forEach(track => {
         const item = buildTrackListItem(track);
-        playlistEl.appendChild(item);
+        listEl.appendChild(item);
     });
 }
 

@@ -1,9 +1,9 @@
-import { domEls } from "../../dom/selectors.js";
+import { domEls, playlistDomEls } from "../../dom/selectors.js";
 import { getQueueContent, redrawQueueUI } from "../../features/queue/index.js";
 
-import { getLibraryContent, getLikedContent, renderPlaylist } from "../../features/playlist/index.js";
-import { setLocalQueue } from "../../cache/localqueue.js";
-import { setLocalLikes } from "../../cache/liked.js";
+import { getLibraryContent, getLikedContent, renderNewCustomPlaylist, renderPlaylist } from "../../features/playlist/index.js";
+import { setLocalQueue, setLocalLikes, setLocalPlaylists } from "../../cache/index.js";
+import { getPlaylistContent, getPlaylists } from "../../features/playlist/lib/api.js"; //move to index.js
 
 
 async function bootstrapQueue() {
@@ -43,8 +43,31 @@ async function bootstrapLikes() {
     }
 }
 
+
+async function bootstrapPlaylists() {
+    try {
+        const data = await getPlaylists(); //implement
+        console.log(data.content);
+
+        const playlists = data.content;
+
+        for (const pl of playlists) {
+            const plData = await getPlaylistContent(pl.id);
+
+            //add to local playlists
+
+            const newCustomListEl = renderNewCustomPlaylist(playlistDomEls.customPlaylistEl, pl.name, pl.id);
+            renderPlaylist(newCustomListEl, plData.tracks);
+        }
+    } catch (err) {
+        console.error("Bootstrap failed", err);
+    }
+}
+
+
 export async function bootstrapAll() {
     bootstrapQueue();
     bootstrapLibrary();
     bootstrapLikes();
+    bootstrapPlaylists();
 }

@@ -15,21 +15,6 @@ from backend.core.youtube.client import YouTubeClient
 router = APIRouter(prefix="/search")
 
 
-@router.get("/likes")
-async def get_likes(req: Request):
-    """
-    Fetches tracks from the likes database table.
-
-    Returns:
-        JSONResponse: A list of matching tracks from the local SQLite database.
-    """
-    db: AudioDatabase = req.app.state.db
-    content = await db.fetch_liked_tracks()
-
-    return JSONResponse(content={"content": content}, status_code=200)
-
-
-
 @router.get("/")
 async def search(req: Request, q: Optional[str] = Query(None)):
     """

@@ -1,7 +1,5 @@
 //static/js/dom/builder.js
 
-import { SELECTORS } from "./selectors.js";
-
 import { prepareDataset, formatTime } from "../utils/index.js";
 
 //helper to create element with optional attributes and children
@@ -24,7 +22,7 @@ export function createElem(tag, attrs = {}, children = []) {
 
 export function buildTrackListItem(track) {
     const li = document.createElement("li");
-    li.className = "list-track-item";
+    li.classList.add("list-track-item");
         
     // Add the track data to the li itself
     const trackDataset = prepareDataset(track);
@@ -69,7 +67,7 @@ export function buildTrackListItem(track) {
 
 export function buildTrackListEmptyItem() {
     const li = document.createElement("li");
-    li.className = "list-track-empty-item";
+    li.classList.add("list-track-empty-item");
         
     li.innerHTML = `
         <p>No tracks available</p>
@@ -81,17 +79,37 @@ export function buildTrackListEmptyItem() {
 
 export function buildCreatePlaylistPopup() {
     const popup = document.createElement("div");
-    popup.className = "popup-content";
+    popup.classList.add("popup-content");
     
     popup.innerHTML = `
         <h3 class="popup-message">Create Playlist</h3>
 
-        <input class="menu-input" type="text" placeholder="New name">
+        <input class="menu-input js-create-playlist-input" type="text" placeholder="New name">
 
         <div class="popup-actions">
-            <button class="menu-button green create-playlist">Save</button>
-            <button class="menu-button cancel">Cancel</button>
+            <button class="menu-button green js-create-playlist-button">Save</button>
+            <button class="menu-button js-cancel">Cancel</button>
         </div>
     `;
     return popup
+}
+
+
+export function buildNewPlaylist(name, id) {
+    const playlist = document.createElement("div");
+    playlist.classList.add("playlist");
+
+    playlist.dataset.name = name;
+    playlist.dataset.id = id;
+
+    playlist.innerHTML = `
+        <div class="list-header">
+            <h3 class="list-title">${name}</h3>
+        </div>
+
+        <ul class="list-track">
+        </ul>
+    `;
+
+    return playlist;
 }

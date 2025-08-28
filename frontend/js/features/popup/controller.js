@@ -2,6 +2,9 @@ import { buildCreatePlaylistPopup } from "../../dom/builder.js";
 import { hidePopup, showPopup } from "./index.js";
 
 import { logDebug } from "../../utils/debug.js";
+import { createLocalPlaylist } from "../../cache/index.js";
+import { renderNewCustomPlaylist, renderPlaylist } from "../playlist/lib/ui.js";
+import { createPlaylist } from "../playlist/lib/api.js";
 
 
 export function hidePopupOnClick(e, domEls) {
@@ -10,7 +13,7 @@ export function hidePopupOnClick(e, domEls) {
 }
 
 export function showCreatePlaylistPopup(domEls) {
-    const { popupOverlayEl, popupEl } = domEls;
+    const { popupOverlayEl, popupEl, customPlaylistEl } = domEls;
 
     //clear old popup and set to a new fresh one
     popupEl.innerHTML = "";
@@ -19,19 +22,39 @@ export function showCreatePlaylistPopup(domEls) {
     popupEl.append(newPopupEl);
 
     //bind listeners
-    const cancelButton = newPopupEl.querySelector(".cancel");
+    const cancelButton = newPopupEl.querySelector(".js-cancel");
     cancelButton.addEventListener("click", () => {
         hidePopup(popupOverlayEl);
     });
 
-    const createPlaylistButton = newPopupEl.querySelector(".create-playlist");
+    const createPlaylistButton = newPopupEl.querySelector(".js-create-playlist-button");
+    const createPlaylistInputEl = newPopupEl.querySelector(".js-create-playlist-input");
+
     createPlaylistButton.addEventListener("click", () => {
         logDebug("create playlist triggered"); //more logic here required
+
+        onCreatePlaylist(customPlaylistEl, createPlaylistInputEl); //no await?
         hidePopup(popupOverlayEl);
     })
 
     //show
     showPopup(popupOverlayEl);
+}
+
+async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl) {
+    //if length of input > 0 then 
+    // 1) update local playlists, 2) update visuals via playlistUI, 3) send rest call via playlistAPI.
+    //listen for websocket update.    
+    const name = createPlaylistInputEl.value.trim(); //extract and only do stuff if greater than length 0
+    if (name.length > 0) {
+        const tempId = "tmp-" + crypto.randomUUID();
+        createLocalPlaylist(tempId, name);
+
+        const newCustomListEl = renderNewCustomPlaylist(customPlaylistEl, name, null, tempId);
+        renderPlaylist(newCustomListEl, []);
+
+        await createPlaylist(tempId, name);
+    }
 }
 
 

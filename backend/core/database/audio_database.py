@@ -17,6 +17,10 @@ class AudioDatabaseAction(str, Enum):
     FETCH_LIKES = "fetch_likes"
 
     CREATE_PLAYLIST = "create_playlist"
+    
+    GET_ALL_PLAYLISTS = "get_all_playlists"
+    GET_PLAYLIST_CONTENT = "get_playlist_content"
+
     ADD_TO_PLAYLIST = "add_to_playlist"
 
 ADA = AudioDatabaseAction #alias
@@ -288,12 +292,8 @@ class AudioDatabase:
 
 
 
-
-
-
-
     #playlists
-    async def create_playlist(self, name: str):
+    async def create_playlist(self, name: str, temp_id: str):
         async with self._lock:
             row = await self._fetchone(f'''
                 INSERT INTO {self.PLAYLISTS_TABLE} (name) 
@@ -301,10 +301,70 @@ class AudioDatabase:
                 RETURNING id;
             ''', (name,))
 
-            content = {"id": row["id"], "name": name}
+            content = {
+                "temp_id": temp_id, 
+                "id": row["id"], 
+                "name": name
+            }
             await self._emit_event(action=ADA.CREATE_PLAYLIST, payload={"content": content})
+            
+            return 
+        
+    async def get_all_playlists(self):
+        async with self._lock:
+            rows = await self._fetchall(f'''
+                SELECT id, name
+                FROM {self.PLAYLISTS_TABLE}
+                ORDER BY id;
+            ''')
+            playlists = [{"id": row["id"], "name": row["name"]} for row in rows]
 
+            await self._emit_event(action=ADA.GET_ALL_PLAYLISTS, payload={"content": playlists})
+            
+            return playlists
+
+    async def get_playlist_content(self, playlist_id: int):
+        async with self._lock:
+            # Get playlist info
+            playlist_row = await self._fetchone(f'''
+                SELECT id, name
+                FROM {self.PLAYLISTS_TABLE}
+                WHERE id = ?
+            ''', (playlist_id,))
+            if not playlist_row:
+                return {
+                    "id": playlist_id,
+                    "name": None,
+                    "tracks": []
+                }  # or raise an error
+    
+            rows = await self._fetchall(f'''
+                SELECT t.id, t.title, t.uploader, t.duration
+                FROM {self.PLAYLIST_TRACKS_TABLE} pt
+                INNER JOIN {self.TRACKS_TABLE} t ON pt.track_id = t.id
+                WHERE pt.playlist_id = ?
+                ORDER BY pt.position ASC;
+            ''', (playlist_id,))
+            tracks = [
+                Track(
+                    id=row["id"], 
+                    title=row["title"],
+                    uploader=row["uploader"],
+                    duration=row["duration"]
+                )
+                for row in rows
+            ]
+
+            content = {
+                "id": playlist_row["id"],
+                "name": playlist_row["name"],
+                "tracks": [track.to_json() for track in tracks]
+            }
+
+            await self._emit_event(action=ADA.GET_PLAYLIST_CONTENT, payload={"content": content})
+    
             return content
+            #PLEASE CHANGE THIS THIS IS SO UGLY
         
     async def add_track_to_playlist(self, playlist_id: int, track_id: str, position: int = None):
         async with self._lock:

@@ -11,9 +11,8 @@ export async function getLibraryContent() {
     return data;
 }
 
-
 export async function getLikedContent() {
-    const response = await getResponse(`/search/likes`);
+    const response = await getResponse(`/playlists/likes`);
 
     const data = await response.json();
     return data;
@@ -21,5 +20,27 @@ export async function getLikedContent() {
 
 export async function toggleLike(id) {
     const response = await postRequest(`/audio/toggle_like`, { id });
-    console.log("queuePopTrack status:", response.status);    
+    console.log("toggleLike status:", response.status);    
+}
+
+
+//playlists
+export async function getPlaylists() {
+    const response = await getResponse(`/playlists`);
+
+    const data = await response.json();
+    //console.log("getPlaylists:", data.content);
+    return data;
+}
+export async function getPlaylistContent(id) {
+    const response = await getResponse(`/playlists/content/?id=${encodeURIComponent(id)}`);
+
+    const data = await response.json();
+    //console.log(`getPlaylistContent(${id}):`, data.content);
+    return data;
+}
+
+export async function createPlaylist(tempId, name) {
+    const response = await postRequest(`/playlists/create`, { "temp_id": tempId, "name": name });
+    console.log("createPlaylist status:", response.status);
 }

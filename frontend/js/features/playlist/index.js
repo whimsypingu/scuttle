@@ -2,9 +2,12 @@ export {
     getLibraryContent,
     getLikedContent,
     toggleLike,
+
+    createPlaylist,
 } from "./lib/api.js";
 
 export {
-    renderPlaylist
+    renderPlaylist,
+    renderNewCustomPlaylist
 } from "./lib/ui.js";
 

@@ -72,6 +72,8 @@ export const SELECTORS = {
 			LIBRARY: "library",
 			LIKED: "liked",
 
+			CUSTOM: "custom-playlists",
+
 			CREATE: "create-playlist-button",
 		},
 		classes: {
@@ -155,8 +157,17 @@ export const searchDomEls = {
 };
 
 export const popupDomEls = {
+	customPlaylistEl: $(SELECTORS.playlists.ids.CUSTOM),
+
 	createPlaylistButtonEl: $(SELECTORS.playlists.ids.CREATE),
 
 	popupOverlayEl: $(SELECTORS.popup.ids.OVERLAY),
 	popupEl: $(SELECTORS.popup.ids.POPUP),
 };
+
+
+export const playlistDomEls = {
+	customPlaylistEl: $(SELECTORS.playlists.ids.CUSTOM),
+
+
+}
