@@ -280,15 +280,14 @@ class AudioDatabase:
     async def fetch_liked_tracks(self):
         async with self._lock:
             rows = await self._fetchall(f'''
-                SELECT t.id, t.title, t.uploader, t.duration
-                FROM {self.LIKES_TABLE} l
-                JOIN {self.TRACKS_TABLE} t ON l.id = t.id
-                ORDER BY t.title COLLATE NOCASE;
+                SELECT id
+                FROM {self.LIKES_TABLE}
+                ORDER BY liked_at ASC;
             ''')
-            content = [Track(**row) for row in rows]
-            await self._emit_event(action=ADA.FETCH_LIKES, payload={"content": content})
+            track_ids = [row["id"] for row in rows]
+            await self._emit_event(action=ADA.FETCH_LIKES, payload={"content": track_ids})
     
-            return [track.to_json() for track in content]
+            return track_ids
 
 
 
@@ -335,30 +334,21 @@ class AudioDatabase:
                 return {
                     "id": playlist_id,
                     "name": None,
-                    "tracks": []
-                }  # or raise an error
+                    "trackIds": []
+                } 
     
             rows = await self._fetchall(f'''
-                SELECT t.id, t.title, t.uploader, t.duration
-                FROM {self.PLAYLIST_TRACKS_TABLE} pt
-                INNER JOIN {self.TRACKS_TABLE} t ON pt.track_id = t.id
-                WHERE pt.playlist_id = ?
-                ORDER BY pt.position ASC;
+                SELECT track_id
+                FROM {self.PLAYLIST_TRACKS_TABLE} 
+                WHERE playlist_id = ?
+                ORDER BY position ASC;
             ''', (playlist_id,))
-            tracks = [
-                Track(
-                    id=row["id"], 
-                    title=row["title"],
-                    uploader=row["uploader"],
-                    duration=row["duration"]
-                )
-                for row in rows
-            ]
+            track_ids = [row["track_id"] for row in rows]
 
             content = {
                 "id": playlist_row["id"],
                 "name": playlist_row["name"],
-                "tracks": [track.to_json() for track in tracks]
+                "trackIds": track_ids
             }
 
             await self._emit_event(action=ADA.GET_PLAYLIST_CONTENT, payload={"content": content})

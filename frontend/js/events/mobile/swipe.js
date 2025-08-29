@@ -9,7 +9,8 @@ import {
 let startX = 0;
 let deltaX = 0;
 let maxSwipe = null;
-let flipThreshold = null;
+let flipThreshold1 = null;
+let flipThreshold2 = null;
 
 let startY = 0;
 let deltaY = 0;
@@ -20,11 +21,23 @@ let swipeDirection = null; // "left" "right" null
 let activeEl = null;
 
 //handles the state of mobile swipeable actions states
+//consider some kind of action handler that determines inner icon and color
+function setSwipeTheme(el, absX, theme1, theme2) {
+    if (absX > flipThreshold2) {
+        el.dataset.swipeTheme = theme2;
+    } else if (absX > flipThreshold1) {
+        el.dataset.swipeTheme = theme1;
+    } else {
+        delete el.dataset.swipeTheme;
+    }
+}
 function setBg(side, opacity = "0", absX = 0) {
     let el = null;
     const foreground = activeEl.querySelector(".foreground");
 
-    const marginOffset = "var(--space-xxl)";
+    const marginOffset = "var(--space-xxl)"; //dude i dont even remember what this is for
+
+    //swipe to the right, exposing the left side
     if (side == "left") {
         el = activeEl.querySelector(".swipe-action.left");
         if (absX > 0) {
@@ -32,6 +45,9 @@ function setBg(side, opacity = "0", absX = 0) {
         } else {
             foreground.style.transform = `translateX(0px)`;
         }
+
+        //color
+        setSwipeTheme(el, absX, "green1", "tan1");
     } else {
         el = activeEl.querySelector(".swipe-action.right");
         if (absX > 0) {
@@ -39,16 +55,13 @@ function setBg(side, opacity = "0", absX = 0) {
         } else {
             foreground.style.transform = `translateX(0px)`;
         }
+
+        //color
+        setSwipeTheme(el, absX, "green1", "red1");
     }
 
     el.style.width = `${absX}px`;
     el.style.opacity = opacity;
-
-    if (absX > flipThreshold) {
-        el.classList.add("flip-color");
-    } else {
-        el.classList.remove("flip-color");
-    }
 }
 
 export function setupSwipeEventListeners() {
@@ -60,8 +73,9 @@ export function setupSwipeEventListeners() {
 
         startX = e.touches[0].clientX;
         deltaX = 0;
-        maxSwipe = activeEl.offsetWidth / 2; //how much swipe space is available
-        flipThreshold = activeEl.offsetWidth / 3; //at which point swipe is complete
+        maxSwipe = activeEl.offsetWidth * 0.6; //how much swipe space is available
+        flipThreshold1 = maxSwipe * 0.5; //at which point swipe is complete
+        flipThreshold2 = maxSwipe * 0.9;
 
         console.log(maxSwipe);
 
@@ -118,16 +132,21 @@ export function setupSwipeEventListeners() {
         setBg("right");
 
         if (!isSwiping) return;
-        const isValidSwipe = Math.abs(deltaX) >= flipThreshold;
+        const isValidSwipe2 = Math.abs(deltaX) >= flipThreshold2; //deeper secondary action
+        const isValidSwipe1 = Math.abs(deltaX) >= flipThreshold1;
 
         if (deltaX > 0) {
             //swipe to the right
-            if (isValidSwipe) {
+            if (isValidSwipe2) {
+                console.log("SWIPE SECONDARY ACTION TO THE RIGHT");
+            } else if (isValidSwipe1) {
                 onSwipe(domEls, activeEl.dataset, "queue"); //this works for both library and queue??
             }
         } else {
             //swipe left
-            if (isValidSwipe) {
+            if (isValidSwipe2) {
+                onSwipe(domEls, activeEl.dataset, "more");
+            } else if (isValidSwipe1) {
                 onSwipe(domEls, activeEl.dataset, "like");
             }
         }

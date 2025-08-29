@@ -16,28 +16,13 @@ import {
 import { 
     queuePushTrack,
     queueSetFirstTrack,
-    renderNowPlaying,
-    renderQueueList
+    redrawQueueUI,
 } from "./index.js";
 
+import { QueueStore } from "../../cache/QueueStore.js";
 
 
-// //ui update
-// export async function renderQueueUI(domEls, tracks) {
-//     const { queueListEl, titleEl, authorEl } = domEls;
 
-//     if (!Array.isArray(tracks) || tracks.length === 0) {
-//         renderNowPlaying(titleEl, authorEl, null);
-//         renderQueueList(queueListEl, null);
-//         return;
-//     }
-
-//     const currTrack = tracks[0];
-//     renderNowPlaying(titleEl, authorEl, currTrack);
-
-//     const remainingQueue = tracks.slice(1);
-//     renderQueueList(queueListEl, remainingQueue);
-// }
 
 
 //clicking the queue list will check for this
@@ -78,7 +63,7 @@ async function onClickPlayButton(domEls, dataset) {
 
     try {
         //1. make changes to local queue
-        setLocalQueueFirst(track);
+        QueueStore.setFirst(track.id);
 
         //2. load in the audio
         await cleanupCurrentAudio(audioEl);
@@ -86,7 +71,7 @@ async function onClickPlayButton(domEls, dataset) {
 
         //3. make optimistic ui changes
         updateMediaSession(track);
-        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
         resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
@@ -94,7 +79,7 @@ async function onClickPlayButton(domEls, dataset) {
         await playLoadedTrack(audioEl);
 
         //5. send changes to server (returns websocket message to sync ui)
-        await queueSetFirstTrack(track);
+        await queueSetFirstTrack(track.id);
 
     } catch (err) {
         logDebug("Failed to play audio:", err);
@@ -115,10 +100,10 @@ async function onClickQueueButton(domEls, dataset) {
 
     //1. update queue (local and backend)
     try {
-        pushLocalQueue(track);
-        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        QueueStore.push(track.id);
+        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
 
-        await queuePushTrack(track);
+        await queuePushTrack(track.id);
     } catch (err) {
         logDebug("Failed to queue audio:", err);
     }

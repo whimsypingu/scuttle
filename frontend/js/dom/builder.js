@@ -95,6 +95,29 @@ export function buildCreatePlaylistPopup() {
 }
 
 
+//FINISH ME
+export function buildEditTrackPopup(playlists) {
+    const popup = document.createElement("div");
+    popup.classList.add("popup-content");
+
+    popup.innerHTML = `
+        <h3 class="popup-message">Edit Track</h3>
+
+        <div class="playlist-selection-menu">
+            ${playlists.map(pl => `
+                <label class="playlist-option">
+                    <input type="checkbox" value="${pl.id}">
+                `)}
+        </div>
+
+        <div class="popup-actions">
+            <button class="menu-button green">Done</button>
+            <button class="menu-button js-cancel">Cancel</button>
+        </div>
+    `
+}
+
+
 export function buildNewPlaylist(name, id) {
     const playlist = document.createElement("div");
     playlist.classList.add("playlist");

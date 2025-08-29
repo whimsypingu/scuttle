@@ -12,7 +12,7 @@ router = APIRouter(prefix="/playlists")
 
 
 @router.get("/")
-async def get_playlist_content(req: Request):
+async def get_playlists(req: Request):
     """
     Gets all playlist names
 
@@ -28,10 +28,10 @@ async def get_playlist_content(req: Request):
 @router.get("/content")
 async def get_playlist_content(req: Request, id: Optional[int] = Query(None)):
     """
-    Fetches tracks for the corresponding playlist
+    Fetches track ids for the corresponding playlist
 
     Returns:
-        JSONResponse: A list of matching tracks from the local SQLite database.
+        JSONResponse: A list of matching track ids from the local SQLite database.
     """
     db: AudioDatabase = req.app.state.db
     content = await db.get_playlist_content(id)
@@ -72,10 +72,10 @@ async def create_playlist(body: CreatePlaylistRequest, req: Request) -> Response
 @router.get("/likes")
 async def get_likes(req: Request):
     """
-    Fetches tracks from the likes database table.
+    Fetches track ids from the likes database table.
 
     Returns:
-        JSONResponse: A list of matching tracks from the local SQLite database.
+        JSONResponse: A list of matching track ids from the local SQLite database.
     """
     db: AudioDatabase = req.app.state.db
     content = await db.fetch_liked_tracks()

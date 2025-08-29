@@ -15,7 +15,7 @@ export async function getLikedContent() {
     const response = await getResponse(`/playlists/likes`);
 
     const data = await response.json();
-    return data;
+    return data; 
 }
 
 export async function toggleLike(id) {

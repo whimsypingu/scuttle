@@ -19,20 +19,13 @@ import {
     redrawQueueUI
 } from "../queue/index.js";
 
-import { 
-    getLocalQueue, 
-    pushLocalQueue, 
-    setLocalQueueFirst,
-
-    toggleLocalLikes,
-    getLocalLikes,
-} from "../../cache/index.js";
-
 import { toggleLike } from "./lib/api.js";
 
 import { logDebug } from "../../utils/debug.js";
 import { renderPlaylist } from "./lib/ui.js";
 
+import { QueueStore } from "../../cache/QueueStore.js";
+import { LikeStore } from "../../cache/LikeStore.js";
 
 
 //clicking the library list will check for this
@@ -72,7 +65,7 @@ async function onClickPlayButton(domEls, dataset) {
 
     try {
         //1. make changes to local queue, which triggers queue ui update
-        setLocalQueueFirst(track);
+        QueueStore.setFirst(track.id);
 
         //2. load in the audio
         await cleanupCurrentAudio(audioEl);
@@ -80,7 +73,7 @@ async function onClickPlayButton(domEls, dataset) {
 
         //3. make optimistic ui changes
         updateMediaSession(track);
-        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
         resetUI(audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
@@ -88,7 +81,7 @@ async function onClickPlayButton(domEls, dataset) {
         await playLoadedTrack(audioEl);
 
         //5. send changes to server (returns websocket message to sync ui)
-        await queueSetFirstTrack(track);
+        await queueSetFirstTrack(track.id);
 
     } catch (err) {
         logDebug("Failed to play audio:", err);
@@ -108,10 +101,10 @@ async function onClickQueueButton(domEls, dataset) {
 
     //1. update queue (local and backend)
     try {
-        pushLocalQueue(track);
-        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        QueueStore.push(track.id);
+        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
 
-        await queuePushTrack(track);
+        await queuePushTrack(track.id);
     } catch (err) {
         logDebug("Failed to queue audio:", err);
     }
@@ -135,10 +128,12 @@ export async function onSwipe(domEls, dataset, action) {
     //1. handle action type
     if (action === "queue") {
         try {
-            pushLocalQueue(track);
-            redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+            QueueStore.push(track.id);
+            redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
+            //test
+            logDebug("TEST: QUEUE:", QueueStore.getTracks());
 
-            await queuePushTrack(track); //backend
+            await queuePushTrack(track.id); //backend
 
             logDebug("Queue swiped");
         } catch (err) {
@@ -146,8 +141,11 @@ export async function onSwipe(domEls, dataset, action) {
         }
     } else if (action === "like") {
         try {
-            toggleLocalLikes(track);
-            renderPlaylist(likedListEl, getLocalLikes());
+            LikeStore.toggle(track.id);
+            renderPlaylist(likedListEl, LikeStore.getTracks());
+
+            //test
+            logDebug("TEST: LIKE:", LikeStore.getTracks());
 
             await toggleLike(track.id); //backend
             
@@ -156,6 +154,9 @@ export async function onSwipe(domEls, dataset, action) {
             logDebug("Like failed", err);
         }
     } else if (action === "more") {
+        
+        //showpop
+
         logDebug("more //BUILD ME", track);
     } else {
         logDebug("unknown swipe action, how did we get here?");

@@ -4,7 +4,6 @@ import { $, SELECTORS } from "../../dom/index.js";
 import { renderPlaylist } from "../../features/playlist/index.js";
 
 
-import { setLocalQueue } from "../../cache/index.js";
 
 
 //handles websocket messages //later this should be migrated from the backend to ensure consistency
@@ -29,23 +28,23 @@ export const handlers = {
 
 //player queue related websocket messages update the state of the local queue (for caching), and also the ui
 function handlePQSF(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 function handlePQIN(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 function handlePQPU(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 function handlePQPO(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 function handlePQRE(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 

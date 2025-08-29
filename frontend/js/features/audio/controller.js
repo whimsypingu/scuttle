@@ -22,8 +22,8 @@ import {
 import { redrawQueueUI } from "../queue/index.js";
 
 import { logDebug } from "../../utils/debug.js";
-import { getLocalQueue, peekLocalQueue, popLocalQueue } from "../../cache/index.js";
 
+import { QueueStore } from "../../cache/QueueStore.js";
 
 
 //autoplay
@@ -33,8 +33,8 @@ export async function onAudioEnded(domEls) {
     try {
         //instantaneously update everything, and then send the update to the backend
         //1. make changes to local , which will trigger queue ui update
-        popLocalQueue();
-        const track = peekLocalQueue();
+        QueueStore.pop();
+        const track = QueueStore.peekTrack();
         logDebug("Next track:", track);
 
         //2. clean
@@ -53,7 +53,7 @@ export async function onAudioEnded(domEls) {
 
         //5. make optimistic ui changes
         updateMediaSession(track);
-        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
         resetUI(audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
@@ -76,8 +76,8 @@ export async function onNextButtonClick(domEls) {
     try {
         //instantaneously update everything, and then send the update to the backend
         //1. make changes to local, which will trigger queue ui update
-        popLocalQueue();
-        const track = peekLocalQueue();
+        QueueStore.pop();
+        const track = QueueStore.peekTrack();
         logDebug("Next track:", track);
 
         //2. clean
@@ -96,7 +96,7 @@ export async function onNextButtonClick(domEls) {
 
         //5. make optimistic ui changes
         updateMediaSession(track);
-        redrawQueueUI(queueListEl, titleEl, authorEl, getLocalQueue());
+        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
         resetUI(audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
@@ -117,7 +117,7 @@ export async function onPlayPauseButtonClick(domEls) {
     console.error(audioEl.paused);
 
     //1. check for track
-    const track = peekLocalQueue();
+    const track = QueueStore.peekTrack();
     if (!track) return;
 
     //2. load in edge case where item is in queue but not yet loaded into audio element.    
