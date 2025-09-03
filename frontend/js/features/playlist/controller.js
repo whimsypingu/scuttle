@@ -26,6 +26,7 @@ import { renderPlaylist } from "./lib/ui.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
 import { LikeStore } from "../../cache/LikeStore.js";
+import { showEditTrackPopup } from "../popup/controller.js";
 
 
 //clicking the library list will check for this
@@ -155,9 +156,13 @@ export async function onSwipe(domEls, dataset, action) {
         }
     } else if (action === "more") {
         
-        //showpop
+        try {
+            showEditTrackPopup(domEls, track.id);
+            logDebug("more //BUILD ME", track);
+        } catch (err) {
+            logDebug("More failed", err);
+        }
 
-        logDebug("more //BUILD ME", track);
     } else {
         logDebug("unknown swipe action, how did we get here?");
     }

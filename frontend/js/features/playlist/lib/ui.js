@@ -1,5 +1,6 @@
 //static/js/features/library/ui.js
 
+import { PlaylistStore } from "../../../cache/PlaylistStore.js";
 import { buildNewPlaylist } from "../../../dom/builder.js";
 import { buildTrackListItem, buildTrackListEmptyItem } from "../../../dom/index.js";
 
@@ -47,4 +48,12 @@ export function renderPlaylist(listEl, tracks) { //rename to renderList
 }
 
 
+//renders a custom playlist by id (just a simple refresh) based on current status in playlistStore
+export function renderPlaylistById(id) {
+    const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
+    const listEl = playlistEl ? playlistEl.querySelector(".list-track") : null;
 
+    const tracks = PlaylistStore.getTracks(id);
+
+    renderPlaylist(listEl, tracks);
+}

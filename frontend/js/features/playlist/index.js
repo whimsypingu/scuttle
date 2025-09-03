@@ -8,6 +8,7 @@ export {
 
 export {
     renderPlaylist,
-    renderNewCustomPlaylist
+    renderNewCustomPlaylist,
+    renderPlaylistById
 } from "./lib/ui.js";
 

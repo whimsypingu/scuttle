@@ -87,11 +87,11 @@ export function buildCreatePlaylistPopup() {
         <input class="menu-input js-create-playlist-input" type="text" placeholder="New name">
 
         <div class="popup-actions">
-            <button class="menu-button green js-create-playlist-button">Save</button>
+            <button class="menu-button green js-save">Save</button>
             <button class="menu-button js-cancel">Cancel</button>
         </div>
     `;
-    return popup
+    return popup;
 }
 
 
@@ -100,21 +100,35 @@ export function buildEditTrackPopup(playlists) {
     const popup = document.createElement("div");
     popup.classList.add("popup-content");
 
+    // expects something like this
+    // const playlists = [
+    //     {"id": 1, "name": "test1", "checked": true},
+    //     {"id": 2, "name": "test2", "checked": false},
+    //     {"id": 3, "name": "test3", "checked": true}        
+    // ]
     popup.innerHTML = `
-        <h3 class="popup-message">Edit Track</h3>
+        <h3 class="popup-message">Select Playlists</h3>
 
         <div class="playlist-selection-menu">
             ${playlists.map(pl => `
-                <label class="playlist-option">
-                    <input type="checkbox" value="${pl.id}">
-                `)}
+                <label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
+                    <span class="checkbox"></span>
+                    <p class="playlist-name">${pl.name}</p>
+                </label>
+            `).join("")}
+        </div>
+
+        <h3 class="popup-message">Track Information</h3>
+
+        <div class="edit-track-metadata-menu">
         </div>
 
         <div class="popup-actions">
-            <button class="menu-button green">Done</button>
+            <button class="menu-button green js-save">Save</button>
             <button class="menu-button js-cancel">Cancel</button>
         </div>
-    `
+    `;
+    return popup;
 }
 
 
