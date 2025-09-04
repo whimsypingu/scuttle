@@ -3,7 +3,7 @@ import { TrackStore } from './TrackStore.js';
 
 
 export const PlaylistStore = (() => {
-    let playlists = {}; // id: {id, name, IdStore}, etc
+    let playlists = {}; // id: {id, name, tracks[createIdStore]}, etc
 
     return {
         //getters
@@ -34,7 +34,11 @@ export const PlaylistStore = (() => {
          */
         create(id, name, trackIds = null) {
             const tracks = createIdStore();
-            if (trackIds) tracks.setAll(trackIds); //sets to list if given
+            if (trackIds) {
+                tracks.setAll(trackIds); //sets to list if given
+            }
+            
+            console.log("CREATE:", trackIds, tracks.getIds());
             
             const pl = {
                 id,

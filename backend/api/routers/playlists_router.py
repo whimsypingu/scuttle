@@ -22,6 +22,8 @@ async def get_playlists(req: Request):
     db: AudioDatabase = req.app.state.db
     content = await db.get_all_playlists()
 
+    print("GET PLAYLISTS CONTENT:", content)
+
     return JSONResponse(content={"content": content}, status_code=200)
 
 
@@ -99,11 +101,11 @@ async def edit_track(body: EditTrackRequest, req: Request) -> Response:
     track_id = body.id
     title = body.title
     uploader = body.author
-    playlist_updates = body.playlists #playlist ids
+    playlist_updates = [pl.model_dump() for pl in body.playlists] #build the right data structure from PlaylistSelections
     
     db: AudioDatabase = req.app.state.db
 
-    await db.update_track_metadata(track_id=track_id, title=title, uploader=uploader)
+    #await db.update_track_metadata(track_id=track_id, title=title, uploader=uploader)
 
     print(f"UPDATED METADATA: TITLE: {title}, UPLOADER: {uploader}")
 

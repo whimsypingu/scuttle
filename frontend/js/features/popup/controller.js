@@ -78,6 +78,7 @@ async function onSaveTrackEdits(trackId, optionEls) {
         }
     }
 
+    console.log("onSaveTrackEdits", "trackId:", trackId, "playlists:", selections);
     await editTrack(trackId, "", "", selections);
 }
 
@@ -105,8 +106,6 @@ export function showCreatePlaylistPopup(domEls) {
 
     const saveButtonEl = newPopupEl.querySelector(".js-save");
     saveButtonEl.addEventListener("click", () => {
-        logDebug("create playlist triggered"); //more logic here required
-
         const createPlaylistInputEl = newPopupEl.querySelector(".js-create-playlist-input");
 
         onCreatePlaylist(customPlaylistEl, createPlaylistInputEl); //no await?
@@ -123,6 +122,8 @@ async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl) {
     //listen for websocket update.    
     const name = createPlaylistInputEl.value.trim(); //extract and only do stuff if greater than length 0
     if (name.length > 0) {
+        logDebug("create playlist triggered");
+
         const tempId = "tmp-" + crypto.randomUUID();
         PlaylistStore.create(tempId, name);
 

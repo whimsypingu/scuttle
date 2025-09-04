@@ -29,14 +29,14 @@ export async function getPlaylists() {
     const response = await getResponse(`/playlists`);
 
     const data = await response.json();
-    //console.log("getPlaylists:", data.content);
+    console.log("getPlaylists:", data.content);
     return data;
 }
 export async function getPlaylistContent(id) {
     const response = await getResponse(`/playlists/content/?id=${encodeURIComponent(id)}`);
 
     const data = await response.json();
-    //console.log(`getPlaylistContent(${id}):`, data.content);
+    console.log(`getPlaylistContent(${id}):`, data.content);
     return data;
 }
 

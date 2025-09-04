@@ -111,7 +111,9 @@ function setQueueToggleMobile() {
                 return; // don't prevent default for interactive elements
             }
         }
-        e.preventDefault();
+        
+        //e.preventDefault() //dont even remember what this was supposed to do anymore fuck; but when i comment it out no warnings hooray
+        if (e.cancelable) e.preventDefault(); // this fixed it idk lol
     }, { passive: false });
 }
 

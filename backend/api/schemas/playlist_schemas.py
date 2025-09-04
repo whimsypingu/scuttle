@@ -7,8 +7,12 @@ class CreatePlaylistRequest(BaseModel):
     name: str
 
 
+class PlaylistSelection(BaseModel):
+    id: str             #technically should be an int, but sqlite will handle conversion.
+    checked: bool
+
 class EditTrackRequest(BaseModel):
     id: str
     title: Optional[str]
     author: Optional[str]
-    playlists: List[str]
+    playlists: List[PlaylistSelection]

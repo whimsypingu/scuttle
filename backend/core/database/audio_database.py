@@ -359,6 +359,22 @@ class AudioDatabase:
 
     #modifications to data
     async def update_track_playlists(self, track_id: str, playlist_updates: list[dict]):
+        """
+        Update a track's playlist memberships based on a set of updates.
+
+        For each playlist update in `playlist_updates`, which should be like [{id: '1', checked: false}]:
+          - If `checked` is True: ensure the track is present in the playlist 
+            (insert if missing, keep if already exists).
+          - If `checked` is False: remove the track from the playlist if it exists.
+          - If `checked` is None or not provided: make no changes for that playlist.
+
+        Args:
+            track_id (str): The ID of the track to update.
+            playlist_updates (list[dict]): A list of updates, where each item is a dict
+                with:
+                  - "id" (str): Playlist ID
+                  - "checked" (bool | None): Desired membership state
+        """
         async with self._lock:
             for playlist in playlist_updates:
                 playlist_id, checked = playlist["id"], playlist["checked"]

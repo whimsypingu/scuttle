@@ -57,22 +57,24 @@ async function bootstrapLikes() {
 
 async function bootstrapPlaylists() {
     try {
-        const data = await getPlaylists();
+        const data = await getPlaylists(); // {content: [{id, name}...]}
         console.log("Bootstrap playlist content:", data.content);
 
         const playlists = data.content; // [{id, name}, etc]
 
         for (const pl of playlists) {
-            const plData = await getPlaylistContent(pl.id); // {id, name, trackIds[]}
+            const plData = await getPlaylistContent(pl.id); // {content: {id, name, trackIds[]}}
 
+            const trackIds = plData.content.trackIds; // [id1, id2, ...]
+            
             //add to local playlists;
-            PlaylistStore.create(pl.id, pl.name, plData.trackIds);
+            PlaylistStore.create(pl.id, pl.name, trackIds);
 
-            console.log("Playlist", pl.id, "Name", pl.name, "content:", PlaylistStore.getTrackIds());
+            console.log("Playlist", pl.id, "Name", pl.name, "Content:", PlaylistStore.getTrackIds(pl.id));
 
             //create visual elements
             const newCustomListEl = renderNewCustomPlaylist(playlistDomEls.customPlaylistEl, pl.name, pl.id);
-            renderPlaylist(newCustomListEl, PlaylistStore.getTracks());
+            renderPlaylist(newCustomListEl, PlaylistStore.getTracks(pl.id));
         }
     } catch (err) {
         console.error("Bootstrap failed", err);
