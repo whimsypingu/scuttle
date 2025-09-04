@@ -152,12 +152,11 @@ class AudioDatabase:
             await self._execute(f'''
                 CREATE TABLE IF NOT EXISTS {self.PLAYLIST_TRACKS_TABLE} (
                     playlist_id INTEGER NOT NULL,
-                    position INTEGER NOT NULL,
                     track_id TEXT NOT NULL,
                     added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (playlist_id) REFERENCES {self.PLAYLISTS_TABLE}(id) ON DELETE CASCADE,
                     FOREIGN KEY (track_id) REFERENCES {self.TRACKS_TABLE}(id) ON DELETE CASCADE,
-                    PRIMARY KEY (playlist_id, position)
+                    PRIMARY KEY (playlist_id, track_id)
                 );
             ''')
 
@@ -341,7 +340,7 @@ class AudioDatabase:
                 SELECT track_id
                 FROM {self.PLAYLIST_TRACKS_TABLE} 
                 WHERE playlist_id = ?
-                ORDER BY position ASC;
+                ORDER BY added_at ASC;
             ''', (playlist_id,))
             track_ids = [row["track_id"] for row in rows]
 
@@ -356,46 +355,63 @@ class AudioDatabase:
             return content
             #PLEASE CHANGE THIS THIS IS SO UGLY
         
-    async def add_track_to_playlist(self, playlist_id: int, track_id: str, position: int = None):
+
+
+    #modifications to data
+    async def update_track_playlists(self, track_id: str, playlist_updates: list[dict]):
         async with self._lock:
-            if position is None:
-                row = await self._fetchone(f'''
-                    SELECT COALESCE(MAX(position), 0) + 1 AS next_pos
-                    FROM {self.PLAYLIST_TRACKS_TABLE}
-                    WHERE playlist_id = ?;
-                ''', (playlist_id,))
-                position = row["next_pos"]
-            else:
-                await self._execute(f'''
-                    UPDATE {self.PLAYLIST_TRACKS_TABLE}
-                    SET position = position + 1
-                    WHERE playlist_id = ? AND position >= ?;
-                ''', (playlist_id, position))
+            for playlist in playlist_updates:
+                playlist_id, checked = playlist["id"], playlist["checked"]
+
+                if checked is True:
+                    #insert or keep existing
+                    await self._execute(f'''
+                        INSERT OR IGNORE INTO {self.PLAYLIST_TRACKS_TABLE} (playlist_id, track_id)
+                        VALUES (?, ?);
+                    ''', (playlist_id, track_id))
+
+                    #await self._emit_event(action=ADA.ADD_TO_PLAYLIST, payload={"content": content}) #emit updated state?
+
+                elif checked is False:
+                    #remove if exists
+                    await self._execute(f'''
+                        DELETE FROM {self.PLAYLIST_TRACKS_TABLE}
+                        WHERE playlist_id = ? AND track_id = ?;
+                    ''', (playlist_id, track_id))
+
+                    #await self._emit_event(action=ADA.ADD_TO_PLAYLIST, payload={"content": content})
+                
+                else:
+                    #none or undefined do nothing
+                    continue
+
+    async def update_track_metadata(self, track_id: str, title: str = None, uploader: str = None):
+        """
+        Update track metadata for a given track_id.
+        Only non-empty, non-null fields will be updated
+
+        Args:
+            track_id (str): ID of the track
+            title (str, optional): New title. If none or empty, no updates.
+            uploader (str, optional): New uploader. If none or empty, no updates.
+        """
+        async with self._lock:
+            fields = {}
+            if title not in (None, ""):
+                fields["title"] = title
+            if uploader not in (None, ""):
+                fields["uploader"] = uploader
             
-            #handle insertion
-            await self._execute(f'''
-                INSERT INTO {self.PLAYLIST_TRACKS_TABLE} (playlist_id, track_id, position)
-                VALUES (?, ?, ?);
-            ''', (playlist_id, track_id, position))
+            if not fields:
+                return
+            
+            #build query
+            set_clause = ", ".join(f"{k} = ?" for k in fields.keys())
+            query = f'''
+                UPDATE {self.TRACKS_TABLE}
+                SET {set_clause}
+                WHERE id = ?;
+            '''
+            params = tuple(fields.values()) + (track_id,)
 
-            #fetch updated playlist
-            rows = await self._fetchall(f'''
-                SELECT pt.position, t.id AS track_id, t.title, t.uploader, t.duration
-                FROM {self.PLAYLIST_TRACKS_TABLE} pt
-                JOIN {self.TRACKS_TABLE} t ON pt.track_id = t.id
-                WHERE pt.playlist_id = ?
-                ORDER BY pt.position;
-            ''', (playlist_id,))
-            content = [
-                Track(
-                    id=row["id"], 
-                    title=row["title"],
-                    uploader=row["uploader"],
-                    duration=row["duration"]
-                )
-                for row in rows
-            ]
-
-            await self._emit_event(action=ADA.ADD_TO_PLAYLIST, payload={"content": content})
-    
-            return [track.to_json() for track in content]
+            await self._execute(query, params)

@@ -54,10 +54,16 @@ async function onClickPlayButton(domEls, dataset) {
     const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 
     //0. parse data
-    const track = parseTrackFromDataset(dataset);
+    const trackId = dataset.trackId;
 
-    if (!track) {
+    if (!trackId) {
         logDebug("Missing track data attributes in dataset");
+        return;
+    }
+
+    const track = TrackStore.get(trackId);
+    if (!track) {
+        logDebug("Missing track in TrackStore");
         return;
     }
 
@@ -91,10 +97,16 @@ async function onClickQueueButton(domEls, dataset) {
     const { titleEl, authorEl, queueListEl } = domEls;
 
     //0. parse data
-    const track = parseTrackFromDataset(dataset);
+    const trackId = dataset.trackId;
 
-    if (!track) {
+    if (!trackId) {
         logDebug("Missing track data attributes in dataset");
+        return;
+    }
+
+    const track = TrackStore.get(trackId);
+    if (!track) {
+        logDebug("Missing track in TrackStore");
         return;
     }
 

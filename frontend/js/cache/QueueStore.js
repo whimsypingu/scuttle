@@ -38,11 +38,7 @@ export const QueueStore = (() => {
             store.push(id);
         },
         pop() {
-            const ids = store.getIds();
-            if (ids.length === 0) return null;
-            const id = ids[0];
-            store.remove(id);
-            return TrackStore.get(id) || null;
+            return store.pop();
         },
         removeAt(index) {
             const ids = store.getIds();

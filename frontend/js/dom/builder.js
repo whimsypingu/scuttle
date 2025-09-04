@@ -23,13 +23,10 @@ export function createElem(tag, attrs = {}, children = []) {
 export function buildTrackListItem(track) {
     const li = document.createElement("li");
     li.classList.add("list-track-item");
-        
-    // Add the track data to the li itself
-    const trackDataset = prepareDataset(track);
-    Object.entries(trackDataset).forEach(([key, value]) => {
-        li.dataset[key] = value;
-    });
 
+    //store the trackId
+    li.dataset.trackId = track.id;
+        
     const index = 99;
     li.innerHTML = `
         <div class="swipe-action left">

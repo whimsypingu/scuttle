@@ -36,7 +36,9 @@ def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketMan
         (G.PLAY_QUEUE_NAME, PQA.SEND_CONTENT),
 
         (G.AUDIO_DATABASE_NAME, ADA.SEARCH),
-
+        (G.AUDIO_DATABASE_NAME, ADA.CREATE_PLAYLIST),
+        (G.AUDIO_DATABASE_NAME, ADA.FETCH_LIKES),        
+        
         (G.YOUTUBE_CLIENT_NAME, YTCA.SEARCH),
         (G.YOUTUBE_CLIENT_NAME, YTCA.DOWNLOAD)
     ]

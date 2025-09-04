@@ -27,6 +27,7 @@ import { renderPlaylist } from "./lib/ui.js";
 import { QueueStore } from "../../cache/QueueStore.js";
 import { LikeStore } from "../../cache/LikeStore.js";
 import { showEditTrackPopup } from "../popup/controller.js";
+import { TrackStore } from "../../cache/TrackStore.js";
 
 
 //clicking the library list will check for this
@@ -57,10 +58,16 @@ async function onClickPlayButton(domEls, dataset) {
     const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 
     //0. parse data
-    const track = parseTrackFromDataset(dataset);
+    const trackId = dataset.trackId;
 
-    if (!track) {
+    if (!trackId) {
         logDebug("Missing track data attributes in dataset");
+        return;
+    }
+
+    const track = TrackStore.get(trackId);
+    if (!track) {
+        logDebug("Missing track in TrackStore");
         return;
     }
 
@@ -93,16 +100,24 @@ async function onClickQueueButton(domEls, dataset) {
     const { titleEl, authorEl, queueListEl } = domEls;
 
     //0. parse data
-    const track = parseTrackFromDataset(dataset);
+    const trackId = dataset.trackId;
 
-    if (!track) {
+    if (!trackId) {
         logDebug("Missing track data attributes in dataset");
+        return;
+    }
+
+    const track = TrackStore.get(trackId);
+    if (!track) {
+        logDebug("Missing track in TrackStore");
         return;
     }
 
     //1. update queue (local and backend)
     try {
         QueueStore.push(track.id);
+
+        console.log("HERE< TRIED TO PUSH", QueueStore.getIds());
         redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
 
         await queuePushTrack(track.id);
@@ -119,10 +134,16 @@ export async function onSwipe(domEls, dataset, action) {
     const { titleEl, authorEl, queueListEl, likedListEl } = domEls;
 
     //0. parse data
-    const track = parseTrackFromDataset(dataset);
+    const trackId = dataset.trackId;
 
-    if (!track) {
+    if (!trackId) {
         logDebug("Missing track data attributes in dataset");
+        return;
+    }
+
+    const track = TrackStore.get(trackId);
+    if (!track) {
+        logDebug("Missing track in TrackStore");
         return;
     }
 
@@ -131,8 +152,6 @@ export async function onSwipe(domEls, dataset, action) {
         try {
             QueueStore.push(track.id);
             redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
-            //test
-            logDebug("TEST: QUEUE:", QueueStore.getTracks());
 
             await queuePushTrack(track.id); //backend
 

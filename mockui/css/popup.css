@@ -73,7 +73,7 @@
 }
 
 
-
+/* popup content for track editing */
 .playlist-selection-menu {
     display: flex;
     flex-direction: column;

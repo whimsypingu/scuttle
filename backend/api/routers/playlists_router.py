@@ -3,7 +3,7 @@ from fastapi import APIRouter, Query, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 
 
-from backend.api.schemas.playlist_schemas import CreatePlaylistRequest
+from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, EditTrackRequest
 from backend.core.database.audio_database import AudioDatabase
 
 
@@ -81,4 +81,34 @@ async def get_likes(req: Request):
     content = await db.fetch_liked_tracks()
 
     return JSONResponse(content={"content": content}, status_code=200)
+
+
+
+@router.post("/edit-track")
+async def edit_track(body: EditTrackRequest, req: Request) -> Response:
+    """
+    Creates a new playlist in the database.
+
+    Args:
+        body (QueuePushTrackRequest): Request body containing the track id, title, author, and playlists it should be in
+        req (Request): FastAPI request object to access app state.
+
+    Returns:
+        status
+    """
+    track_id = body.id
+    title = body.title
+    uploader = body.author
+    playlist_updates = body.playlists #playlist ids
+    
+    db: AudioDatabase = req.app.state.db
+
+    await db.update_track_metadata(track_id=track_id, title=title, uploader=uploader)
+
+    print(f"UPDATED METADATA: TITLE: {title}, UPLOADER: {uploader}")
+
+    await db.update_track_playlists(track_id=track_id, playlist_updates=playlist_updates)
+
+    return JSONResponse(content={"status": "updated"}, status_code=200)
+
 

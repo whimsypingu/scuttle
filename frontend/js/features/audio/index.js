@@ -1,6 +1,6 @@
 
 export { 
-    getCurrentAudioStream 
+    getAudioStream 
 } from "./lib/api.js";
 
 export { 

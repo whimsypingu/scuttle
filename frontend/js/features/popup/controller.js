@@ -9,6 +9,7 @@ import { createPlaylist } from "../playlist/lib/api.js";
 
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { getSelectedPlaylists } from "./lib/utils.js";
+import { editTrack } from "./lib/api.js";
 
 export function hidePopupOnClick(e, domEls) {
     const { popupOverlayEl } = domEls;
@@ -60,21 +61,24 @@ export function showEditTrackPopup(domEls, trackId) {
 async function onSaveTrackEdits(trackId, optionEls) {
     const selections = getSelectedPlaylists(optionEls);
 
-    for (const { playlistId, checked } of selections) {
-        const inPlaylist = PlaylistStore.hasTrack(playlistId, trackId);
+    //optimistic ui update
+    for (const { id, checked } of selections) {
+        const inPlaylist = PlaylistStore.hasTrack(id, trackId);
 
         if (checked && !inPlaylist) {
             //user checked but not in playlist -> add
-            PlaylistStore.addTrackId(playlistId, trackId);
+            PlaylistStore.addTrackId(id, trackId);
 
-            renderPlaylistById(playlistId);
+            renderPlaylistById(id);
         } else if (!checked && inPlaylist) {
             //user unchecked and in playlist -> remove
-            PlaylistStore.removeTrack(playlistId, trackId);
+            PlaylistStore.removeTrack(id, trackId);
 
-            renderPlaylistById(playlistId);
+            renderPlaylistById(id);
         }
     }
+
+    await editTrack(trackId, "", "", selections);
 }
 
 

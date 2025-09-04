@@ -14,15 +14,17 @@ export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = nul
     }
 
     //try selecting the temp, if it exists, then update the id
+    //this is critical segment for being able to call this function and update the tempId with a backend id to ensure
+    //all playlist ids are unique
     existingEl = customPlaylistEl.querySelector(`[data-id="${tempId}"]`);
     if (existingEl) {
         existingEl.dataset.id = id;
         return;
-        
     }
 
     //neither the expected nor the temp id version exists yet
-    const playlistEl = buildNewPlaylist(name, id);
+    const idToUse = id ? id : tempId;
+    const playlistEl = buildNewPlaylist(name, idToUse);
     customPlaylistEl.appendChild(playlistEl);
 
     const listEl = playlistEl.querySelector(".list-track");

@@ -1,7 +1,8 @@
 //static/js/events/websocket/handlers.js
 
+import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { $, SELECTORS } from "../../dom/index.js";
-import { renderPlaylist } from "../../features/playlist/index.js";
+import { renderNewCustomPlaylist, renderPlaylist } from "../../features/playlist/index.js";
 
 
 
@@ -17,7 +18,9 @@ export const handlers = {
     },
     audio_database: {
         search: handleADSE,
+        create_playlist: handleADCP,
         fetch_likes: handleADFL,
+
         
         download: handleADDO
     },
@@ -70,4 +73,18 @@ const likedListEl = $(SELECTORS.liked.ids.LIST)
 
 function handleADFL(payload) {
     renderPlaylist(likedListEl, payload.content);
+}
+
+
+const customPlaylistEl = $(SELECTORS.playlists.ids.CUSTOM);
+
+function handleADCP(payload) {
+    const tempId = payload.content.temp_id;
+    const newId = payload.content.id;
+    const name = payload.content.name;
+
+    console.log("DEBUGGING:", tempId, newId);
+
+    PlaylistStore.updateId(tempId, newId);
+    renderNewCustomPlaylist(customPlaylistEl, name, newId, tempId);
 }

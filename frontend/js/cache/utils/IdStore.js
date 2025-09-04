@@ -31,6 +31,9 @@ export function createIdStore() {
         push(id) {
             idList.push(id);
         },
+        pop() {
+            return idList.shift() || null;
+        },
         remove(id) {
             idList = idList.filter(x => x !== id);
         },

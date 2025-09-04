@@ -76,7 +76,9 @@ export async function onNextButtonClick(domEls) {
     try {
         //instantaneously update everything, and then send the update to the backend
         //1. make changes to local, which will trigger queue ui update
+        logDebug("CURRENT STATE:", QueueStore.getTracks());
         QueueStore.pop();
+        logDebug("CURRENT STATE POST POP:", QueueStore.getTracks());
         const track = QueueStore.peekTrack();
         logDebug("Next track:", track);
 
