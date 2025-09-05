@@ -8,7 +8,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-    z-index: 10000;
+    z-index: 300;
 }
 #popup-overlay.active {
     opacity: 1;

@@ -28,6 +28,7 @@ import { QueueStore } from "../../cache/QueueStore.js";
 import { LikeStore } from "../../cache/LikeStore.js";
 import { showEditTrackPopup } from "../popup/controller.js";
 import { TrackStore } from "../../cache/TrackStore.js";
+import { showToast } from "../toast/index.js";
 
 
 //clicking the library list will check for this
@@ -116,9 +117,8 @@ async function onClickQueueButton(domEls, dataset) {
     //1. update queue (local and backend)
     try {
         QueueStore.push(track.id);
-
-        console.log("HERE< TRIED TO PUSH", QueueStore.getIds());
         redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
+        showToast(`Queued`);
 
         await queuePushTrack(track.id);
     } catch (err) {
@@ -152,6 +152,7 @@ export async function onSwipe(domEls, dataset, action) {
         try {
             QueueStore.push(track.id);
             redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
+            showToast(`Queued`); //optionally include track.title but should probably prevent js injection
 
             await queuePushTrack(track.id); //backend
 
@@ -161,8 +162,9 @@ export async function onSwipe(domEls, dataset, action) {
         }
     } else if (action === "like") {
         try {
-            LikeStore.toggle(track.id);
+            const liked = LikeStore.toggle(track.id);
             renderPlaylist(likedListEl, LikeStore.getTracks());
+            showToast(liked ? "Liked" : "Unliked");
 
             //test
             logDebug("TEST: LIKE:", LikeStore.getTracks());

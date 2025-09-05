@@ -7,16 +7,18 @@ export const LikeStore = (() => {
     return {
         /**
          * Toggle the liked status of a track.
-         * If the track is already liked, it is removed from the store.
-         * If not liked, it is added.
+         * If the track is already liked, it is removed from the store. (Returns false)
+         * If not liked, it is added. (Returns true)
          *
          * @param {string} id - The track ID to toggle.
          */
         toggle(id) {
             if (store.has(id)) {
                 store.remove(id);
+                return false;
             } else {
                 store.insert(id);
+                return true;
             }
         },
 

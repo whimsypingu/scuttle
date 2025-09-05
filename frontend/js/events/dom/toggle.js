@@ -5,34 +5,42 @@ let isCollapsed = true;
 const toggleButton = document.getElementById("queue-toggle-button");
 const container = document.getElementById("playbar-queue");
 const playbar = document.getElementById("playbar");
+const toast = document.getElementById("toast");
 
 //do this once to save the collapsed height
-let totalHeight = 0;
 function measureCollapsedHeight() {
     if (isMobile()) {
         //mobile collapsed height measurement
         const rect = playbar.getBoundingClientRect();
         const styles = getComputedStyle(playbar);
         const marginTop = parseFloat(styles.marginTop) || 0;
-        totalHeight = rect.height + marginTop;
-        console.log("test", rect.height, marginTop);
-        console.log(window.getComputedStyle(playbar).height);
+        return (rect.height + marginTop);
+
+        // console.log("test", rect.height, marginTop);
+        // console.log(window.getComputedStyle(playbar).height);
     } else {
-        //desktop collapsed height measurement
+        //desktop collapsed height measurement including button
         const rect = playbar.getBoundingClientRect();
         const butt = toggleButton.getBoundingClientRect();
         const styles = getComputedStyle(playbar);
         const marginTop = parseFloat(styles.marginTop) || 0;
         const marginBottom = parseFloat(styles.marginBottom) || 0;
-        totalHeight = rect.height + butt.height + marginTop + marginBottom;
+        return (rect.height + butt.height + marginTop + marginBottom);
     }
 }
-measureCollapsedHeight();
+const collapsedHeight = measureCollapsedHeight();
+
+
+//toast height
+function setToast() {
+    toast.style.bottom = `${collapsedHeight}px`;
+}
+
 
 //set the height of the playbar to collapse or exapnded values
 function setHeight() {
     if (isCollapsed) {
-        container.style.height = `${totalHeight}px`;
+        container.style.height = `${collapsedHeight}px`;
         container.classList.remove("expanded");
     } else {
         const vh = window.innerHeight;
@@ -129,4 +137,5 @@ function initQueueToggle() {
 
 export function setupToggle() {
     initQueueToggle();
+    setToast();
 }

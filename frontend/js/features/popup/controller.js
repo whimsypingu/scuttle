@@ -10,19 +10,24 @@ import { createPlaylist } from "../playlist/lib/api.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { getSelectedPlaylists } from "./lib/utils.js";
 import { editTrack } from "./lib/api.js";
+import { showToast } from "../toast/index.js";
 
-export function hidePopupOnClick(e, domEls) {
-    const { popupOverlayEl } = domEls;
+
+
+const { popupOverlayEl, popupEl, customPlaylistEl } = popupDomEls;
+
+
+
+export function hidePopupOnClick(e) {
     if (e.target === popupOverlayEl) hidePopup(popupOverlayEl);
 }
 
 
 
 //popup to edit which playlists a track is in
-export function showEditTrackPopup(domEls, trackId) {
-    const { popupOverlayEl, popupEl, customPlaylistEl } = popupDomEls;
+export function showEditTrackPopup(trackId) {
 
-    //TODO: need some other logic here for getting initial checked state
+    //logic for getting initial checked state
     const playlists = PlaylistStore.getPlaylistsWithCheck(trackId);
 
     //clear old popup and set to a new fresh one
@@ -78,6 +83,8 @@ async function onSaveTrackEdits(trackId, optionEls) {
         }
     }
 
+    showToast(`Saved`);
+
     console.log("onSaveTrackEdits", "trackId:", trackId, "playlists:", selections);
     await editTrack(trackId, "", "", selections);
 }
@@ -87,8 +94,7 @@ async function onSaveTrackEdits(trackId, optionEls) {
 
 
 //popup for when a new playlist is created
-export function showCreatePlaylistPopup(domEls) {
-    const { popupOverlayEl, popupEl, customPlaylistEl } = popupDomEls;
+export function showCreatePlaylistPopup() {
 
     const playlists = PlaylistStore.getAll();
 

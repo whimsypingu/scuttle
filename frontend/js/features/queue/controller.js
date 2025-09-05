@@ -114,6 +114,7 @@ async function onClickQueueButton(domEls, dataset) {
     try {
         QueueStore.push(track.id);
         redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
+        showToast(`Queued`);
 
         await queuePushTrack(track.id);
     } catch (err) {
