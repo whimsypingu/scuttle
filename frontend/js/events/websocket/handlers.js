@@ -1,8 +1,10 @@
 //static/js/events/websocket/handlers.js
 
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
+import { TrackStore } from "../../cache/TrackStore.js";
 import { $, SELECTORS } from "../../dom/index.js";
 import { renderNewCustomPlaylist, renderPlaylist } from "../../features/playlist/index.js";
+import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 
 
 
@@ -21,13 +23,28 @@ export const handlers = {
         create_playlist: handleADCP,
         fetch_likes: handleADFL,
 
-        
         download: handleADDO
     },
     youtube_client: {
         search: handleYTSE,
+        download: handleYTDO,
+
+        task_start: handleTaskStart,
+        task_finish: handleTaskFinish,
     }
 }
+
+
+
+//spinner, can also include toasts for when downloads start and are complete.
+function handleTaskStart(payload) {
+    showSpinner();
+}
+function handleTaskFinish(payload) {
+    hideSpinner();
+}
+
+
 
 //player queue related websocket messages update the state of the local queue (for caching), and also the ui
 function handlePQSF(payload) {
@@ -64,8 +81,24 @@ function handleADDO(payload) {
 }
 
 function handleYTSE(payload) {
+
+    const tracks = payload.content || [];
+    for (const track of tracks) {
+        TrackStore.insert(track)
+    }
+
+    console.log("TRACKSTORE:", TrackStore.getTracks());
     renderPlaylist(libraryListEl, payload.content);
 }
+
+function handleYTDO(payload) {
+    const track = payload.content;
+    TrackStore.insert(track);
+
+    console.log("TRACKSTORE:", TrackStore.getTracks());
+    renderPlaylist(libraryListEl, payload.content);
+}
+
 
 
 //whenever liked list gets updated in the backend sync up

@@ -15,6 +15,13 @@ export function setupWebSocket() {
         }
     };
 
+    // reconnect if tab becomes visible
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && (!socket || socket.readyState === WebSocket.CLOSED)) {
+            console.log("Tab visible, reconnecting WebSocket...");
+            setupWebSocket();
+        }
+    });
 }
 
 function handleWebSocketMessage(message) {

@@ -6,11 +6,11 @@ from .websocket.message import WebsocketMessage
 from backend.core.models.event import Event
 
 import backend.globals as G
-from backend.core.queue.implementations.play_queue import PlayQueueAction as PQA
-from backend.core.queue.implementations.download_queue import DownloadQueueAction as DQA
 
-from backend.core.database.audio_database import AudioDatabaseAction as ADA
-from backend.core.youtube.client import YouTubeClientAction as YTCA
+from backend.core.models.enums import DownloadQueueAction as DQA
+from backend.core.models.enums import YouTubeClientAction as YTCA
+from backend.core.models.enums import PlayQueueAction as PQA
+from backend.core.models.enums import AudioDatabaseAction as ADA
 
 
 def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketManager):
@@ -40,7 +40,9 @@ def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketMan
         (G.AUDIO_DATABASE_NAME, ADA.FETCH_LIKES),        
         
         (G.YOUTUBE_CLIENT_NAME, YTCA.SEARCH),
-        (G.YOUTUBE_CLIENT_NAME, YTCA.DOWNLOAD)
+        (G.YOUTUBE_CLIENT_NAME, YTCA.DOWNLOAD),
+        (G.YOUTUBE_CLIENT_NAME, YTCA.START),
+        (G.YOUTUBE_CLIENT_NAME, YTCA.FINISH)
     ]
 
     handler = make_basic_handler(websocket_manager)

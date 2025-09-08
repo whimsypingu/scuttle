@@ -49,7 +49,7 @@ export async function onAudioEnded(domEls) {
         }
 
         //4. load new track
-        await loadTrack(audioEl, track);
+        await loadTrack(audioEl, track.id);
 
         //5. make optimistic ui changes
         updateMediaSession(track);
@@ -94,7 +94,7 @@ export async function onNextButtonClick(domEls) {
         }
 
         //4. load new track
-        await loadTrack(audioEl, track);
+        await loadTrack(audioEl, track.id);
 
         //5. make optimistic ui changes
         updateMediaSession(track);
@@ -125,7 +125,7 @@ export async function onPlayPauseButtonClick(domEls) {
     //2. load in edge case where item is in queue but not yet loaded into audio element.    
     if (!audioEl.src || audioEl.readyState === 0) {
         logDebug("No audio source set somehow, attempting load");
-        await loadTrack(audioEl, track);
+        await loadTrack(audioEl, track.id);
     }
 
     //3. handle click

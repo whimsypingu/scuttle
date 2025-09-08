@@ -13,15 +13,7 @@ from backend.core.models.event import Event
 from backend.core.models.track import Track
 from backend.exceptions import SearchFailedError
 
-from enum import Enum
-
-
-class YouTubeClientAction(str, Enum):
-    SEARCH = "search"
-    DOWNLOAD = "download"
-
-YTCA = YouTubeClientAction #alias for convenience in this file
-
+from backend.core.models.enums import YouTubeClientAction as YTCA
 
 
 #if this fucker breaks just run: python -m pip install -U yt-dlp (goated software btw up with ffmpeg)
@@ -155,6 +147,8 @@ class YouTubeClient:
         """
         Search YouTube using yt-dlp with retries and return Track objects.
         """
+        await self._emit_event(action=YTCA.START, payload={})
+
         #cmd line search
         delim = "\x1f"
         cmd = [
@@ -211,6 +205,8 @@ class YouTubeClient:
         #only emit when fetching multiple results
         if limit > 1:
             await self._emit_event(action=YTCA.SEARCH, payload={"content": results})
+
+        await self._emit_event(action=YTCA.FINISH, payload={})
         return results
 
 
@@ -249,6 +245,9 @@ class YouTubeClient:
         id: str, 
         timeout: int = 60
     ) -> bool:
+        #send task start notification
+        await self._emit_event(action=YTCA.START, payload={})
+
         #prepares cmd line arguments
         output_path = get_audio_path(track_or_id=id, base_dir=self.base_dir, audio_format=self.dl_format)
         temp_path = get_audio_path(track_or_id=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
@@ -301,13 +300,16 @@ class YouTubeClient:
                 duration=int(duration) if duration.isdigit() else 0
             )
 
-            await self._emit_event(action=YTCA.DOWNLOAD, payload={})
-            return track
-
         except Exception as e:
             print(f"[ERROR] Failed to download {id}: {e}")
-            await self._emit_event(action=YTCA.DOWNLOAD, payload={})
-            return None
+            raise
+        
+        finally:
+            #complete task notification
+            await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
+            await self._emit_event(action=YTCA.FINISH, payload={})
+        
+        return track
         
 
     async def download_by_query(

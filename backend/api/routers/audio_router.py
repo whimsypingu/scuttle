@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -29,7 +30,7 @@ async def get_audio_stream(id: str, req: Request, full: bool = False):
     if not is_downloaded(track_or_id=id):
         if not download_queue.contains(job):
             await download_queue.push(job)
-            
+        
         raise HTTPException(status_code=503, detail="Track is downloading, try again shortly")
     return stream_audio(req=req, track_or_id=id, full=full)
 

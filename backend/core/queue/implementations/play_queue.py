@@ -1,20 +1,7 @@
 from backend.core.models.track import Track
 from backend.core.queue.base.observable_dll import ObservableQueue
 
-from enum import Enum
-
-
-class PlayQueueAction(str, Enum):
-    SET_FIRST = "set_first"
-    INSERT_NEXT = "insert_next"
-    PUSH = "push"
-    POP = "pop"
-    REMOVE = "remove"
-    SEND_CONTENT = "send_content"
-
-
-PQA = PlayQueueAction #alias for convenience in this file
-
+from backend.core.models.enums import PlayQueueAction as PQA
 
 class PlayQueue(ObservableQueue[str]):
     async def set_first(self, id: str):

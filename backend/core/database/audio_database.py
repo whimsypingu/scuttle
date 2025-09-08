@@ -9,21 +9,7 @@ from backend.core.lib.utils import run_in_executor
 from backend.core.models.event import Event
 from backend.core.models.track import Track
 
-from enum import Enum
-
-class AudioDatabaseAction(str, Enum):
-    SEARCH = "search"
-
-    FETCH_LIKES = "fetch_likes"
-
-    CREATE_PLAYLIST = "create_playlist"
-    
-    GET_ALL_PLAYLISTS = "get_all_playlists"
-    GET_PLAYLIST_CONTENT = "get_playlist_content"
-
-    ADD_TO_PLAYLIST = "add_to_playlist"
-
-ADA = AudioDatabaseAction #alias
+from backend.core.models.enums import AudioDatabaseAction as ADA
 
 
 class AudioDatabase:

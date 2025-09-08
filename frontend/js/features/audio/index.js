@@ -19,14 +19,14 @@ export {
 
 import { logDebug } from "../../utils/debug.js";
 
-export async function loadTrack(audioEl, track) {
+export async function loadTrack(audioEl, trackId) {
     //1. check
-    if (!track) return false;
+    if (!trackId) return false;
 
     //2. point src to backend url, service worker intercepts with caching logic
-    audioEl.src = `/audio/stream/${track.id}`;
+    audioEl.src = `/audio/stream/${trackId}`;
 
-    const srcPath = `/audio/stream/${track.id}`;
+    const srcPath = `/audio/stream/${trackId}`;
     console.log("audioEl.src (before assignment):", srcPath);
     const fullUrl = new URL(srcPath, window.location.href).href;
     console.log("audioEl.src absolute URL:", fullUrl);

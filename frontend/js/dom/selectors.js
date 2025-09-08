@@ -65,6 +65,15 @@ export const SELECTORS = {
 		},
 	},
 
+	spinner: {
+		ids: {
+			SPINNER: "spinner",
+		},
+		classes: {
+			//
+		},
+	},
+
 	playlists: {
 		ids: {
 			BODY: "playlists",

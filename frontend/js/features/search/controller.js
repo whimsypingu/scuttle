@@ -50,7 +50,7 @@ export async function onDownloadSearchButtonClick(domEls) {
     logDebug("Download search:", q);
 
     if (!q) return;
-    
+
     const data = await downloadSearch(q);
     logDebug("data:", data);
 }

@@ -10,7 +10,8 @@ import {
     updatePlayPauseButtonDisplay,
 
     resetUI,
-    updateMediaSession
+    updateMediaSession,
+    getAudioStream
 } from "../audio/index.js";
 
 import { 
@@ -66,21 +67,24 @@ async function onClickPlayButton(domEls, dataset) {
         return;
     }
 
-    const track = TrackStore.get(trackId);
-    if (!track) {
-        logDebug("Missing track in TrackStore");
+    const response = await getAudioStream(trackId);
+    if (!response.ok) {
+        logDebug("Track is downloading, please wait :)");
         return;
     }
 
     try {
-        //1. make changes to local queue, which triggers queue ui update
-        QueueStore.setFirst(track.id);
+        //1. make changes to local queue
+        QueueStore.setFirst(trackId);
 
         //2. load in the audio
         await cleanupCurrentAudio(audioEl);
-        await loadTrack(audioEl, track);
+        await loadTrack(audioEl, trackId);
 
         //3. make optimistic ui changes
+        const track = TrackStore.get(trackId);
+        console.log("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+
         updateMediaSession(track);
         redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
         resetUI(audioEl, currTimeEl, progBarEl, durationEl);
@@ -178,7 +182,7 @@ export async function onSwipe(domEls, dataset, action) {
     } else if (action === "more") {
         
         try {
-            showEditTrackPopup(domEls, track.id);
+            showEditTrackPopup(track.id);
             logDebug("more //BUILD ME", track);
         } catch (err) {
             logDebug("More failed", err);

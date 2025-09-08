@@ -2,6 +2,7 @@ from pathlib import Path
 from enum import Enum
 
 #singleton names, and also websocket sources
+SERVER_NAME = "server"
 SEARCH_QUEUE_NAME = "search_queue"
 DOWNLOAD_QUEUE_NAME = "download_queue"
 PLAY_QUEUE_NAME = "play_queue"
