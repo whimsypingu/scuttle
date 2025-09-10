@@ -5,6 +5,14 @@ let audioCtx, dest;
 let currentPlayer = null; //either audioEl (non-ios) or trackEl (ios)
 
 
+
+//credit:
+/*
+https://www.reddit.com/r/webdev/comments/1ldjqa1/safari_web_audio_api_issue_audiocontext_silently/
+https://codepen.io/matteason/pen/VYwdzVV?editors=1010
+*/
+
+
 export function getPlayerEl() {
     return currentPlayer;
 }
@@ -99,20 +107,6 @@ export async function playLoadedTrack(audioEl) {
 
     try {
         await currentPlayer.play();
-
-
-
-        //
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: "test",
-            artist: "test",
-            artwork: [
-                { src: '/frontend/assets/logo.png', sizes: '512x512', type: 'image/png' }
-            ]
-        });
-        navigator.mediaSession.playbackState = 'playing';
-        navigator.mediaSession.setActionHandler("play", () => currentPlayer.play());
-        navigator.mediaSession.setActionHandler("pause", () => currentPlayer.pause());
 
         logDebug("playback success");
 

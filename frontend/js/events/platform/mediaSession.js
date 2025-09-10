@@ -29,27 +29,28 @@ export function registerMediaSessionHandlers() {
 
         const { title, artist, playing } = e.detail;
 
-        logDebug("trackChangedMediaSession fired.", title, artist, playing);
+        logDebug("trackChangedMediaSession fired.",  , artist, playing);
 
-        // //set metadata
-        // navigator.mediaSession.metadata = new MediaMetadata({
-        //     title: title,
-        //     artist: artist,
-        //     artwork: [
-        //         { 
-        //             src: "/frontend/assets/logo.png", 
-        //             sizes: "512x512", 
-        //             type: "image/png" 
-        //         }
-        //     ]
-        // });
+        //set metadata 
+        // this does NOT necessarily work on iOS background autoplay workaround since it has something to do with streaming blah blah
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: title,
+            artist: artist,
+            artwork: [
+                { 
+                    src: "/frontend/assets/logo.png", 
+                    sizes: "512x512", 
+                    type: "image/png" 
+                }
+            ]
+        });
 
-        // navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+        navigator.mediaSession.playbackState = playing ? "playing" : "paused";
 
-        // //set handlers (needs to be done here instead of once on spawn because of ios dammit)
-        // navigator.mediaSession.setActionHandler("play", () => onPlayPauseButtonClick(domEls));
-        // navigator.mediaSession.setActionHandler("pause", () => onPlayPauseButtonClick(domEls));
-        // navigator.mediaSession.setActionHandler("previoustrack", () => onPreviousButtonClick(domEls));
-        // navigator.mediaSession.setActionHandler("nexttrack", () => onNextButtonClick(domEls));
+        //set handlers (needs to be done here instead of once on spawn)
+        navigator.mediaSession.setActionHandler("play", () => onPlayPauseButtonClick(domEls));
+        navigator.mediaSession.setActionHandler("pause", () => onPlayPauseButtonClick(domEls));
+        navigator.mediaSession.setActionHandler("previoustrack", () => onPreviousButtonClick(domEls));
+        navigator.mediaSession.setActionHandler("nexttrack", () => onNextButtonClick(domEls));
     })
 }
