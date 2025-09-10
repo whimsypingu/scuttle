@@ -29,10 +29,10 @@ export function registerMediaSessionHandlers() {
 
         const { title, artist, playing } = e.detail;
 
-        logDebug("trackChangedMediaSession fired.",  , artist, playing);
+        logDebug("trackChangedMediaSession fired.", title, artist, playing);
 
         //set metadata 
-        // this does NOT necessarily work on iOS background autoplay workaround since it has something to do with streaming blah blah
+        // this does NOT necessarily work on iOS background autoplay workaround since it has something to do with streaming blah
         navigator.mediaSession.metadata = new MediaMetadata({
             title: title,
             artist: artist,
