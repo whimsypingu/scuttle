@@ -30,6 +30,7 @@ import { LikeStore } from "../../cache/LikeStore.js";
 import { showEditTrackPopup } from "../popup/controller.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 import { showToast } from "../toast/index.js";
+import { getPlayerEl } from "../audio/lib/streamTrick.js";
 
 
 //clicking the library list will check for this
@@ -80,14 +81,15 @@ async function onClickPlayButton(domEls, dataset) {
         //2. load in the audio
         await cleanupCurrentAudio(audioEl);
         await loadTrack(audioEl, trackId);
+        const playerEl = getPlayerEl();
 
         //3. make optimistic ui changes
         const track = TrackStore.get(trackId);
-        console.log("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+        logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
 
-        updateMediaSession(track);
+        updateMediaSession(track, true);
         redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
-        resetUI(audioEl, currTimeEl, progBarEl, durationEl);
+        resetUI(playerEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
         
         //4. play audio

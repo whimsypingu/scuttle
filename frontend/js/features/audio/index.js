@@ -15,10 +15,19 @@ export {
     updateMediaSession
 } from "./lib/ui.js";
 
-
+export {
+    loadTrack,
+    playLoadedTrack,
+    pauseLoadedTrack,
+    trackState,
+    cleanupCurrentAudio
+} from "./lib/streamTrick.js";
 
 import { logDebug } from "../../utils/debug.js";
 
+
+
+/*
 export async function loadTrack(audioEl, trackId) {
     //1. check
     if (!trackId) return false;
@@ -91,3 +100,4 @@ export async function cleanupCurrentAudio(audioEl) {
 
 
 
+*/

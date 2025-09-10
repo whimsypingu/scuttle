@@ -18,7 +18,7 @@ import {
 export function setupAudioEventListeners() {
     //hook up event listeners
     //autoplay
-    domEls.audioEl.addEventListener("ended", () => onAudioEnded(domEls));
+    domEls.audioEl.addEventListener("trackEnded", () => onAudioEnded(domEls)); //custom event
     domEls.audioEl.addEventListener("timeupdate", () => onTimeUpdate(domEls));
     
     //user input

@@ -76,7 +76,7 @@ async function onClickPlayButton(domEls, dataset) {
         await loadTrack(audioEl, track);
 
         //3. make optimistic ui changes
-        updateMediaSession(track);
+        updateMediaSession(track, true);
         redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
         resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
         updatePlayPauseButtonDisplay(ppButtonEl, true);
