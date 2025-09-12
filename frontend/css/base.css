@@ -4,7 +4,7 @@ html, body {
     margin: 0;
     overscroll-behavior: contain;
     touch-action: pan-y;
-    overflow-y: auto;
+    overflow: hidden; /*lock scrolling*/
     font-family: var(--ff);
     -webkit-overflow-scrolling: touch;
 }
@@ -21,29 +21,40 @@ html, body {
     z-index: -9999;
 }
 
-#title-search-library {
+#title-search-playlists {
     background-color: transparent;
     display: flex;
     flex-direction: column;
-    z-index: 1;
+
     max-width: 1200px;
+    max-height: 100%;
     margin-left: auto;
     margin-right: auto;
     padding: var(--space-app-border);
 }
-body.mobile #title-search-library {
+body.mobile #title-search-playlists {
     padding: 0;
 }
 
-#title-search-library-contents {
+#title-search-playlists-contents {
     background: linear-gradient(
         to bottom,
         var(--bg-4),
         var(--bg-3)
     );
     border-radius: var(--radius-l);
+
+    flex: 1 1 auto;
+    overflow: hidden;
+
     display: flex;
     flex-direction: column;
+
+    /* position: relative;
+    z-index: 1; */
+}
+#title-search-playlists-margin-block {
+    flex: 0 0 auto;
 }
 
 

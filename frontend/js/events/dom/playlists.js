@@ -6,37 +6,41 @@ import {
 
 export function setupPlaylistEventListeners() {
     domEls.playlistsEl.addEventListener("click", (e) => {
-        const header = e.target.closest(".list-header");
+        const headerEl = e.target.closest(".list-header");
 
-        if (!header) {
+        if (!headerEl) {
             onClickPlaylist(e, domEls);
             return;
         };
 
-        const playlistEl = header.closest(".playlist");
+        const playlistEl = headerEl.closest(".playlist");
         const isExpanded = playlistEl.classList.contains("expanded");
 
         const listTrack = playlistEl.querySelector(".list-track");
 
-        if (!isExpanded) {
-            //scroll distance calculation
-            const rect = playlistEl.getBoundingClientRect();
-            const scrollTop = window.scrollY;
-            const offset = rect.top + scrollTop;
+        const parentEl = document.getElementById("playlists");
 
-            const translateY = -rect.top;
+        if (!isExpanded) {
+            const parentRect = parentEl.getBoundingClientRect();
+            const playlistRect = playlistEl.getBoundingClientRect();
+
+            //
+            const translateY = parentRect.top - playlistRect.top;
+
             playlistEl.style.transform = `translateY(${translateY}px)`;
 
-            //lock scroll
-            document.body.style.overflowY = "hidden";
+            parentEl.style.overflow = "hidden";
+            parentEl.style.touchAction = "none";  // optional, prevents touch scrolling on mobile
 
-            //height
-            listTrack.style.height = "100vh"; //for now this is good enough
+            //
+            const availableHeight = parentRect.height - headerEl.offsetHeight;
+            listTrack.style.height = `${availableHeight}px`;
 
         } else {
             playlistEl.style.transform = "";
 
-            document.body.style.overflowY = "auto";
+            parentEl.style.overflow = "auto";
+            parentEl.style.touchAction = "";  // optional, prevents touch scrolling on mobile
 
             listTrack.style.height = "0px";
         }

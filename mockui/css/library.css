@@ -1,3 +1,8 @@
+#whole-library {
+    overflow-y: auto;
+}
+
+
 #library {
     background: linear-gradient(
         180deg,

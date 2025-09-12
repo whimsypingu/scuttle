@@ -6,6 +6,7 @@ const toggleButton = document.getElementById("queue-toggle-button");
 const container = document.getElementById("playbar-queue");
 const playbar = document.getElementById("playbar");
 const toast = document.getElementById("toast");
+const marginBlock = document.getElementById("title-search-playlists-margin-block");
 
 //do this once to save the collapsed height
 function measureCollapsedHeight() {
@@ -29,6 +30,12 @@ function measureCollapsedHeight() {
     }
 }
 const collapsedHeight = measureCollapsedHeight();
+
+
+//set other elements' margin block
+function setMarginBlock() {
+    marginBlock.style.height = `${collapsedHeight}px`;
+}
 
 
 //toast height
@@ -138,4 +145,5 @@ function initQueueToggle() {
 export function setupToggle() {
     initQueueToggle();
     setToast();
+    setMarginBlock();
 }
