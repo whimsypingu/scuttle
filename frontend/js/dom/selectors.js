@@ -12,6 +12,8 @@ export const SELECTORS = {
 			INPUT: "search-input",
 			SEARCH_GET_RESULTS_BUTTON: "search-get-results-button",
 			SEARCH_AND_DOWNLOAD_BUTTON: "search-and-download-button",
+
+			DROPDOWN: "search-dropdown"
 		},
 		classes: {
 			SEARCH_BUTTON: "search-button",
@@ -162,7 +164,9 @@ export const searchDomEls = {
 	searchInputEl: $(SELECTORS.search.ids.INPUT),
 
 	deepSearchButtonEl: $(SELECTORS.search.ids.SEARCH_GET_RESULTS_BUTTON),
-	downloadSearchButtonEl: $(SELECTORS.search.ids.SEARCH_AND_DOWNLOAD_BUTTON)
+	downloadSearchButtonEl: $(SELECTORS.search.ids.SEARCH_AND_DOWNLOAD_BUTTON),
+
+	searchDropdownEl: $(SELECTORS.search.ids.DROPDOWN)
 };
 
 export const popupDomEls = {

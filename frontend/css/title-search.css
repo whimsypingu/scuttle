@@ -14,8 +14,8 @@
     flex-direction: column;
     gap: var(--space-m);
 
-    /* position: relative;
-    z-index: -1; */
+    position: relative;
+    /* z-index: -1; */
 
 }
 
@@ -91,7 +91,21 @@
 
 
 
-/* #search-dropdown {
+#search-dropdown {
     position: absolute;
     top: 100%;
-} */
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+
+    background: rgba(0,0,0,0.3);
+
+    max-height: 40vh;
+    overflow: hidden;
+
+    transition: max-height 0.2s ease;
+}
+
+#search-dropdown.hidden {
+    max-height: 0px;
+}
