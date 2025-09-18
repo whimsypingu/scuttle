@@ -17,6 +17,7 @@
     position: relative;
     /* z-index: -1; */
 
+    transition: border-radius 0.4s ease;
 }
 
 #title {
@@ -90,22 +91,25 @@
 }
 
 
-
+/* this is inside the #playlists section and not #title-search */
 #search-dropdown {
     position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    z-index: 99999;
+    top: 0;
+    inset-inline: var(--space-content-margin);
+    width: auto; /* important: let it stretch between the insets */    
+    background: var(--bg-5);
+    z-index: 10;
 
-    background: rgba(0,0,0,0.3);
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    max-height: 100%;
 
-    max-height: 40vh;
-    overflow: hidden;
+    pointer-events: auto;
 
-    transition: max-height 0.2s ease;
+    transition: max-height 0.3s ease;
 }
-
 #search-dropdown.hidden {
     max-height: 0px;
+    pointer-events: none;
 }

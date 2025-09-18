@@ -70,10 +70,11 @@ function handlePQRE(payload) {
 
 
 
-const libraryListEl = $(SELECTORS.library.ids.LIST)
+const libraryListEl = $(SELECTORS.library.ids.LIST);
+const searchDropdownEl = $(SELECTORS.search.ids.DROPDOWN);
 
 function handleADSE(payload) {
-    renderPlaylist(libraryListEl, payload.content);
+    renderPlaylist(searchDropdownEl, payload.content);
 }
 
 function handleADDO(payload) {
@@ -88,7 +89,7 @@ function handleYTSE(payload) {
     }
 
     console.log("TRACKSTORE:", TrackStore.getTracks());
-    renderPlaylist(libraryListEl, payload.content);
+    renderPlaylist(searchDropdownEl, payload.content);
 }
 
 function handleYTDO(payload) {

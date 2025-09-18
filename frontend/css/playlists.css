@@ -2,8 +2,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* smooth scroll for iOS */
 
-    /* position: relative;
-    z-index: 20; */
+    position: relative;
 }
 
 /* When any playlist is expanded, fade out all other playlists */
@@ -66,11 +65,10 @@
 .playlist .list-track {
     margin: 0;
     padding: 0;
-    /* height: 20vh;
-    overflow-y: auto;
-    overflow-x: hidden; */
 
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* smooth native scrolling */
 
     display: flex;
     flex-direction: column;
