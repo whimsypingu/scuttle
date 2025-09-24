@@ -3,21 +3,26 @@
 import { formatTime } from "../../../utils/index.js";
 
 
+//visual updates should reflect the TRUE AUDIO ELEMENT not the streaming one on IOS
+
 
 //current time
 export function setCurrentTimeDisplay(currTimeEl, value) {
     currTimeEl.textContent = formatTime(value);    
 }
-export function syncCurrentTimeDisplay(currTimeEl, audioEl) {
-    const time = isNaN(audioEl.currentTime) ? 0 : audioEl.currentTime;
-    setCurrentTimeDisplay(currTimeEl, time)
+export function syncCurrentTimeDisplay(currTimeEl, playerEl) {
+    const time = isNaN(playerEl.currentTime) ? 0 : playerEl.currentTime;
+    setCurrentTimeDisplay(currTimeEl, time);
 }
 
 
 //duration
-export function syncDurationDisplay(durationEl, audioEl) {
-    const duration = isNaN(audioEl.duration) ? 0 : audioEl.duration;
-    durationEl.textContent = formatTime(duration);
+export function setDurationDisplay(durationEl, value) {
+    durationEl.textContent = formatTime(value);
+}
+export function syncDurationDisplay(durationEl, playerEl) {
+    const duration = isNaN(playerEl.duration) ? 0 : playerEl.duration;
+    setDurationDisplay(durationEl, duration);
 }
 
 
@@ -28,10 +33,10 @@ const blankColor = "var(--bg-7)";
 export function setProgressBar(progBarEl, percent) {
     progBarEl.style.background = `linear-gradient(to right, ${fillColor} 0%, ${fillColor} ${percent}%, ${blankColor} ${percent}%, ${blankColor} 100%)`;
 }
-export function syncProgressBar(progBarEl, audioEl) {
-    const duration = audioEl.duration;
+export function syncProgressBar(progBarEl, playerEl) {
+    const duration = playerEl.duration;
 
-    let percent = (audioEl.currentTime / duration) * 100;
+    let percent = (playerEl.currentTime / duration) * 100;
     
     if (isNaN(duration) || duration === 0) {
         percent = 0;
@@ -50,19 +55,26 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
 
 
 //helper function to set ui to whatever the song is, and sync up time displays
-export function resetUI(audioEl, currTimeEl, progBarEl, durationEl) {
-    audioEl.currentTime = 0;
-    syncCurrentTimeDisplay(currTimeEl, audioEl);
-    syncProgressBar(progBarEl, audioEl);
-    syncDurationDisplay(durationEl, audioEl);
+export function resetUI(playerEl, currTimeEl, progBarEl, durationEl) {
+    if (!playerEl) {
+        setCurrentTimeDisplay(currTimeEl, 0);
+        setProgressBar(progBarEl, 0);
+        setDurationDisplay(durationEl, 0);
+        return;
+    }
+    playerEl.currentTime = 0;
+    syncCurrentTimeDisplay(currTimeEl, playerEl);
+    syncProgressBar(progBarEl, playerEl);
+    syncDurationDisplay(durationEl, playerEl);
 }
 
 
-export function updateMediaSession(track) {
+export function updateMediaSession(track, isPlaying) {
     document.dispatchEvent(new CustomEvent("trackChangedMediaSession", {
         detail: {
             title: track.title,
-            artist: track.uploader
+            artist: track.uploader,
+            playing: isPlaying
         }
     }));
 }

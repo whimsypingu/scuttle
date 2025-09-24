@@ -1,0 +1,129 @@
+#popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 300;
+}
+#popup-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
+#popup {
+    background: linear-gradient(
+        to bottom,
+        var(--bg-5),
+        var(--bg-4)
+    );
+    padding: var(--space-xxl);
+    border-radius: 12px;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    width: 60vw;
+    height: auto;
+    max-height: 70vh;
+
+    display: flex;
+}
+
+#popup-overlay.active #popup {
+    transform: translateY(0);
+}
+
+
+/* popup content dynamically injected */
+.popup-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xxl);
+    overflow-y: auto;
+    height: auto;
+}
+
+.popup-content .scrollable-popup-content {
+    flex: 1 1 auto;
+
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.popup-message {
+    text-align: left;
+    font: var(--h1);
+    color: var(--text-2);
+}
+
+
+/* list checkboxes */
+.playlist-selection-menu {
+    display: flex;
+    flex-direction: column;
+
+    gap: var(--space-m);
+}
+
+.playlist-selection-menu .playlist-option {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+
+    color: var(--text-2);
+}
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--text-2);
+  border-radius: 0.25rem;
+  display: inline-block;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.playlist-option.checked .checkbox {
+    background-color: #4caf50;
+}
+
+
+/* edit track metadata */
+.edit-track-metadata-menu {
+    display: flex;
+    flex-direction: column;
+
+    gap: var(--space-m);
+}
+
+
+/* save button and cancel button */
+.popup-content .popup-actions {
+    flex: 0 0 auto;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: var(--space-l);
+}
+
+.popup-content .popup-actions .menu-button {
+    flex: 0 0 auto;
+    width: 8ch;
+}
+
+@media(max-width: 768px) {
+    #popup {
+        width: 80vw;
+    }
+    .popup-content .popup-actions .menu-button {
+        min-width: var(--mobile-button-m);
+    }
+}

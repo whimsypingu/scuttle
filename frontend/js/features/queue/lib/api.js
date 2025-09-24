@@ -6,22 +6,22 @@ import { postRequest, getResponse } from "../../../utils/index.js";
 import { logDebug } from "../../../utils/debug.js";
 
 
-export async function queueSetFirstTrack(track) {
+export async function queueSetFirstTrack(id) {
     //1. inform the backend of changes in the frontend
-    const response = await postRequest(`/queue/set-first`, { track });
+    const response = await postRequest(`/queue/set-first`, { id });
     console.log("queueSetFirstTrack status:", response.status);
 
     logDebug("queueSetFirstTrack");
 }
 
 
-export async function queuePushTrack(track) {
+export async function queuePushTrack(id) {
     //1. inform the backend of changes in the frontend
-    const response = await postRequest(`/queue/push`, { track });
+    const response = await postRequest(`/queue/push`, { id });
     console.log("queuePushTrack status:", response.status);
 
     //2. fire and forget for caching purposes (service worker will eat this uppp)
-    fetch(`/audio/stream/${track.youtube_id}`).catch((err) => {
+    fetch(`/audio/stream/${id}`).catch((err) => {
         logDebug("queuePushTrack prefetch failed:", err);
     })
 }

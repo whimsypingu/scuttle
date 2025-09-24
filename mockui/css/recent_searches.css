@@ -1,0 +1,9 @@
+#recent-searches {
+  height: 0;
+  overflow: hidden;
+  transition: height 0.25s ease; /* smooth expand */
+}
+
+#recent-searches.expanded {
+  height: 200px; /* or auto, but fixed height animates better */
+}

@@ -3,10 +3,10 @@ from typing import Optional
 from backend.core.models.track import Track
 
 class QueueSetFirstTrackRequest(BaseModel):
-    track: Track
+    id: str
 
 class QueuePushTrackRequest(BaseModel):
-    track: Track
+    id: str
 
 #QueuePopTrackRequest no need to implement
 

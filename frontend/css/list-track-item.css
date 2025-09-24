@@ -35,6 +35,7 @@
     position: relative;
 }
 
+
 .list-track-item .foreground {
     display: flex;
     flex-direction: row;
@@ -179,6 +180,7 @@ body.mobile .list-track {
 
 body.mobile .list-track-item {
     touch-action: pan-y;
+    margin-inline: var(--space-l);
 }
 body.mobile .list-track-item * {
     -webkit-tap-highlight-color: transparent; /*prevent blue highlight on mobile*/
@@ -207,11 +209,13 @@ body.mobile .list-track-item .swipe-action {
     pointer-events: none;
         
     will-change: transform, width, opacity;
-    transition: transform 0.2s ease-out, width 0.2s ease-out, opacity 0.2s ease-out;
+    /* transition: transform 0.2s ease-out, width 0.2s ease-out, opacity 0.2s ease-out, color 0.2s ease-out, background-color 0.2s ease-out; */
+    /* transition: transform 0.1s linear, width 0.1s linear, opacity 0.1s linear, color 0.1s linear, background-color 0.1s linear; */
+    transition: transform 0s, width 0s, opacity 0s, color 0s, background-color 0.1s ease;
 
     background-color: transparent;
     color: var(--text-1);
-}
+} 
 
 body.mobile .list-track-item .swipe-action.left {
     left: 0;
@@ -225,11 +229,41 @@ body.mobile .list-track-item .swipe-action.right {
     border-bottom-right-radius: var(--radius-s);
 }
 
-body.mobile .list-track-item .swipe-action.flip-color {
-    background-color: tan;
+body.mobile .list-track-item .swipe-action[data-swipe-theme="tan1"] {
+    background-color: #d2b48c;
     color: black;
 }
-    
+body.mobile .list-track-item .swipe-action[data-swipe-theme="green1"] {
+    background-color: #1db954;
+    color: black;
+}
+body.mobile .list-track-item .swipe-action[data-swipe-theme="red1"] {
+    background-color: #e74c3c;
+    color: black;
+}
+body.mobile .list-track-item .swipe-action[data-swipe-theme="purple1"] {
+    background-color: #8e44ad;
+    color: black;
+}
+/* body.mobile .list-track-item .swipe-action.flip-color-1 {
+    background-color: #d2b48c;
+    color: black;
+}
+body.mobile .list-track-item .swipe-action.flip-color-2 {
+    background-color: #c29d72;
+    color: black;
+}
+body.mobile .list-track-item .swipe-action.flip-color-3 {
+    background-color: #1db954;
+    color: black;
+}
+body.mobile .list-track-item .swipe-action.flip-color-4 {
+    background-color: #1ed760;
+    color: black;
+} */
+
+
+
 body.mobile .actions {
     display: none;
 }

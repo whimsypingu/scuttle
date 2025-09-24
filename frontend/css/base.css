@@ -4,7 +4,7 @@ html, body {
     margin: 0;
     overscroll-behavior: contain;
     touch-action: pan-y;
-    overflow-y: auto;
+    overflow: hidden; /*lock scrolling*/
     font-family: var(--ff);
     -webkit-overflow-scrolling: touch;
 }
@@ -21,26 +21,40 @@ html, body {
     z-index: -9999;
 }
 
-#title-search-library {
+#title-search-playlists {
     background-color: transparent;
     display: flex;
     flex-direction: column;
-    z-index: 1;
+
     max-width: 1200px;
+    max-height: 100%;
     margin-left: auto;
     margin-right: auto;
     padding: var(--space-app-border);
 }
+body.mobile #title-search-playlists {
+    padding: 0;
+}
 
-#title-search-library-contents {
+#title-search-playlists-contents {
     background: linear-gradient(
         to bottom,
         var(--bg-4),
         var(--bg-3)
     );
     border-radius: var(--radius-l);
+
+    flex: 1 1 auto;
+    overflow: hidden;
+
     display: flex;
     flex-direction: column;
+
+    /* position: relative;
+    z-index: 1; */
+}
+#title-search-playlists-margin-block {
+    flex: 0 0 auto;
 }
 
 
@@ -53,7 +67,7 @@ html, body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    z-index: 1000;
+    z-index: 100;
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
@@ -63,6 +77,9 @@ html, body {
     /*height: 600px; /*debug*/
     opacity: 1;
     transition: height 0.5s ease, opacity 0.2s ease;
+}
+body.mobile #playbar-queue {
+    padding-inline: 0;
 }
 
 #playbar-queue-contents {

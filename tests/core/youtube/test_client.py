@@ -17,16 +17,16 @@ async def test_download_by_id(tmp_path: Path):
     )
 
     # track = Track(
-    #     youtube_id="dQw4w9WgXcQ",  # Rickroll for test
+    #     id="dQw4w9WgXcQ",  # Rickroll for test
     #     title="Rick Astley - Never Gonna Give You Up",
     #     uploader="RickAstleyVEVO",
     #     duration=213
     # )
-    youtube_id = "dQw4w9WgXcQ"
+    id = "dQw4w9WgXcQ"
 
-    track = await client.download_by_id(id=youtube_id)
+    track = await client.download_by_id(id)
 
-    audio_path = get_audio_path(track=youtube_id, base_dir=tmp_path)
+    audio_path = get_audio_path(track_or_id=id, base_dir=tmp_path)
     
     print(f"Contents of {tmp_path}:")
     for f in os.listdir(tmp_path):
@@ -56,7 +56,7 @@ async def test_download_by_query(tmp_path: Path):
     assert search_results, "Search returned no results"
     expected_track = search_results[0]
 
-    audio_path = get_audio_path(track=track.youtube_id, base_dir=tmp_path, audio_format="mp3")
+    audio_path = get_audio_path(track_or_id=track.id, base_dir=tmp_path, audio_format="mp3")
 
     assert isinstance(track, Track), "Download by query failed"
     assert audio_path.exists(), "Audio file was not created"

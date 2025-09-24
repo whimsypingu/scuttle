@@ -1,7 +1,7 @@
-import { bootstrapLibrary, bootstrapQueue } from "./bootstrap/bootstrap.js";
+import { bootstrapAll } from "./bootstrap/bootstrap.js";
 
 import { setupAudioEventListeners } from "./dom/audio.js";
-import { setupLibraryEventListeners } from "./dom/library.js";
+import { setupPlaylistEventListeners } from "./dom/playlists.js";
 import { setupQueueEventListeners } from "./dom/queue.js";
 import { setupSearchEventListeners } from "./dom/search.js";
 import { setupToggle } from "./dom/toggle.js";
@@ -14,16 +14,15 @@ import { setLayoutDesktop, setLayoutMobile } from "./mobile/setMobile.js";
 
 import { isMobile } from "../utils/index.js"; 
 import { logDebug } from "../utils/debug.js";
-
-async function bootstrapAll() {
-    bootstrapLibrary();
-    bootstrapQueue();
-}
+import { setupPopupListeners } from "./dom/popup.js";
 
 
 async function setupDomEvents() {
     setupAudioEventListeners();
-    setupLibraryEventListeners();
+
+    setupPlaylistEventListeners();
+    setupPopupListeners();
+
     setupQueueEventListeners();
     setupSearchEventListeners();
     setupToggle();
@@ -42,6 +41,8 @@ async function setupMobileEvents() {
         const { setupSwipeEventListeners } = await import("./mobile/swipe.js");
         setupSwipeEventListeners();
     } else {
+        logDebug("DESKTOP ACTIVE");
+        
         setLayoutDesktop();
     }
 }

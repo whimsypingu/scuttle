@@ -2,6 +2,8 @@
 
 let socket = null;
 
+const reconnectTimeout = 3000; //ms
+
 export function initWebSocket() {
 
     //websocket failure ciould be that you have to pip install "uvicorn[standard]" for websocket support
@@ -24,6 +26,7 @@ export function initWebSocket() {
     socket.onclose = () => {
         console.warn("WebSocket connection closed.");
         socket = null;
+        setTimeout(initWebSocket, reconnectTimeout);
     };
 
     socket.onerror = (err) => {

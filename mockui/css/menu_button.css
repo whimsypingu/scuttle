@@ -1,0 +1,43 @@
+
+.menu-button {
+    font: var(--p);
+    background-color: var(--bg-7);
+    border: 1px solid var(--bg-3);
+    border-radius: var(--radius-s);
+    color: var(--text-3);
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    padding-inline: var(--space-s);
+    cursor: pointer;
+    transition: color 0.1s ease, background-color 0.1s ease, border-color 0.1s ease;
+    position: relative; /* for tooltip */
+    -webkit-tap-highlight-color: transparent;
+}
+.menu-button:hover {
+    color: var(--text-1);
+    background-color: var(--bg-8);
+    border-color: var(--bg-5);
+}
+.menu-button:active {
+    border-color: var(--text-2);
+}
+
+.menu-button.green {
+    background-color: #17a44b;      /* slightly darker green on hover */
+    border-color: #14963c;
+    color: var(--text-2);
+}
+.menu-button.green:hover {
+    background-color: #1db954;
+    border-color: #17a44b;
+    color: var(--text-1);
+}
+.menu-button.green:active {
+    border-color: var(--text-1);
+}
+
+@media (max-width: 768px) {
+    .menu-button {
+        height: var(--mobile-button-m);
+    }
+}

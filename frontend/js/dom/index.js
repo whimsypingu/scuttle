@@ -1,2 +1,3 @@
-export { $, SELECTORS, domEls, searchDomEls } from "./selectors.js"
-export { createElem, buildTrackListItem, buildTrackListEmptyItem } from "./builder.js" 
+export { $, SELECTORS, domEls, searchDomEls, popupDomEls } from "./selectors.js";
+export { createElem, buildTrackListItem, buildTrackListEmptyItem } from "./builder.js";
+export { collapsedHeight } from "./collapsedHeight.js";

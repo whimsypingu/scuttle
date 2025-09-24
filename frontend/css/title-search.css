@@ -4,6 +4,8 @@
         var(--bg-6),
         var(--bg-5)
     );
+    /* margin-top: var(--space-content-margin);
+    margin-inline: var(--space-content-margin); */
     margin: var(--space-content-margin);
     border-radius: var(--radius-l);
     padding: var(--space-xl);
@@ -11,6 +13,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-m);
+
+    position: relative;
+    /* z-index: -1; */
+
+    transition: border-radius 0.4s ease;
 }
 
 #title {
@@ -27,11 +34,13 @@
     filter: invert(1);
 }
 #title h1 {
+    flex-grow: 1; /* push spinner to the right, which is in the toast.css file */
     text-align: left;
     font: var(--h1);
     color: var(--text-1);
     font-family: var(--ff-title)
 }
+
 
 #search {
     flex-grow: 1;
@@ -42,53 +51,10 @@
     padding: var(--space-s);
 }
 
-#search-input {
-    font: var(--p);
-    background-color: var(--bg-7);
-    border: 1px solid var(--bg-3);
-    color: var(--text-2);
-    border-radius: 9999px;
-    outline: none;
-    padding-top: var(--space-xs);
-    padding-bottom: var(--space-xs);
-    padding-inline: var(--space-s);
-    margin: 0;
-    transition: border-color 0.1s ease, background-color 0.1s ease;
-}
-#search-input::placeholder {
-    color: var(--text-3);
-}
-#search-input:hover {
-    background-color: var(--bg-8);
-    border-color: var(--bg-5);
-}
-#search-input:focus {
-    border-color: var(--text-2);
-}
 
 .search-button {
-    font: var(--p);
-    background-color: var(--bg-7);
-    border: 1px solid var(--bg-3);
-    border-radius: var(--radius-s);
-    color: var(--text-3);
-    padding-top: var(--space-xs);
-    padding-bottom: var(--space-xs);
-    padding-inline: var(--space-s);
     aspect-ratio: 1 / 1;
-    cursor: pointer;
-    transition: color 0.1s ease, background-color 0.1s ease, border-color 0.1s ease, transform 0.1s ease;
-    position: relative; /* for tooltip */
-}
-.search-button:hover {
-    color: var(--text-1);
-    background-color: var(--bg-8);
-    border-color: var(--bg-5);
-    transform: scale(1.05);
-}
-.search-button:active {
-    border-color: var(--text-2);
-    transform: scale(0.95);
+    position: relative;
 }
 .search-button::after {
     content: attr(data-tooltip);
@@ -114,15 +80,36 @@
 }
 
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     #search-input {
         flex: 1 1 auto;
         min-width: 0;
-        height: var(--mobile-button-m);
-        padding-inline: var(--space-l);
     }
     .search-button {
         flex: 0 0 var(--mobile-button-m);
-        -webkit-tap-highlight-color: transparent;
     }
+}
+
+
+/* this is inside the #playlists section and not #title-search */
+#search-dropdown {
+    position: absolute;
+    top: 0;
+    inset-inline: var(--space-content-margin);
+    width: auto; /* important: let it stretch between the insets */    
+    background: var(--bg-5);
+    z-index: 10;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    max-height: 100%;
+
+    pointer-events: auto;
+
+    transition: max-height 0.3s ease;
+}
+#search-dropdown.hidden {
+    max-height: 0px;
+    pointer-events: none;
 }

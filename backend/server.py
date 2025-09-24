@@ -21,6 +21,7 @@ from backend.core.queue.implementations.download_queue import DownloadQueue
 import backend.globals as G
 
 from backend.api.routers import audio_router
+from backend.api.routers import playlists_router
 from backend.api.routers import queue_router
 from backend.api.routers import search_router
 from backend.api.routers import websocket_router
@@ -88,6 +89,7 @@ app.add_middleware(
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
 app.include_router(audio_router.router)
+app.include_router(playlists_router.router)
 app.include_router(queue_router.router)
 app.include_router(search_router.router)
 

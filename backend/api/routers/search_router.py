@@ -9,6 +9,9 @@ from backend.core.lib.utils import is_downloaded
 from backend.core.models.download_job import DownloadJob
 import backend.globals as G
 
+from backend.core.database.audio_database import AudioDatabase
+from backend.core.youtube.client import YouTubeClient
+
 router = APIRouter(prefix="/search")
 
 
@@ -24,7 +27,7 @@ async def search(req: Request, q: Optional[str] = Query(None)):
         JSONResponse: A list of matching tracks from the local SQLite database.
     """
     #local db search
-    db = req.app.state.db
+    db: AudioDatabase = req.app.state.db
     content = await db.search(q)
 
     return JSONResponse(content={"content": content}, status_code=200)
@@ -51,7 +54,7 @@ async def deep_search(req: Request, q: Optional[str] = Query(None)):
     if not q or len(q) == 0:
         return Response(status_code=200)
 
-    yt = req.app.state.yt
+    yt: YouTubeClient = req.app.state.yt
     results = await yt.robust_search(q)
 
     content = [track.to_json() for track in results]

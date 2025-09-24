@@ -22,8 +22,16 @@
     <link rel="stylesheet" href="/frontend/css/scrollbars.css">
     <link rel="stylesheet" href="/frontend/css/title-search.css">
 
+    <link rel="stylesheet" href="/frontend/css/menu-input.css">
+    <link rel="stylesheet" href="/frontend/css/menu-button.css">
+
+    <link rel="stylesheet" href="/frontend/css/playlists.css">
     <link rel="stylesheet" href="/frontend/css/list-track-item.css">
-    <link rel="stylesheet" href="/frontend/css/library.css">
+    <link rel="stylesheet" href="/frontend/css/create-playlist.css">
+
+    <link rel="stylesheet" href="/frontend/css/popup.css">
+    <link rel="stylesheet" href="/frontend/css/toast.css">
+    <link rel="stylesheet" href="/frontend/css/spinner.css">
 
     <link rel="stylesheet" href="/frontend/css/playbar.css">
     <link rel="stylesheet" href="/frontend/css/queue.css">
@@ -47,50 +55,88 @@
         font-family: monospace;
         z-index: 9999;
 
+
         display: none;
+
 
     ">blurb</div>
 
 	<!-- Page Title -->
-    <div id="title-search-library">
-        <div id="title-search-library-contents">
+    <div id="title-search-playlists">
+        <div id="title-search-playlists-contents">
             <div id="title-search">
                 <div id="title">
                     <img src="/frontend/assets/big_favicon.png" alt="Scuttle Logo" />
                     <h1 id="app-name">Scuttle</h1>
+
+                    <div id="spinner"></div>
                 </div>
 
                 <div id="search">
-                    <input type="text" id="search-input" placeholder="Search..." />
-                    <button id="search-get-results-button" class="search-button" data-tooltip="Search">
+                    <input type="text" id="search-input" class="menu-input" placeholder="Search..." />
+                    <button id="search-get-results-button" class="search-button menu-button" data-tooltip="Search">
                         <i class="fa fa-search"></i>
                     </button>
-                    <button id="search-and-download-button" class="search-button" data-tooltip="Get best match">
+                    <button id="search-and-download-button" class="search-button menu-button" data-tooltip="Get best match">
                         <i class="fa fa-rocket"></i>
                     </button>
                 </div>
+                
             </div>
 
-            <div id="library">
-                <h3 id="library-name">Library</h3>
+            <div id="playlists">
+                <!-- search dropdown menu absolutely positioned inside the playlists body -->
+                <div id="search-dropdown" class="hidden">
+                    <ul id="live-search-results" class="list-track">
+                    </ul>
+                </div>
 
-                <ul id="library-list">
-                </ul>
+
+                <div id="library" class="playlist">
+                    <div class="list-header">
+                        <h3 class="list-title">Library</h3>
+                    </div>
+
+                    <ul id="library-list" class="list-track">
+                    </ul>
+                </div>
+
+                <div id="liked" class="playlist">
+                    <div class="list-header">
+                        <h3 class="list-title">Liked</h3>
+                    </div>
+
+                    <ul id="liked-list" class="list-track">
+                    </ul>
+                </div>
+
+                <div id="custom-playlists">
+
+                </div>
+
+                <div id="create-playlist">
+                    <button id="create-playlist-button">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
             </div>
+        </div>
+
+        <div id="title-search-playlists-margin-block"></div>
+    </div>
+
+
+    <!-- Custom popup menus -->
+    <div id="popup-overlay">
+        <div id="popup">
         </div>
     </div>
 
-    
-
-    <!-- Playlists -->
-    <div id="playlist-section">
-        <div id="playlists">
-            <div>
-
-            </div>
+    <!-- Custom toast messages -->
+    <div id="toast-overlay">
+        <div id="toast">
         </div>
     </div>
-
 
 
 	<!-- Custom Playbar and Audio -->
@@ -103,7 +149,7 @@
 
         <div id="playbar-queue-contents">
             <div id="playbar">
-                <audio id="audio-player" hidden>
+                <audio id="audio-player" style="width:1px; height:1px; opacity:0.01">
                     Your browser does not support the audio element.
                 </audio>
 

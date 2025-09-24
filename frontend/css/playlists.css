@@ -1,0 +1,85 @@
+#playlists {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* smooth scroll for iOS */
+
+    position: relative;
+}
+
+/* When any playlist is expanded, fade out all other playlists */
+#playlists:has(.playlist.expanded) .playlist:not(.expanded) {
+    opacity: 0;
+    pointer-events: none; /* optional, prevent clicks on them */
+    transition: opacity 0.3s ease;
+}
+
+
+.playlist {
+    background: linear-gradient(
+        180deg,
+        var(--bg-5),
+        var(--bg-4)
+    );
+    margin-inline: var(--space-content-margin);
+    margin-bottom: var(--space-content-margin);
+    border-radius: var(--radius-l);
+
+    /* padding: var(--space-xl); */
+    padding: 0;
+
+    transition: all 0.5s ease;
+}
+.playlist.expanded {
+    border-radius: var(--radius-m);
+} 
+
+
+/* preview header part */
+.playlist .list-header {
+    margin: 0;
+    padding-inline: var(--space-xl);
+    padding-top: calc(var(--space-xl) - 0.1rem); /*adjust spacing top and bottom to text*/
+    padding-bottom: var(--space-xl);
+
+    width: 100%;
+
+    border-radius: var(--radius-m);
+    background: linear-gradient(
+        160deg, 
+        #8B0000, /* dark red */
+        #FF6347  /* tomato */
+    );
+
+    transition: all 0.3s ease;
+    /* 
+    position: relative;
+    z-index: 100; */
+}
+
+.playlist .list-header h3 {
+    text-align: left;
+    font: var(--h1);
+    color: var(--text-2);
+}
+
+
+.playlist .list-track {
+    margin: 0;
+    padding: 0;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* smooth native scrolling */
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+
+    height: 0;
+    transition: height 0.5s ease, padding 0.5s ease;
+}
+
+.playlist.expanded .list-track {
+    
+    padding-block: var(--space-l);
+    overflow: auto;
+}

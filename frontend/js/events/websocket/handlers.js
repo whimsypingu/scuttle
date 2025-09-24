@@ -1,10 +1,12 @@
 //static/js/events/websocket/handlers.js
 
+import { PlaylistStore } from "../../cache/PlaylistStore.js";
+import { TrackStore } from "../../cache/TrackStore.js";
 import { $, SELECTORS } from "../../dom/index.js";
-import { renderLibraryList } from "../../features/library/index.js";
+import { renderNewCustomPlaylist, renderPlaylist } from "../../features/playlist/index.js";
+import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 
 
-import { setLocalQueue } from "../../cache/index.js";
 
 
 //handles websocket messages //later this should be migrated from the backend to ensure consistency
@@ -18,56 +20,105 @@ export const handlers = {
     },
     audio_database: {
         search: handleADSE,
+        create_playlist: handleADCP,
+        fetch_likes: handleADFL,
+
         download: handleADDO
     },
     youtube_client: {
         search: handleYTSE,
+        download: handleYTDO,
+
+        task_start: handleTaskStart,
+        task_finish: handleTaskFinish,
     }
 }
 
 
-const domEls = {
-    queueListEl: $(SELECTORS.queue.ids.LIST),
-    titleEl: $(SELECTORS.audio.ids.TITLE),
-    authorEl: $(SELECTORS.audio.ids.AUTHOR),
 
-    libraryListEl: $(SELECTORS.library.ids.LIST),
+//spinner, can also include toasts for when downloads start and are complete.
+function handleTaskStart(payload) {
+    showSpinner();
 }
+function handleTaskFinish(payload) {
+    hideSpinner();
+}
+
+
 
 //player queue related websocket messages update the state of the local queue (for caching), and also the ui
 function handlePQSF(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 function handlePQIN(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 function handlePQPU(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 function handlePQPO(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 function handlePQRE(payload) {
-    setLocalQueue(payload.content);
+    //sync up queue and render?
 }
 
 
 
 
-const libraryListEl = $(SELECTORS.library.ids.LIST)
+const libraryListEl = $(SELECTORS.library.ids.LIST);
+const searchDropdownEl = $(SELECTORS.search.ids.DROPDOWN);
 
-export function handleADSE(payload) {
-    renderLibraryList(libraryListEl, payload.content);
+function handleADSE(payload) {
+    renderPlaylist(searchDropdownEl, payload.content);
 }
 
-export function handleADDO(payload) {
-    renderLibraryList(libraryListEl, payload.content);
+function handleADDO(payload) {
+    renderPlaylist(libraryListEl, payload.content);
 }
 
-export function handleYTSE(payload) {
-    renderLibraryList(libraryListEl, payload.content);
+function handleYTSE(payload) {
+
+    const tracks = payload.content || [];
+    for (const track of tracks) {
+        TrackStore.insert(track)
+    }
+
+    console.log("TRACKSTORE:", TrackStore.getTracks());
+    renderPlaylist(searchDropdownEl, payload.content);
+}
+
+function handleYTDO(payload) {
+    const track = payload.content;
+    TrackStore.insert(track);
+
+    console.log("TRACKSTORE:", TrackStore.getTracks());
+    renderPlaylist(libraryListEl, payload.content);
+}
+
+
+
+//whenever liked list gets updated in the backend sync up
+const likedListEl = $(SELECTORS.liked.ids.LIST)
+
+function handleADFL(payload) {
+    renderPlaylist(likedListEl, payload.content);
+}
+
+
+const customPlaylistEl = $(SELECTORS.playlists.ids.CUSTOM);
+
+function handleADCP(payload) {
+    const tempId = payload.content.temp_id;
+    const newId = payload.content.id;
+    const name = payload.content.name;
+
+    console.log("DEBUGGING:", tempId, newId);
+
+    PlaylistStore.updateId(tempId, newId);
+    renderNewCustomPlaylist(customPlaylistEl, name, newId, tempId);
 }

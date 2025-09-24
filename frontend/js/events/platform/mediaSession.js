@@ -27,11 +27,12 @@ export function registerMediaSessionHandlers() {
     document.addEventListener("trackChangedMediaSession", (e) => {
         if (!("mediaSession" in navigator)) return;
 
-        const { title, artist } = e.detail;
+        const { title, artist, playing } = e.detail;
 
-        logDebug("queueUpdated:", title, artist);
+        logDebug("trackChangedMediaSession fired.", title, artist, playing);
 
-        //set metadata
+        //set metadata 
+        // this does NOT necessarily work on iOS background autoplay workaround since it has something to do with streaming blah
         navigator.mediaSession.metadata = new MediaMetadata({
             title: title,
             artist: artist,
@@ -44,7 +45,9 @@ export function registerMediaSessionHandlers() {
             ]
         });
 
-        //set handlers (needs to be done here instead of once on spawn because of ios dammit)
+        navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+
+        //set handlers (needs to be done here instead of once on spawn)
         navigator.mediaSession.setActionHandler("play", () => onPlayPauseButtonClick(domEls));
         navigator.mediaSession.setActionHandler("pause", () => onPlayPauseButtonClick(domEls));
         navigator.mediaSession.setActionHandler("previoustrack", () => onPreviousButtonClick(domEls));

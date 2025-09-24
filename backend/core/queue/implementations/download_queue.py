@@ -2,20 +2,7 @@ from backend.core.models.download_job import DownloadJob
 from backend.core.queue.base.observable_dll import ObservableQueue
 import asyncio
 
-from enum import Enum
-
-
-class DownloadQueueAction(str, Enum):
-    SET_FIRST = "set_first"
-    INSERT_NEXT = "insert_next"
-    PUSH = "push"
-    POP = "pop"
-    REMOVE = "remove"
-    SEND_CONTENT = "send_content"
-
-
-DQA = DownloadQueueAction #alias for convenience in this file
-
+from backend.core.models.enums import DownloadQueueAction as DQA
 
 class DownloadQueue(ObservableQueue[DownloadJob]):
     async def insert_next(self, job: DownloadJob):

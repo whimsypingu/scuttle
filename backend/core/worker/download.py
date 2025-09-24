@@ -36,8 +36,7 @@ class DownloadWorker:
                     
                 if track is not None:
                     await self.audio_database.log_track(track)
-                    await self.audio_database.log_download(track)
-                    await self.audio_database.log_cache(track)
+                    await self.audio_database.log_download(track.id)
 
             except Exception as e:
                 print(f"[ERROR] DownloadWorker error ({e}) handling DownloadJob: {job}\n{traceback.format_exc()}")

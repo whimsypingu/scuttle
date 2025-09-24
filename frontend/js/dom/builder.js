@@ -1,7 +1,5 @@
 //static/js/dom/builder.js
 
-import { SELECTORS } from "./selectors.js";
-
 import { prepareDataset, formatTime } from "../utils/index.js";
 
 //helper to create element with optional attributes and children
@@ -24,14 +22,11 @@ export function createElem(tag, attrs = {}, children = []) {
 
 export function buildTrackListItem(track) {
     const li = document.createElement("li");
-    li.className = "list-track-item";
-        
-    // Add the track data to the li itself
-    const trackDataset = prepareDataset(track);
-    Object.entries(trackDataset).forEach(([key, value]) => {
-        li.dataset[key] = value;
-    });
+    li.classList.add("list-track-item");
 
+    //store the trackId
+    li.dataset.trackId = track.id;
+        
     const index = 99;
     li.innerHTML = `
         <div class="swipe-action left">
@@ -69,7 +64,7 @@ export function buildTrackListItem(track) {
 
 export function buildTrackListEmptyItem() {
     const li = document.createElement("li");
-    li.className = "list-track-empty-item";
+    li.classList.add("list-track-empty-item");
         
     li.innerHTML = `
         <p>No tracks available</p>
@@ -78,63 +73,98 @@ export function buildTrackListEmptyItem() {
 }
 
 
-/*
-//helper that makes a track list item
-export function buildTrackListItem(track, context) {
-    const item = createElem("li", 
-        { class: `${SELECTORS.track.classes.ITEM} ${SELECTORS[context].classes.ITEM}` }
-    );
 
-    //track fields
-    // Title
-    const titleDiv = createElem("div", {
-        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
-        textContent: track.title || "Untitled",
-    });
-    item.appendChild(titleDiv);
+export function buildCreatePlaylistPopup() {
+    const popup = document.createElement("div");
+    popup.classList.add("popup-content");
+    
+    popup.innerHTML = `
+        <h3 class="popup-message">Create Playlist</h3>
 
-    // Uploader
-    const uploaderDiv = createElem("div", {
-        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
-        textContent: track.uploader || "Unknown artist",
-    });
-    item.appendChild(uploaderDiv);
+        <input class="menu-input js-create-playlist-input" type="text" placeholder="New name">
 
-    // Duration (formatted)
-    const durationDiv = createElem("div", {
-        class: `${SELECTORS.track.classes.FIELD} ${SELECTORS[context].classes.FIELD}`,
-        textContent: formatTime(track.duration),
-    });
-    item.appendChild(durationDiv);
+        <div class="popup-actions">
+            <button class="menu-button green js-save">Save</button>
+            <button class="menu-button js-cancel">Cancel</button>
+        </div>
+    `;
+    return popup;
+}
 
 
-    //action buttons
-    const trackDataset = prepareDataset(track);
-    const playIcon = createElem("i", { class: "fa fa-play" });
-    const playButton = createElem("button", {
-        class: SELECTORS.actions.classes.PLAY_BUTTON,
-        dataset: {
-            ...trackDataset,
-            action: "play"
-        },
-        type: "button",
-    }, [playIcon]);
+//FINISH ME
+export function buildEditTrackPopup(playlists, track) {
+    const popup = document.createElement("div");
+    popup.classList.add("popup-content");
 
-    const queueIcon = createElem("i", { class: "fa fa-plus" });
-    const queueButton = createElem("button", {
-        class: SELECTORS.actions.classes.QUEUE_BUTTON,
-        dataset: {
-            ...trackDataset,
-            action: "queue"
-        },
-        type: "button",
-    }, [queueIcon]);
+    // expects something like this
+    // const playlists = [
+    //     {"id": 1, "name": "test1", "checked": true},
+    //     {"id": 2, "name": "test2", "checked": false},
+    //     {"id": 3, "name": "test3", "checked": true}        
+    // ]
+    console.log("TRACK DATA", track);
+    popup.innerHTML = `
+        <div class="scrollable-popup-content">
 
-    const actions = createElem("div", 
-        { class: `${SELECTORS[context].classes.FIELD} ${SELECTORS[context].classes.ACTIONS}` }, 
-        [playButton, queueButton]
-    );
-    item.appendChild(actions);
+            <h3 class="popup-message">Playlists</h3>
 
-    return item;
-}*/
+            <div class="playlist-selection-menu">
+                ${playlists.map(pl => `
+                    <label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
+                        <span class="checkbox"></span>
+                        <p class="playlist-name">${pl.name}</p>
+                    </label>
+                `).join("")}
+            </div>
+
+            <div class="spacing-block">
+            </div>
+
+            <h3 class="popup-message">Track Information</h3>
+
+            <div class="edit-track-metadata-menu">
+                <input type="text" class="menu-input" value="${track.title}" placeholder="Title..." />
+            
+                <input type="text" class="menu-input" value="${track.uploader}" placeholder="Artist..." />
+            </div>
+
+            <div class="spacing-block">
+            </div>
+
+            <h3 class="popup-message">Delete</h3>
+            <div class="delete-track-menu">
+                <button class="menu-button red js-delete">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+
+        </div>
+        
+        <div class="popup-actions">
+            <button class="menu-button green js-save">Save</button>
+            <button class="menu-button js-cancel">Cancel</button>
+        </div>
+    `;
+    return popup;
+}
+
+
+export function buildNewPlaylist(name, id) {
+    const playlist = document.createElement("div");
+    playlist.classList.add("playlist");
+
+    playlist.dataset.name = name;
+    playlist.dataset.id = id;
+
+    playlist.innerHTML = `
+        <div class="list-header">
+            <h3 class="list-title">${name}</h3>
+        </div>
+
+        <ul class="list-track">
+        </ul>
+    `;
+
+    return playlist;
+}

@@ -19,10 +19,19 @@
 	<link rel="stylesheet" href="css/variables.css ">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/title_and_search.css">
+
+    <link rel="stylesheet" href="css/menu_input.css">
+    <link rel="stylesheet" href="css/menu_button.css">
+
     <link rel="stylesheet" href="css/playbar.css">
     <link rel="stylesheet" href="css/queue.css">
-    <link rel="stylesheet" href="css/library.css">
+    <!-- <link rel="stylesheet" href="css/library.css"> -->
     <link rel="stylesheet" href="css/scrollbars.css">
+    <link rel="stylesheet" href="css/playlist.css">
+    <!-- <link rel="stylesheet" href="css/popup.css"> -->
+
+    <!-- <link rel="stylesheet" href="css/toast.css"> -->
+    <link rel="stylesheet" href="css/recent_searches.css">
 </head>
 <body>
     <div id="background-layer"></div>
@@ -37,37 +46,61 @@
                 </div>
 
                 <div id="search">
-                    <input type="text" id="search-input" placeholder="Search..." />
-                    <button id="search-get-results-button" class="search-button" data-tooltip="Search">
+                    <input type="text" id="search-input" class="menu-input" placeholder="Search..." />
+                    <button id="search-get-results-button" class="search-button menu-button" data-tooltip="Search">
                         <i class="fa fa-search"></i>
                     </button>
-                    <button id="search-and-download-button" class="search-button" data-tooltip="Get best match">
+                    <button id="search-and-download-button" class="search-button menu-button" data-tooltip="Get best match">
                         <i class="fa fa-rocket"></i>
                     </button>
                 </div>
             </div>
 
-            <div id="library">
-                <h3>Library</h3>
+            <div id="whole-library">
 
-                <ul id="library-list">
+            <div id="library" class="playlist">
+                <h3 class="playlist-header">Library</h3>
+
+                <ul id="library-list" class="list-track playlist-content">
                 </ul>
+            </div>
+
+            <div id="playlists">
+                <div id="playlist-1" class="playlist">
+                    <h3 class="playlist-header">playlist 1</h3>
+
+                    <ul class="list-track playlist-content">
+
+                    </ul>
+                </div>
+
+                <div id="playlist-2" class="playlist">
+                    <h3 class="playlist-header">playlist 2</h3>
+
+                    <ul class="list-track playlist-content">
+                        
+                    </ul>
+                </div>
+            </div>
+
+
             </div>
         </div>
     </div>
 
     
-
-    <!-- Playlists -->
-    <div id="playlist-section">
-        <div id="playlists">
-            <div>
-
-            </div>
+    <div id="popup-overlay" class="hidden">
+        <div id="popup">
+            <div id="popup-content"></div>
         </div>
     </div>
 
 
+    <div id="toast-overlay">
+        <div id="toast-container">
+
+        </div>
+    </div>
 
 	<!-- Custom Playbar and Audio -->
     <div id="playbar-queue">
@@ -122,6 +155,11 @@
     <script type="module" src="js/slider.js"></script>
     <script type="module" src="js/populate.js"></script>
     <script type="module" src="js/swipe.js"></script>
+    <script type="module" src="js/collapsePlaylist.js"></script>
+    <!-- <script type="module" src="js/popup.js"></script> -->
+    <!-- <script type="module" src="js/toast.js"></script> -->
+    <script type="module" src="js/recentSearches.js"></script>
+    
     
     </body>
 </html>

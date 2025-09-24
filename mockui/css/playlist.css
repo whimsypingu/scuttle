@@ -1,4 +1,4 @@
-#library {
+.playlist {
     background: linear-gradient(
         180deg,
         var(--bg-5),
@@ -9,12 +9,16 @@
     border-radius: var(--radius-l);
     padding: var(--space-xl);
     flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-l);
+    position: relative;
+    transition: all 0.3s ease;
+}
+/* Optional: expanded playlist “locks” to top */
+.playlist.expanded {
+    margin: 0;
 }
 
-#library h3 {
+
+.playlist .playlist-header {
     text-align: left;
     font: var(--h1);
     color: var(--text-2);
@@ -31,13 +35,20 @@
     );
 }
 
-#library-list {
+.playlist .playlist-content {
     margin: 0;
     padding: 0;
-    height: 35vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    /* height: 35vh;
+    overflow-y: auto; */
     display: flex;
     flex-direction: column;
     gap: var(--space-m);
+
+    max-height: 0;
+    transition: max-height 0.2s ease, margin 0.2s ease;
+}
+
+.playlist.expanded .playlist-content {
+    max-height: 100vh;
+    margin-top: var(--space-l);
 }

@@ -1,10 +1,10 @@
-html, body {
+body {
     min-height: 100vh;
     height: 100%;
     margin: 0;
     overscroll-behavior: contain;
     touch-action: pan-y;
-    overflow-y: auto;
+    overflow: hidden; /*prevent body scrolling*/
     font-family: var(--ff);
     -webkit-overflow-scrolling: touch;
 }
@@ -21,6 +21,11 @@ html, body {
     z-index: -9999;
 }
 
+
+
+
+
+
 #title-search-library {
     background-color: transparent;
     display: flex;
@@ -29,7 +34,7 @@ html, body {
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
-    padding: var(--space-app-border);
+    padding: 0;
 }
 
 #title-search-library-contents {
@@ -57,7 +62,7 @@ html, body {
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
-    padding-inline: var(--space-app-border);
+    padding-inline: 0;
     height: auto;
     opacity: 1;
     transition: height 0.5s ease, opacity 0.2s ease;

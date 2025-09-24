@@ -58,14 +58,20 @@ async function handleAudioStream(request) {
         arrayBuffer = await cachedResponse.arrayBuffer();
         swLog("Returning cached full audio:", request.url);
     } else {
-        const networkResponse = await fetch(fullUrl);
-        if (!networkResponse.ok) return networkResponse;
 
-        cachedResponse = networkResponse.clone(); //eats the original so make a copy
-        cache.put(fullUrl, cachedResponse);
+        //getting cached request
+        try {
+            const networkResponse = await fetch(fullUrl);
+            if (!networkResponse.ok) return networkResponse;
 
-        arrayBuffer = await networkResponse.arrayBuffer();
-        swLog("Cached full audio from network:", fullUrl);
+            cachedResponse = networkResponse.clone(); //eats the original so make a copy
+            cache.put(fullUrl, cachedResponse);
+
+            arrayBuffer = await networkResponse.arrayBuffer();
+            swLog("Cached full audio from network:", fullUrl);
+        } catch {
+            swLog("Getting cached request failed");
+        }
     }
 
     //4. handle range request, for faster streaming from cache
@@ -101,4 +107,3 @@ async function handleAudioStream(request) {
         },
     });
 }
-

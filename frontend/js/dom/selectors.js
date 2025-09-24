@@ -12,6 +12,8 @@ export const SELECTORS = {
 			INPUT: "search-input",
 			SEARCH_GET_RESULTS_BUTTON: "search-get-results-button",
 			SEARCH_AND_DOWNLOAD_BUTTON: "search-and-download-button",
+
+			DROPDOWN: "search-dropdown"
 		},
 		classes: {
 			SEARCH_BUTTON: "search-button",
@@ -55,16 +57,52 @@ export const SELECTORS = {
 		},
 	},
 
-	library: {
+	popup: {
 		ids: {
-			NAME: "library-name",
-			LIST: "library-list",
+			OVERLAY: "popup-overlay",
+			POPUP: "popup",
 		},
 		classes: {
-			//?
-			ITEM: "library-item",
-			FIELD: "library-field",
-			ACTIONS: "library-actions",
+			//
+		},
+	},
+
+	spinner: {
+		ids: {
+			SPINNER: "spinner",
+		},
+		classes: {
+			//
+		},
+	},
+
+	playlists: {
+		ids: {
+			BODY: "playlists",
+
+			LIBRARY: "library",
+			LIKED: "liked",
+
+			CUSTOM: "custom-playlists",
+
+			CREATE: "create-playlist-button",
+		},
+		classes: {
+			PLAYLIST: "playlist",
+
+			HEADER: "list-header",
+		}
+	},
+
+	library: {
+		ids: {
+			LIST: "library-list",
+		},
+	},
+
+	liked: {
+		ids: {
+			LIST: "liked-list",
 		},
 	},
 
@@ -96,7 +134,8 @@ export const SELECTORS = {
 
 //const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 export const domEls = {
-    audioEl: $(SELECTORS.audio.ids.PLAYER),
+    //audio and playbar
+	audioEl: $(SELECTORS.audio.ids.PLAYER),
 
     currTimeEl: $(SELECTORS.audio.ids.CURRENT_TIME),
     progBarEl: $(SELECTORS.audio.ids.PROGRESS_BAR),
@@ -109,9 +148,15 @@ export const domEls = {
 
     titleEl: $(SELECTORS.audio.ids.TITLE),
     authorEl: $(SELECTORS.audio.ids.AUTHOR),
-    queueListEl: $(SELECTORS.queue.ids.LIST),
 
-    libraryListEl: $(SELECTORS.library.ids.LIST)
+	//queue
+	queueListEl: $(SELECTORS.queue.ids.LIST),
+
+	//playlists
+	playlistsEl: $(SELECTORS.playlists.ids.BODY),
+
+	libraryListEl: $(SELECTORS.library.ids.LIST),
+	likedListEl: $(SELECTORS.liked.ids.LIST),
 };
 
 
@@ -119,5 +164,23 @@ export const searchDomEls = {
 	searchInputEl: $(SELECTORS.search.ids.INPUT),
 
 	deepSearchButtonEl: $(SELECTORS.search.ids.SEARCH_GET_RESULTS_BUTTON),
-	downloadSearchButtonEl: $(SELECTORS.search.ids.SEARCH_AND_DOWNLOAD_BUTTON)
+	downloadSearchButtonEl: $(SELECTORS.search.ids.SEARCH_AND_DOWNLOAD_BUTTON),
+
+	searchDropdownEl: $(SELECTORS.search.ids.DROPDOWN)
+};
+
+export const popupDomEls = {
+	customPlaylistEl: $(SELECTORS.playlists.ids.CUSTOM),
+
+	createPlaylistButtonEl: $(SELECTORS.playlists.ids.CREATE),
+
+	popupOverlayEl: $(SELECTORS.popup.ids.OVERLAY),
+	popupEl: $(SELECTORS.popup.ids.POPUP),
+};
+
+
+export const playlistDomEls = {
+	customPlaylistEl: $(SELECTORS.playlists.ids.CUSTOM),
+
+
 }

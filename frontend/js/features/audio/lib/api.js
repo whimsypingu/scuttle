@@ -4,38 +4,16 @@
 import { getResponse } from "../../../utils/index.js";
 
 
+export async function getAudioStream(trackId) {
+    const response = await fetch(`/audio/stream/${trackId}`);
+    console.log("getAudioStream status:", response.status);
 
-export async function getCurrentAudioStream() {
-    try {
-        const response = await getResponse(`/audio/stream/current`);
-        console.log("getCurrentAudioStream status:", response.status);
+    if (!response) return null;
 
-        if (response.status === 204) return null; //edge case when queue is exhausted and no tracks left
-        if (!response.ok) { 
-            console.warn("Failed to get audio stream");
-            return null;
-        }
-
-        return await response.blob();
-    } catch (err) {
-        console.error("Error fetching current audio stream:", err);
-        return null;
+    //log and handle 503
+    if (response.status === 503) {
+        console.warn("Failed to get audio stream, probably downloading");
     }
-}
 
-export async function getAudioStream(track) {
-    try {
-        const response = await getResponse(`/audio/stream/${track.youtube_id}`);
-        console.log("getAudioStream status:", response.status);
-
-        if (!response.ok) {
-            console.warn("Failed to get audio stream");
-            return null;
-        }
-
-        return response; //return the entire Response and dont throw away headers
-    } catch (err) {
-        console.error("Error fetching audio stream:", err);
-        return null;
-    }
+    return response;
 }

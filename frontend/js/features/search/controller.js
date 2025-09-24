@@ -1,14 +1,35 @@
 //static/js/features/search/controller.js
 
-import { search, deepSearch, downloadSearch } from "./index.js";
+import { 
+    search, 
+    deepSearch, 
+    downloadSearch,
+
+    hideDropdown, 
+    showDropdown 
+} from "./index.js";
+
 import { logDebug } from "../../utils/debug.js";
+
+import { searchDomEls } from "../../dom/selectors.js";
 
 
 //typing in the search bar
 export async function onSearchInput(e) {
+    const { searchDropdownEl } = searchDomEls;
+
     const q = e.target.value.trim();
     console.log("Search query:", q);
+    
+    if (q === "") {
+        hideDropdown(searchDropdownEl);
+        return;
+    } else {
 
+        console.log("DROPDOWN ACTIVE");
+        showDropdown(searchDropdownEl);
+    }
+    
     const data = await search(q);
     console.log("data:", data);
 }
@@ -50,7 +71,7 @@ export async function onDownloadSearchButtonClick(domEls) {
     logDebug("Download search:", q);
 
     if (!q) return;
-    
+
     const data = await downloadSearch(q);
     logDebug("data:", data);
 }

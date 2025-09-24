@@ -1,0 +1,37 @@
+#create-playlist {
+    margin-inline: var(--space-content-margin);
+    border-radius: var(--radius-l);
+    padding: 0;
+}
+
+#create-playlist-button {
+    margin: 0;
+    padding-inline: var(--space-xl);
+    padding-top: calc(var(--space-xl) - 0.1rem); /*adjust spacing top and bottom to text*/
+    padding-bottom: var(--space-xl);
+
+    width: 100%;
+
+    border-radius: var(--radius-m);
+    background: linear-gradient(
+        180deg,
+        var(--bg-5),
+        var(--bg-4)
+    );
+    color: var(--text-3);
+
+    transition: filter 0.2s ease;
+}
+
+/* Hover animation */
+#create-playlist-button:hover {
+    filter: brightness(1.05);
+    color: var(--text-1); /* brighter text */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* soft shadow */
+}
+
+/* Click / active animation */
+#create-playlist-button:active {
+    filter: brightness(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* reduced shadow */
+}

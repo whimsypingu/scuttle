@@ -13,15 +13,7 @@ from backend.core.models.event import Event
 from backend.core.models.track import Track
 from backend.exceptions import SearchFailedError
 
-from enum import Enum
-
-
-class YouTubeClientAction(str, Enum):
-    SEARCH = "search"
-    DOWNLOAD = "download"
-
-YTCA = YouTubeClientAction #alias for convenience in this file
-
+from backend.core.models.enums import YouTubeClientAction as YTCA
 
 
 #if this fucker breaks just run: python -m pip install -U yt-dlp (goated software btw up with ffmpeg)
@@ -42,6 +34,8 @@ class YouTubeClient:
         self.base_dir = base_dir
 
         self._event_bus = event_bus
+
+        self.id_src = "YT___" #source for id's, so that it'll be like YT_#######...
 
         self.dl_format_filter = dl_format_filter or "bestaudio/best"
         self.dl_format = dl_format or "mp3"
@@ -153,6 +147,8 @@ class YouTubeClient:
         """
         Search YouTube using yt-dlp with retries and return Track objects.
         """
+        await self._emit_event(action=YTCA.START, payload={})
+
         #cmd line search
         delim = "\x1f"
         cmd = [
@@ -189,9 +185,11 @@ class YouTubeClient:
                     print(f"[WARN]: Unexpected line format: {line}")
                     continue
 
-                youtube_id, title, uploader, duration = parts
+                id, title, uploader, duration = parts
+                true_id = f"{self.id_src}{id}"
+
                 track = Track(
-                    youtube_id=youtube_id,
+                    id=true_id,
                     title=title or "Unknown Title",
                     uploader=uploader or "Unknown Uploader",
                     duration=int(duration) if duration.isdigit() else 0,
@@ -207,6 +205,8 @@ class YouTubeClient:
         #only emit when fetching multiple results
         if limit > 1:
             await self._emit_event(action=YTCA.SEARCH, payload={"content": results})
+
+        await self._emit_event(action=YTCA.FINISH, payload={})
         return results
 
 
@@ -245,9 +245,15 @@ class YouTubeClient:
         id: str, 
         timeout: int = 60
     ) -> bool:
+        #send task start notification
+        await self._emit_event(action=YTCA.START, payload={})
+
         #prepares cmd line arguments
-        output_path = get_audio_path(track=id, base_dir=self.base_dir, audio_format=self.dl_format)
-        temp_path = get_audio_path(track=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
+        output_path = get_audio_path(track_or_id=id, base_dir=self.base_dir, audio_format=self.dl_format)
+        temp_path = get_audio_path(track_or_id=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
+
+        if id.startswith(self.id_src):
+            id = id[len(self.id_src):]
 
         url = f"https://www.youtube.com/watch?v={id}"
 
@@ -284,21 +290,26 @@ class YouTubeClient:
 
             # Parse metadata from stdout
             line = out.strip().splitlines()[0]  # first line
-            youtube_id, title, uploader, duration = line.split(delim)
+            id, title, uploader, duration = line.split(delim)
+            true_id = f"{self.id_src}{id}"
+
             track = Track(
-                youtube_id=youtube_id,
+                id=true_id,
                 title=title or "Unknown Title",
                 uploader=uploader or "Unknown Uploader",
                 duration=int(duration) if duration.isdigit() else 0
             )
 
-            await self._emit_event(action=YTCA.DOWNLOAD, payload={})
-            return track
-
         except Exception as e:
             print(f"[ERROR] Failed to download {id}: {e}")
-            await self._emit_event(action=YTCA.DOWNLOAD, payload={})
-            return None
+            raise
+        
+        finally:
+            #complete task notification
+            await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
+            await self._emit_event(action=YTCA.FINISH, payload={})
+        
+        return track
         
 
     async def download_by_query(
@@ -313,10 +324,10 @@ class YouTubeClient:
             print(f"[WARN]: No results found for query: {q}")
             return False
         
-        id = result[0].youtube_id
+        id = result[0].id
         print(f"[DEBUG] Result: {result}, ID: {id}")
 
-        track = await self.download_by_id(id=id, timeout=timeout)
+        track = await self.download_by_id(id, timeout=timeout)
         print(f"[DEBUG] Track: {track}")
 
         return track

@@ -29,8 +29,8 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
     Raises:
         HTTPException: Returns 500 if any unexpected error occurs during processing.
     """
-    track = body.track
-    job = DownloadJob(track=track)
+    id = body.id
+    job = DownloadJob(id=id)
 
     queue_manager = req.app.state.queue_manager
 
@@ -39,10 +39,10 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
 
     try:
         #queueing logic for replacing first item in queue if available
-        if is_downloaded(track=track):
-            await play_queue.set_first(track)
+        if is_downloaded(track_or_id=id):
+            await play_queue.set_first(id)
         else:
-            await play_queue.insert_next(track)
+            await play_queue.insert_next(id)
             if not download_queue.contains(job):
                 await download_queue.insert_next(job)
     
@@ -69,8 +69,8 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
     Raises:
         HTTPException: Returns 500 if any unexpected error occurs during processing.
     """
-    track = body.track
-    job = DownloadJob(track=track)
+    id = body.id
+    job = DownloadJob(id=id)
 
     queue_manager = req.app.state.queue_manager
     
@@ -79,9 +79,9 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
 
     try:
         #normal queueing logic
-        await play_queue.push(track)
+        await play_queue.push(id)
 
-        if not is_downloaded(track=track):
+        if not is_downloaded(track_or_id=id):
             if not download_queue.contains(job):
                 await download_queue.push(job)
         
