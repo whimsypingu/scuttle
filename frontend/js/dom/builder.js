@@ -93,7 +93,7 @@ export function buildCreatePlaylistPopup() {
 
 
 //FINISH ME
-export function buildEditTrackPopup(playlists) {
+export function buildEditTrackPopup(playlists, track) {
     const popup = document.createElement("div");
     popup.classList.add("popup-content");
 
@@ -103,23 +103,44 @@ export function buildEditTrackPopup(playlists) {
     //     {"id": 2, "name": "test2", "checked": false},
     //     {"id": 3, "name": "test3", "checked": true}        
     // ]
+    console.log("TRACK DATA", track);
     popup.innerHTML = `
-        <h3 class="popup-message">Select Playlists</h3>
+        <div class="scrollable-popup-content">
 
-        <div class="playlist-selection-menu">
-            ${playlists.map(pl => `
-                <label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
-                    <span class="checkbox"></span>
-                    <p class="playlist-name">${pl.name}</p>
-                </label>
-            `).join("")}
+            <h3 class="popup-message">Playlists</h3>
+
+            <div class="playlist-selection-menu">
+                ${playlists.map(pl => `
+                    <label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
+                        <span class="checkbox"></span>
+                        <p class="playlist-name">${pl.name}</p>
+                    </label>
+                `).join("")}
+            </div>
+
+            <div class="spacing-block">
+            </div>
+
+            <h3 class="popup-message">Track Information</h3>
+
+            <div class="edit-track-metadata-menu">
+                <input type="text" class="menu-input" value="${track.title}" placeholder="Title..." />
+            
+                <input type="text" class="menu-input" value="${track.uploader}" placeholder="Artist..." />
+            </div>
+
+            <div class="spacing-block">
+            </div>
+
+            <h3 class="popup-message">Delete</h3>
+            <div class="delete-track-menu">
+                <button class="menu-button red js-delete">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+
         </div>
-
-        <h3 class="popup-message">Track Information</h3>
-
-        <div class="edit-track-metadata-menu">
-        </div>
-
+        
         <div class="popup-actions">
             <button class="menu-button green js-save">Save</button>
             <button class="menu-button js-cancel">Cancel</button>

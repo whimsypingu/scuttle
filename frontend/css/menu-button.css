@@ -36,8 +36,25 @@
     border-color: var(--text-1);
 }
 
+
+/* variation for red buttons */
+.menu-button.red {
+    background-color: #c62828;   /* base red */
+    color: var(--text-2);
+}
+.menu-button.red:hover {
+    background-color: #e53935;   /* brighter red on hover */
+    color: var(--text-1);
+}
+.menu-button.red:active {
+    border-color: var(--text-1);
+}
+
+
+
 @media (max-width: 768px) {
     .menu-button {
         height: var(--mobile-button-m);
+        min-width: var(--mobile-button-m);
     }
 }

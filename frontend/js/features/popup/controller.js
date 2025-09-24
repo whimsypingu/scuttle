@@ -11,6 +11,7 @@ import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { getSelectedPlaylists } from "./lib/utils.js";
 import { editTrack } from "./lib/api.js";
 import { showToast } from "../toast/index.js";
+import { TrackStore } from "../../cache/TrackStore.js";
 
 
 
@@ -33,7 +34,8 @@ export function showEditTrackPopup(trackId) {
     //clear old popup and set to a new fresh one
     popupEl.innerHTML = "";
 
-    const newPopupEl = buildEditTrackPopup(playlists);
+    const track = TrackStore.get(trackId);
+    const newPopupEl = buildEditTrackPopup(playlists, track);
     popupEl.append(newPopupEl);
 
     //bind listeners
