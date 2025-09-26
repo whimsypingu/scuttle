@@ -9,7 +9,7 @@ export function setupPlaylistEventListeners() {
         const headerEl = e.target.closest(".list-header");
 
         if (!headerEl) {
-            onClickPlaylist(e, domEls);
+            onClickPlaylist(e);
             return;
         };
 

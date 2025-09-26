@@ -17,7 +17,7 @@ export const LikeStore = (() => {
                 store.remove(id);
                 return false;
             } else {
-                store.insert(id);
+                store.push(id);
                 return true;
             }
         },

@@ -31,12 +31,11 @@ import { LikeStore } from "../../cache/LikeStore.js";
 import { showEditTrackPopup } from "../popup/controller.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 import { showToast } from "../toast/index.js";
-import { getPlayerEl } from "../audio/lib/streamTrick.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 
 
 //clicking the playlist will check for this
-export async function onClickPlaylist(e, domEls) {
+export async function onClickPlaylist(e) {
     //check what was clicked
     const buttonEl = e.target.closest("button");
 
@@ -55,7 +54,7 @@ export async function onClickPlaylist(e, domEls) {
         if (buttonEl.classList.contains("play-playlist-button")) {
             logDebug("Play playlist clicked");
 
-            onClickPlayPlaylistButton(domEls, playlistDataset);
+            onClickPlayPlaylistButton(playlistDataset);
 
         } else if (buttonEl.classList.contains("shuffle-playlist-button")) {
             logDebug("Shuffle playlist clicked");
@@ -64,22 +63,21 @@ export async function onClickPlaylist(e, domEls) {
         //individual buttons clicked (desktop)?
         else if (buttonEl.classList.contains("queue-button")) {
             logDebug("Queue clicked");
-            await onClickQueueButton(domEls, liDataset);
+            await onClickQueueButton(liDataset);
 
         } else if (buttonEl.classList.contains("more-button")) {
             logDebug("more //BUILD ME", liDataset);
         }
     } else if (li) {
         logDebug("Play clicked");
-        await onClickPlayButton(domEls, liDataset);
+        await onClickPlayButton(liDataset);
     }
 }
 
 
 
 //play an entire playlist
-async function onClickPlayPlaylistButton(domEls, dataset) {
-    const { audioEl } = domEls;
+async function onClickPlayPlaylistButton(dataset) {
 
     const playlistIdRaw = dataset.id;
     const playlistId = parseInt(playlistIdRaw, 10);
@@ -131,9 +129,7 @@ async function onClickPlayPlaylistButton(domEls, dataset) {
 
 
 //helpers
-async function onClickPlayButton(domEls, dataset) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
-
+async function onClickPlayButton(dataset) {
     //0. parse data
     const trackId = dataset.trackId;
 
@@ -150,7 +146,9 @@ async function onClickPlayButton(domEls, dataset) {
 
     try {
         //1. make changes to local queue
+        console.log("QueueStore check 1:", QueueStore.getTracks());
         QueueStore.setFirst(trackId);
+        console.log("QueueStore check 2:", QueueStore.getTracks());
 
         //2. load in the audio
         await cleanupCurrentAudio();
@@ -176,9 +174,7 @@ async function onClickPlayButton(domEls, dataset) {
     }
 }
 
-async function onClickQueueButton(domEls, dataset) {
-    const { titleEl, authorEl, queueListEl } = domEls;
-
+async function onClickQueueButton(dataset) {
     //0. parse data
     const trackId = dataset.trackId;
 
@@ -209,8 +205,10 @@ async function onClickQueueButton(domEls, dataset) {
 
 
 //which action to do "queue", "more"
-export async function onSwipe(domEls, dataset, action) {
-    const { titleEl, authorEl, queueListEl, likedListEl } = domEls;
+import { domEls } from "../../dom/selectors.js";
+const { likedListEl } = domEls;
+
+export async function onSwipe(dataset, action) {
 
     //0. parse data
     const trackId = dataset.trackId;

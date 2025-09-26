@@ -23,7 +23,13 @@ export function createIdStore() {
         },
 
         //modifiers
-        insert(id) {
+        insert(id, index) {
+            if (index < 0) index = 0;
+            if (index > idList.length) index = idList.length;
+
+            idList.splice(index, 0, id);
+        },
+        add(id) {
             if (!idList.includes(id)) {
                 idList.push(id);
             }

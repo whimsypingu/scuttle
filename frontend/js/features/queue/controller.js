@@ -28,7 +28,7 @@ import { QueueStore } from "../../cache/QueueStore.js";
 
 
 //clicking the queue list will check for this
-export async function onClickQueueList(e, domEls) {
+export async function onClickQueueList(e) {
     //check what was clicked
     const button = e.target.closest("button");
     const li = e.target.closest("li.list-track-item");
@@ -38,23 +38,21 @@ export async function onClickQueueList(e, domEls) {
     if (button) {
         if (button.classList.contains("queue-button")) {
             logDebug("Queue clicked");
-            await onClickQueueButton(domEls, dataset);
+            await onClickQueueButton(dataset);
 
         } else if (button.classList.contains("more-button")) {
             logDebug("more //BUILD ME", li?.dataset);
         }
     } else if (li) {
         logDebug("Play clicked");
-        await onClickPlayButton(domEls, dataset);
+        await onClickPlayButton(dataset);
     }
 
 }
 
 
 //helpers
-async function onClickPlayButton(domEls, dataset) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
-
+async function onClickPlayButton(dataset) {
     //0. parse data
     const trackId = dataset.trackId;
 
@@ -95,9 +93,7 @@ async function onClickPlayButton(domEls, dataset) {
 }
 
 
-async function onClickQueueButton(domEls, dataset) {
-    const { titleEl, authorEl, queueListEl } = domEls;
-
+async function onClickQueueButton(dataset) {
     //0. parse data
     const trackId = dataset.trackId;
 
@@ -126,4 +122,4 @@ async function onClickQueueButton(domEls, dataset) {
 
 
 
-//onSwipe is defined in library and i think works for both... consider moving to a separate swipe function
+//onSwipe is defined in frontend/js/features/playlist/controller.js

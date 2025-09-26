@@ -82,7 +82,7 @@ export const PlaylistStore = (() => {
          */
         addTrackId(playlistId, trackId) {
             const pl = playlists[playlistId];
-            if (pl) pl.tracks.insert(trackId);
+            if (pl) pl.tracks.add(trackId);
         },
 
         /**

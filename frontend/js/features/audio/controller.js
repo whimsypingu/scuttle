@@ -30,9 +30,7 @@ import { getPlayerEl } from "./lib/streamTrick.js";
 
 
 //autoplay
-export async function onAudioEnded(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
-
+export async function onAudioEnded() {
     try {
         //instantaneously update everything, and then send the update to the backend
         //1. make changes to local , which will trigger queue ui update
@@ -71,9 +69,7 @@ export async function onAudioEnded(domEls) {
 }
 
 //next
-export async function onNextButtonClick(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
-
+export async function onNextButtonClick() {
     console.error(trackState());
 
     try {
@@ -116,9 +112,7 @@ export async function onNextButtonClick(domEls) {
 }
 
 //play or pause
-export async function onPlayPauseButtonClick(domEls) {
-    const { audioEl, ppButtonEl } = domEls;
-
+export async function onPlayPauseButtonClick() {
     console.error(trackState());
 
     //1. check for track
@@ -141,9 +135,7 @@ export async function onPlayPauseButtonClick(domEls) {
 }
 
 //previous --gonna become a mess when previous track is allowed
-export function onPreviousButtonClick(domEls) {
-    const { audioEl, currTimeEl, progBarEl } = domEls;
-
+export function onPreviousButtonClick() {
     const playerEl = getPlayerEl();
 
     playerEl.currentTime = 0;
@@ -156,19 +148,17 @@ export function onPreviousButtonClick(domEls) {
 let isSeeking = false;
 
 //time update
-export function onTimeUpdate(domEls) {
-    if (!isSeeking) {
-        const { audioEl, currTimeEl, progBarEl } = domEls;
+export function onTimeUpdate() {
+    if (trackState()) return; //paused
 
+    if (!isSeeking) {
         syncCurrentTimeDisplay();
         syncProgressBar();
     }
 }
 
 //start scrub seek, pointer down on progress bar
-export function startScrubSeek(domEls) {
-    const { audioEl } = domEls;
-
+export function startScrubSeek() {
     const playerEl = getPlayerEl();
 
     if (!playerEl.src || playerEl.readyState === 0) return; // nothing loaded, abort
@@ -176,10 +166,11 @@ export function startScrubSeek(domEls) {
 }
 
 //preview scrub seek, swipe on progress bar
-export function inputScrubSeek(domEls) {
+import { domEls } from "../../dom/selectors.js";
+const { progBarEl } = domEls;
+
+export function inputScrubSeek() {
     if (!isSeeking) return;
-    
-    const { audioEl, currTimeEl, progBarEl } = domEls;
 
     const playerEl = getPlayerEl();
 
@@ -189,11 +180,9 @@ export function inputScrubSeek(domEls) {
 }
 
 //commit scrub seek, pointer up on window
-export function commitScrubSeek(domEls) {
+export function commitScrubSeek() {
     if (!isSeeking) return;
     
-    const { audioEl, currTimeEl, progBarEl } = domEls;
-
     const playerEl = getPlayerEl();
 
     const seekTime = (progBarEl.value / 100) * playerEl.duration;
