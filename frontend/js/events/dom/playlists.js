@@ -16,7 +16,9 @@ export function setupPlaylistEventListeners() {
         const playlistEl = headerEl.closest(".playlist");
         const isExpanded = playlistEl.classList.contains("expanded");
 
-        const listTrack = playlistEl.querySelector(".list-track");
+        //expand heights of playlist option buttons and tracklist
+        const playlistOptionsEl = playlistEl.querySelector(".playlist-options");
+        const listTrackEl = playlistEl.querySelector(".list-track");
 
         const parentEl = document.getElementById("playlists");
 
@@ -24,7 +26,7 @@ export function setupPlaylistEventListeners() {
             const parentRect = parentEl.getBoundingClientRect();
             const playlistRect = playlistEl.getBoundingClientRect();
 
-            //
+            //move to top and style parent
             const translateY = parentRect.top - playlistRect.top;
 
             playlistEl.style.transform = `translateY(${translateY}px)`;
@@ -32,9 +34,13 @@ export function setupPlaylistEventListeners() {
             parentEl.style.overflow = "hidden";
             parentEl.style.touchAction = "none";  // optional, prevents touch scrolling on mobile
 
-            //
-            const availableHeight = parentRect.height - headerEl.offsetHeight;
-            listTrack.style.height = `${availableHeight}px`;
+            //list options height
+            const optionHeight = playlistOptionsEl.scrollHeight;
+            playlistOptionsEl.style.height = `${optionHeight}px`;
+
+            //list track height
+            const availableHeight = parentRect.height - optionHeight - headerEl.offsetHeight;
+            listTrackEl.style.height = `${availableHeight}px`;
 
         } else {
             playlistEl.style.transform = "";
@@ -42,7 +48,11 @@ export function setupPlaylistEventListeners() {
             parentEl.style.overflow = "auto";
             parentEl.style.touchAction = "";  // optional, prevents touch scrolling on mobile
 
-            listTrack.style.height = "0px";
+            //list options height
+            playlistOptionsEl.style.height = "0px";
+
+            //list track height
+            listTrackEl.style.height = "0px";
         }
 
         playlistEl.classList.toggle("expanded");

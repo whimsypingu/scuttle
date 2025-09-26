@@ -45,6 +45,15 @@ export const TrackStore = {
 
 
     /**
+     * Get all track IDs
+     * @returns {Array<string>} Array of track IDs.
+     */
+    getIds() {
+        return Object.keys(tracksById);
+    },
+
+
+    /**
      * Get multiple tracks by an array of IDs.
      * @param {Array<string>} ids - Array of track IDs.
      * @returns {Array<Object>} Array of track objects that were found. Missing IDs are skipped.

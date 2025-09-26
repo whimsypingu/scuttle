@@ -2,6 +2,8 @@
 
 import { parseTrackFromDataset } from "../../utils/index.js"
 
+import { logDebug } from "../../utils/debug.js";
+
 import { 
     loadTrack, 
     playLoadedTrack,
@@ -72,17 +74,17 @@ async function onClickPlayButton(domEls, dataset) {
         QueueStore.setFirst(track.id);
 
         //2. load in the audio
-        await cleanupCurrentAudio(audioEl);
-        await loadTrack(audioEl, track);
+        await cleanupCurrentAudio();
+        await loadTrack(track.id);
 
         //3. make optimistic ui changes
         updateMediaSession(track, true);
-        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
-        resetUI(track, titleEl, authorEl, audioEl, currTimeEl, progBarEl, durationEl);
-        updatePlayPauseButtonDisplay(ppButtonEl, true);
+        redrawQueueUI(QueueStore.getTracks());
+        resetUI();
+        updatePlayPauseButtonDisplay(true);
         
         //4. play audio
-        await playLoadedTrack(audioEl);
+        await playLoadedTrack();
 
         //5. send changes to server (returns websocket message to sync ui)
         await queueSetFirstTrack(track.id);
@@ -113,7 +115,7 @@ async function onClickQueueButton(domEls, dataset) {
     //1. update queue (local and backend)
     try {
         QueueStore.push(track.id);
-        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
+        redrawQueueUI(QueueStore.getTracks());
         showToast(`Queued`);
 
         await queuePushTrack(track.id);

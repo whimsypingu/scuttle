@@ -17,7 +17,8 @@ import {
 import { 
     queuePushTrack,
     queueSetFirstTrack,
-    redrawQueueUI
+    redrawQueueUI,
+    renderQueueList
 } from "../queue/index.js";
 
 import { toggleLike } from "./lib/api.js";
@@ -31,29 +32,102 @@ import { showEditTrackPopup } from "../popup/controller.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 import { showToast } from "../toast/index.js";
 import { getPlayerEl } from "../audio/lib/streamTrick.js";
+import { PlaylistStore } from "../../cache/PlaylistStore.js";
 
 
-//clicking the library list will check for this
+//clicking the playlist will check for this
 export async function onClickPlaylist(e, domEls) {
     //check what was clicked
-    const button = e.target.closest("button");
-    const li = e.target.closest("li.list-track-item");
-    const dataset = li?.dataset;
+    const buttonEl = e.target.closest("button");
+
+    //closest playlist for id
+    const playlistEl = e.target.closest(".playlist");
+    const playlistDataset = playlistEl?.dataset;
+
+    //closest list element
+    const li = e.target.closest("li.list-track-item"); //why dont i use liEl? it looks ugly
+    const liDataset = li?.dataset;
 
     //handle button or whole row pressed
-    if (button) {
-        if (button.classList.contains("queue-button")) {
-            logDebug("Queue clicked");
-            await onClickQueueButton(domEls, dataset);
+    if (buttonEl) {
 
-        } else if (button.classList.contains("more-button")) {
-            logDebug("more //BUILD ME", li?.dataset);
+        //playlist-wide play or shuffle buttons
+        if (buttonEl.classList.contains("play-playlist-button")) {
+            logDebug("Play playlist clicked");
+
+            onClickPlayPlaylistButton(domEls, playlistDataset);
+
+        } else if (buttonEl.classList.contains("shuffle-playlist-button")) {
+            logDebug("Shuffle playlist clicked");
+        } 
+        
+        //individual buttons clicked (desktop)?
+        else if (buttonEl.classList.contains("queue-button")) {
+            logDebug("Queue clicked");
+            await onClickQueueButton(domEls, liDataset);
+
+        } else if (buttonEl.classList.contains("more-button")) {
+            logDebug("more //BUILD ME", liDataset);
         }
     } else if (li) {
         logDebug("Play clicked");
-        await onClickPlayButton(domEls, dataset);
+        await onClickPlayButton(domEls, liDataset);
     }
 }
+
+
+
+//play an entire playlist
+async function onClickPlayPlaylistButton(domEls, dataset) {
+    const { audioEl } = domEls;
+
+    const playlistIdRaw = dataset.id;
+    const playlistId = parseInt(playlistIdRaw, 10);
+
+    let queueIds = null;
+
+    if (isNaN(playlistId)) {
+        //system playlist
+        switch (playlistIdRaw) {
+            case "library":
+                queueIds = TrackStore.getIds(); //TODO: ordering is sus!
+                break;
+            
+            case "liked":
+                queueIds = LikeStore.getIds();
+                break;
+
+            default:
+                console.warn("Unknown system playlist:", playlistIdRaw);
+        }
+    } else {
+        //user playlist
+        queueIds = PlaylistStore.getTrackIds(playlistId);
+    }
+
+    //1. set queue locally
+    QueueStore.setAll(queueIds);
+
+    //2. load in audio
+    const trackId = QueueStore.peekId();
+
+    await cleanupCurrentAudio();
+    await loadTrack(trackId);
+
+    //3. make optimistic ui changes
+    const track = TrackStore.get(trackId);
+    logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+
+    updateMediaSession(track, true);
+    redrawQueueUI(QueueStore.getTracks());
+    resetUI();
+    updatePlayPauseButtonDisplay(true);
+
+    //4. play audio
+    await playLoadedTrack();
+
+}
+
 
 
 //helpers
@@ -79,21 +153,20 @@ async function onClickPlayButton(domEls, dataset) {
         QueueStore.setFirst(trackId);
 
         //2. load in the audio
-        await cleanupCurrentAudio(audioEl);
-        await loadTrack(audioEl, trackId);
-        const playerEl = getPlayerEl();
+        await cleanupCurrentAudio();
+        await loadTrack(trackId);
 
         //3. make optimistic ui changes
         const track = TrackStore.get(trackId);
         logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
 
         updateMediaSession(track, true);
-        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
-        resetUI(playerEl, currTimeEl, progBarEl, durationEl);
-        updatePlayPauseButtonDisplay(ppButtonEl, true);
+        redrawQueueUI(QueueStore.getTracks());
+        resetUI();
+        updatePlayPauseButtonDisplay(true);
         
         //4. play audio
-        await playLoadedTrack(audioEl);
+        await playLoadedTrack();
 
         //5. send changes to server (returns websocket message to sync ui)
         await queueSetFirstTrack(track.id);
@@ -123,7 +196,7 @@ async function onClickQueueButton(domEls, dataset) {
     //1. update queue (local and backend)
     try {
         QueueStore.push(track.id);
-        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
+        redrawQueueUI(QueueStore.getTracks());
         showToast(`Queued`);
 
         await queuePushTrack(track.id);
@@ -157,7 +230,7 @@ export async function onSwipe(domEls, dataset, action) {
     if (action === "queue") {
         try {
             QueueStore.push(track.id);
-            redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
+            redrawQueueUI(QueueStore.getTracks());
             showToast(`Queued`); //optionally include track.title but should probably prevent js injection
 
             await queuePushTrack(track.id); //backend
