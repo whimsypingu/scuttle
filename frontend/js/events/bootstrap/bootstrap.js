@@ -32,7 +32,7 @@ async function bootstrapQueue() {
         QueueStore.setAll(data.content); //accepts ids
         const tracks = QueueStore.getTracks();
 
-        redrawQueueUI(domEls.queueListEl, domEls.titleEl, domEls.authorEl, tracks);
+        redrawQueueUI(tracks);
     } catch (err) {
         console.error("Bootstrap failed", err);
     }

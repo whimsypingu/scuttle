@@ -30,9 +30,7 @@ import { getPlayerEl } from "./lib/streamTrick.js";
 
 
 //autoplay
-export async function onAudioEnded(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
-
+export async function onAudioEnded() {
     try {
         //instantaneously update everything, and then send the update to the backend
         //1. make changes to local , which will trigger queue ui update
@@ -41,28 +39,27 @@ export async function onAudioEnded(domEls) {
         logDebug("Next track:", track);
 
         //2. clean
-        await cleanupCurrentAudio(audioEl);
+        await cleanupCurrentAudio();
 
         //3. handle empty track
         if (!track) {
             logDebug("No track found in queue");
-            resetUI(null, currTimeEl, progBarEl, durationEl);
-            updatePlayPauseButtonDisplay(ppButtonEl, false);
+            resetUI();
+            updatePlayPauseButtonDisplay(false);
             return;
         }
 
         //4. load new track
-        await loadTrack(audioEl, track.id);
-        const playerEl = getPlayerEl();
+        await loadTrack(track.id);
 
         //5. make optimistic ui changes
         updateMediaSession(track, true);
-        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
-        resetUI(playerEl, currTimeEl, progBarEl, durationEl);
-        updatePlayPauseButtonDisplay(ppButtonEl, true);
+        redrawQueueUI(QueueStore.getTracks());
+        resetUI();
+        updatePlayPauseButtonDisplay(true);
         
         //6. play audio
-        await playLoadedTrack(audioEl);
+        await playLoadedTrack();
 
         //7. send changes to server (returns websocket message to sync ui)
         await queuePopTrack();
@@ -72,9 +69,7 @@ export async function onAudioEnded(domEls) {
 }
 
 //next
-export async function onNextButtonClick(domEls) {
-    const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
-
+export async function onNextButtonClick() {
     console.error(trackState());
 
     try {
@@ -87,27 +82,26 @@ export async function onNextButtonClick(domEls) {
         logDebug("Next track:", track);
 
         //2. clean
-        await cleanupCurrentAudio(audioEl);
+        await cleanupCurrentAudio();
 
         //3. handle empty track
         if (!track) {
             logDebug("No track found in queue");
-            resetUI(null, currTimeEl, progBarEl, durationEl);
-            updatePlayPauseButtonDisplay(ppButtonEl, false);
+            resetUI();
+            updatePlayPauseButtonDisplay(false);
             return;
         }
 
         //4. load new track
-        await loadTrack(audioEl, track.id);
-        const playerEl = getPlayerEl();
+        await loadTrack(track.id);
 
         //5. make optimistic ui changes
-        redrawQueueUI(queueListEl, titleEl, authorEl, QueueStore.getTracks());
-        resetUI(playerEl, currTimeEl, progBarEl, durationEl);
-        updatePlayPauseButtonDisplay(ppButtonEl, true);
+        redrawQueueUI(QueueStore.getTracks());
+        resetUI();
+        updatePlayPauseButtonDisplay(true);
         
         //6. play audio
-        await playLoadedTrack(audioEl);
+        await playLoadedTrack();
         updateMediaSession(track, true);
 
         //7. send changes to server (returns websocket message to sync ui)
@@ -118,9 +112,7 @@ export async function onNextButtonClick(domEls) {
 }
 
 //play or pause
-export async function onPlayPauseButtonClick(domEls) {
-    const { audioEl, ppButtonEl } = domEls;
-
+export async function onPlayPauseButtonClick() {
     console.error(trackState());
 
     //1. check for track
@@ -130,27 +122,25 @@ export async function onPlayPauseButtonClick(domEls) {
     //2. handle click
     if (trackState()) {
         try {
-            await playLoadedTrack(audioEl);            
-            updatePlayPauseButtonDisplay(ppButtonEl, true);
+            await playLoadedTrack();            
+            updatePlayPauseButtonDisplay(true);
         } catch {
-            updatePlayPauseButtonDisplay(ppButtonEl, false);
+            updatePlayPauseButtonDisplay(false);
             logDebug("Play failed");
         }
     } else {
         pauseLoadedTrack();
-        updatePlayPauseButtonDisplay(ppButtonEl, false);
+        updatePlayPauseButtonDisplay(false);
     }
 }
 
 //previous --gonna become a mess when previous track is allowed
-export function onPreviousButtonClick(domEls) {
-    const { audioEl, currTimeEl, progBarEl } = domEls;
-
+export function onPreviousButtonClick() {
     const playerEl = getPlayerEl();
 
     playerEl.currentTime = 0;
-    syncCurrentTimeDisplay(currTimeEl, playerEl);
-    syncProgressBar(progBarEl, playerEl);
+    syncCurrentTimeDisplay();
+    syncProgressBar();
 }
 
 
@@ -158,21 +148,17 @@ export function onPreviousButtonClick(domEls) {
 let isSeeking = false;
 
 //time update
-export function onTimeUpdate(domEls) {
+export function onTimeUpdate() {
+    if (trackState()) return; //paused
+
     if (!isSeeking) {
-        const { audioEl, currTimeEl, progBarEl } = domEls;
-
-        const playerEl = getPlayerEl();
-
-        syncCurrentTimeDisplay(currTimeEl, playerEl);
-        syncProgressBar(progBarEl, playerEl);
+        syncCurrentTimeDisplay();
+        syncProgressBar();
     }
 }
 
 //start scrub seek, pointer down on progress bar
-export function startScrubSeek(domEls) {
-    const { audioEl } = domEls;
-
+export function startScrubSeek() {
     const playerEl = getPlayerEl();
 
     if (!playerEl.src || playerEl.readyState === 0) return; // nothing loaded, abort
@@ -180,30 +166,29 @@ export function startScrubSeek(domEls) {
 }
 
 //preview scrub seek, swipe on progress bar
-export function inputScrubSeek(domEls) {
+import { domEls } from "../../dom/selectors.js";
+const { progBarEl } = domEls;
+
+export function inputScrubSeek() {
     if (!isSeeking) return;
-    
-    const { audioEl, currTimeEl, progBarEl } = domEls;
 
     const playerEl = getPlayerEl();
 
     const seekTime = (progBarEl.value / 100) * playerEl.duration;
-    setCurrentTimeDisplay(currTimeEl, seekTime);
-    setProgressBar(progBarEl, progBarEl.value); //set to value shown
+    setCurrentTimeDisplay(seekTime);
+    setProgressBar(progBarEl.value); //set to value shown
 }
 
 //commit scrub seek, pointer up on window
-export function commitScrubSeek(domEls) {
+export function commitScrubSeek() {
     if (!isSeeking) return;
     
-    const { audioEl, currTimeEl, progBarEl } = domEls;
-
     const playerEl = getPlayerEl();
 
     const seekTime = (progBarEl.value / 100) * playerEl.duration;
     playerEl.currentTime = seekTime; //set and sync
-    syncCurrentTimeDisplay(currTimeEl, playerEl);
-    syncProgressBar(progBarEl, playerEl);
+    syncCurrentTimeDisplay();
+    syncProgressBar();
 
     isSeeking = false;
 }

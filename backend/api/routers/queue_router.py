@@ -11,6 +11,40 @@ import backend.globals as G
 router = APIRouter(prefix="/queue")
 
 
+@router.post("/set-all")
+async def queue_set_all_tracks(body: QueueSetAllTracksRequest, req: Request) -> Response:
+    """
+    Replace the play queue with the provided list of track IDs.
+
+    Will only set tracks for track IDs that are downloaded.
+
+    Args:
+        body (QueueSetAllTracksRequest): Request body containing track IDs.
+        req (Request): FastAPI request object to access app state.
+
+    Returns:
+        JSONResponse: The updated play queue serialized as JSON.
+
+    Raises:
+        HTTPException: Returns 500 if any unexpected error occurs.
+    """
+    ids = [id for id in body.ids if is_downloaded(id)]
+    queue_manager = req.app.state.queue_manager
+
+    play_queue = queue_manager.get(G.PLAY_QUEUE_NAME)
+
+    try:
+        # clear and set the new play queue
+        await play_queue.set_all(ids)
+
+        return Response(status_code=204)
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @router.post("/set-first")
 async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -> Response:
     """

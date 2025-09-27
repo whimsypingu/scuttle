@@ -3,6 +3,10 @@
     -webkit-overflow-scrolling: touch; /* smooth scroll for iOS */
 
     position: relative;
+    height: auto;
+    overflow-x: hidden;
+
+    transition: transform 0.5s ease;
 }
 
 /* When any playlist is expanded, fade out all other playlists */
@@ -23,13 +27,19 @@
     margin-bottom: var(--space-content-margin);
     border-radius: var(--radius-l);
 
+    overflow-x: hidden;
+
     /* padding: var(--space-xl); */
     padding: 0;
+
+    height: auto;
+    max-height: 30vh;
 
     transition: all 0.5s ease;
 }
 .playlist.expanded {
     border-radius: var(--radius-m);
+    max-height: 100vh;
 } 
 
 
@@ -55,6 +65,8 @@
     z-index: 100; */
 }
 
+
+/* visible preview header */
 .playlist .list-header h3 {
     text-align: left;
     font: var(--h1);
@@ -62,6 +74,52 @@
 }
 
 
+/* playlist options */
+.playlist .playlist-options {
+    padding-inline: var(--space-xl);
+    padding-block: 0;
+    overflow: hidden;
+    height: auto;
+    max-height: 0;
+
+    transition: max-height 0.5s ease, padding 0.5s ease;
+
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-l);
+    justify-content: flex-end;
+    align-items: stretch;
+
+    padding-block: 0;
+}
+
+.playlist.expanded .playlist-options {
+    overflow: auto;
+    max-height: 30vh;
+    padding-block: var(--space-l);
+
+    /* height set dynamically -- js/events/dom/playlists.js */
+}
+
+
+.playlist-option-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: var(--mobile-button-s);
+    height: var(--mobile-button-s);
+
+    border-radius: 50%;
+    background: var(--bg-3);
+    border: none;
+    color: var(--text-2);
+    cursor: pointer;
+}
+
+
+
+/* list track */
 .playlist .list-track {
     margin: 0;
     padding: 0;
@@ -81,5 +139,6 @@
 .playlist.expanded .list-track {
     
     padding-block: var(--space-l);
-    overflow: auto;
+
+    /* height set dynamically -- js/events/dom/playlists.js */
 }

@@ -5,6 +5,7 @@ import { TrackStore } from "../../cache/TrackStore.js";
 import { $, SELECTORS } from "../../dom/index.js";
 import { renderNewCustomPlaylist, renderPlaylist } from "../../features/playlist/index.js";
 import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
+import { showToast } from "../../features/toast/index.js";
 
 
 
@@ -12,6 +13,7 @@ import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 //handles websocket messages //later this should be migrated from the backend to ensure consistency
 export const handlers = {
     play_queue: {
+        set_all: handlePQSA,
         set_first: handlePQSF,
         insert_next: handlePQIN,
         push: handlePQPU,
@@ -47,6 +49,10 @@ function handleTaskFinish(payload) {
 
 
 //player queue related websocket messages update the state of the local queue (for caching), and also the ui
+function handlePQSA(payload) {
+    //sync up queue and render?
+}
+
 function handlePQSF(payload) {
     //sync up queue and render?
 }
@@ -74,11 +80,12 @@ const libraryListEl = $(SELECTORS.library.ids.LIST);
 const searchDropdownEl = $(SELECTORS.search.ids.DROPDOWN);
 
 function handleADSE(payload) {
+    //do something with RecentStore.js here
     renderPlaylist(searchDropdownEl, payload.content);
 }
 
 function handleADDO(payload) {
-    renderPlaylist(libraryListEl, payload.content);
+    //renderPlaylist(libraryListEl, payload.content);
 }
 
 function handleYTSE(payload) {
@@ -92,12 +99,19 @@ function handleYTSE(payload) {
     renderPlaylist(searchDropdownEl, payload.content);
 }
 
+//actual download message
 function handleYTDO(payload) {
     const track = payload.content;
+
+    const tracks = TrackStore.getTracks();
+    tracks.unshift(track);
+
     TrackStore.insert(track);
 
-    console.log("TRACKSTORE:", TrackStore.getTracks());
-    renderPlaylist(libraryListEl, payload.content);
+    console.log("TRACKS:", tracks);
+    renderPlaylist(libraryListEl, tracks);
+
+    showToast(`Downloaded ${track.title}`);
 }
 
 

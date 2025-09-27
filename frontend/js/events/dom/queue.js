@@ -6,5 +6,5 @@ import {
 
 
 export function setupQueueEventListeners() {
-    domEls.queueListEl.addEventListener("click", (e) => onClickQueueList(e, domEls));
+    domEls.queueListEl.addEventListener("click", (e) => onClickQueueList(e));
 }

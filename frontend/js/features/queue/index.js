@@ -1,4 +1,7 @@
+import { domEls } from "../../dom/selectors.js";
+
 export { 
+    queueSetAllTracks,
     queueSetFirstTrack, 
     queuePushTrack,
     queuePopTrack,
@@ -17,8 +20,11 @@ import {
     renderQueueList
 } from "./lib/ui.js";
 
+
 //ui update
-export async function redrawQueueUI(queueListEl, titleEl, authorEl, tracks) {
+const { queueListEl, titleEl, authorEl } = domEls;
+
+export async function redrawQueueUI(tracks) {
     if (!Array.isArray(tracks) || tracks.length === 0) {
         renderNowPlaying(titleEl, authorEl, null);
         renderQueueList(queueListEl, null);

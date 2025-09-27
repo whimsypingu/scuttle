@@ -47,11 +47,8 @@ export const QueueStore = (() => {
             }
         },
         setFirst(id) {
-            const ids = store.getIds();
-            if (ids.length > 0) {
-                store.remove(ids[0]);
-            }
-            store.insert(id);
+            store.pop();
+            store.insert(id, 0);
         }
     };
 })();

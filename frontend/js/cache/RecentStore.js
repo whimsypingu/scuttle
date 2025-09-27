@@ -1,19 +1,19 @@
-let tracksById = {};
+let recentById = {};
 
 
 /**
- * TrackStore: a singleton for managing all track objects in memory.
+ * RecentStore: a singleton for managing all recent search track objects in memory.
  * Tracks are stored by their unique ID.
  */
-export const TrackStore = {
+export const RecentStore = {
     /**
      * Replace all tracks in the store.
      * @param {Array<Object>} tracks - Array of track objects.
      */
     setAll(tracks) {
-        tracksById = {};
+        recentById = {};
         for (const track of tracks) {
-            tracksById[track.id] = track;
+            recentById[track.id] = track;
         }
     },
 
@@ -23,7 +23,7 @@ export const TrackStore = {
      * @param {Object} track - The track object to insert. Must have an 'id' property.
      */
     insert(track) {
-        tracksById[track.id] = track;
+        recentById[track.id] = track;
     },
 
     /**
@@ -31,7 +31,7 @@ export const TrackStore = {
      * @param {string} id - The ID of the track to remove.
      */    
     remove(id) {
-        delete tracksById[id];
+        delete recentById[id];
     },
 
     /**
@@ -40,7 +40,7 @@ export const TrackStore = {
      * @returns {Object|undefined} The track object if found, otherwise undefined.
      */
     get(id) {
-        return tracksById[id];
+        return recentById[id];
     },
 
 
@@ -49,7 +49,7 @@ export const TrackStore = {
      * @returns {Array<string>} Array of track IDs.
      */
     getIds() {
-        return Object.keys(tracksById);
+        return Object.keys(recentById);
     },
 
 
@@ -59,7 +59,7 @@ export const TrackStore = {
      * @returns {Array<Object>} Array of track objects that were found. Missing IDs are skipped.
      */
     getMany(ids) {
-        return ids.map(id => tracksById[id]).filter(Boolean);
+        return ids.map(id => recentById[id]).filter(Boolean);
     },
 
 
@@ -68,7 +68,7 @@ export const TrackStore = {
      * @returns {Array<Object>} Array of all track objects in the store.
      */
     getTracks() {
-        return Object.values(tracksById);
+        return Object.values(recentById);
     },
 
 
@@ -78,7 +78,7 @@ export const TrackStore = {
      * @returns {boolean} True if the track exists, false otherwise.
      */
     has(id) {
-        return id in tracksById;
+        return id in recentById;
     },
 
 
@@ -86,6 +86,6 @@ export const TrackStore = {
      * Clear all tracks from the store.
      */
     clear() {
-        tracksById = {};
+        recentById = {};
     }
 };

@@ -1,5 +1,3 @@
-import { domEls } from "../../dom/selectors.js";
-
 import { 
     onSwipe
 } from "../../features/playlist/controller.js";
@@ -140,14 +138,14 @@ export function setupSwipeEventListeners() {
             if (isValidSwipe2) {
                 console.log("SWIPE SECONDARY ACTION TO THE RIGHT");
             } else if (isValidSwipe1) {
-                onSwipe(domEls, activeEl.dataset, "queue"); //this works for both library and queue??
+                onSwipe(activeEl.dataset, "queue"); //this works for both library and queue??
             }
         } else {
             //swipe left
             if (isValidSwipe2) {
-                onSwipe(domEls, activeEl.dataset, "more");
+                onSwipe(activeEl.dataset, "more");
             } else if (isValidSwipe1) {
-                onSwipe(domEls, activeEl.dataset, "like");
+                onSwipe(activeEl.dataset, "like");
             }
         }
 

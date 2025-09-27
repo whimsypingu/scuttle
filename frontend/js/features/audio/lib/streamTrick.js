@@ -89,7 +89,7 @@ export async function loadTrack(audioEl, trackId) {
     }
 }
 
-export async function playLoadedTrack(audioEl) {
+export async function playLoadedTrack() {
     if (!currentPlayer) return;
 
     //

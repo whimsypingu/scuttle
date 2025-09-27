@@ -6,6 +6,22 @@ import { postRequest, getResponse } from "../../../utils/index.js";
 import { logDebug } from "../../../utils/debug.js";
 
 
+export async function queueSetAllTracks(ids) {
+    //1. inform backend
+    const response = await postRequest(`/queue/set-all`, { ids });
+    console.log("queueSetAllTracks status:", response.status);
+
+    //2. fire and forget caching, non blocking (not await-ed) and kind of half ass batched
+    ids.forEach((id, index) => {
+        setTimeout(() => {
+            fetch(`/audio/stream/${id}`).catch(err => {
+                logDebug(`queueSetAllTracks prefetch failed for ${id}:`, err);
+            });
+        }, index * 200);
+    });
+}
+
+
 export async function queueSetFirstTrack(id) {
     //1. inform the backend of changes in the frontend
     const response = await postRequest(`/queue/set-first`, { id });
@@ -23,8 +39,9 @@ export async function queuePushTrack(id) {
     //2. fire and forget for caching purposes (service worker will eat this uppp)
     fetch(`/audio/stream/${id}`).catch((err) => {
         logDebug("queuePushTrack prefetch failed:", err);
-    })
+    });
 }
+
 
 
 export async function queuePopTrack() {

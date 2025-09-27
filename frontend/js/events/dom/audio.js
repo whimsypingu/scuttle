@@ -18,16 +18,16 @@ import {
 export function setupAudioEventListeners() {
     //hook up event listeners
     //autoplay
-    domEls.audioEl.addEventListener("trackEnded", () => onAudioEnded(domEls)); //custom event
-    domEls.audioEl.addEventListener("timeupdate", () => onTimeUpdate(domEls));
+    domEls.audioEl.addEventListener("trackEnded", () => onAudioEnded()); //custom event
+    domEls.audioEl.addEventListener("timeupdate", () => onTimeUpdate());
     
     //user input
-    domEls.nextButtonEl.addEventListener("click", () => onNextButtonClick(domEls));
-    domEls.ppButtonEl.addEventListener("click", () => onPlayPauseButtonClick(domEls));
-    domEls.prevButtonEl.addEventListener("click", () => onPreviousButtonClick(domEls));
+    domEls.nextButtonEl.addEventListener("click", () => onNextButtonClick());
+    domEls.ppButtonEl.addEventListener("click", () => onPlayPauseButtonClick());
+    domEls.prevButtonEl.addEventListener("click", () => onPreviousButtonClick());
 
     //scrubber logic
-    domEls.progBarEl.addEventListener("pointerdown", () => startScrubSeek(domEls));
-    domEls.progBarEl.addEventListener("input", () => inputScrubSeek(domEls));
-    window.addEventListener("pointerup", () => commitScrubSeek(domEls));
+    domEls.progBarEl.addEventListener("pointerdown", () => startScrubSeek());
+    domEls.progBarEl.addEventListener("input", () => inputScrubSeek());
+    window.addEventListener("pointerup", () => commitScrubSeek());
 }

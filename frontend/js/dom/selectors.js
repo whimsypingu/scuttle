@@ -9,6 +9,8 @@ export function $(id) {
 export const SELECTORS = {
 	search: {
 		ids: {
+			BODY: "title-search",
+
 			INPUT: "search-input",
 			SEARCH_GET_RESULTS_BUTTON: "search-get-results-button",
 			SEARCH_AND_DOWNLOAD_BUTTON: "search-and-download-button",
@@ -161,6 +163,8 @@ export const domEls = {
 
 
 export const searchDomEls = {
+	titleSearchEl: $(SELECTORS.search.ids.BODY),
+	
 	searchInputEl: $(SELECTORS.search.ids.INPUT),
 
 	deepSearchButtonEl: $(SELECTORS.search.ids.SEARCH_GET_RESULTS_BUTTON),

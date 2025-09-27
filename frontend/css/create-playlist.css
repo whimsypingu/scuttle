@@ -2,6 +2,7 @@
     margin-inline: var(--space-content-margin);
     border-radius: var(--radius-l);
     padding: 0;
+    margin-bottom: var(--space-content-margin);
 }
 
 #create-playlist-button {

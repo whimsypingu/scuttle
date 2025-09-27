@@ -162,6 +162,20 @@ export function buildNewPlaylist(name, id) {
             <h3 class="list-title">${name}</h3>
         </div>
 
+        <div class="playlist-options">
+            <button class="playlist-option-button">
+                <i class="fa fa-ellipsis-h"></i>
+            </button>
+
+            <button class="playlist-option-button shuffle-playlist-button">
+                <i class="fa fa-random"></i>
+            </button>
+
+            <button class="playlist-option-button play-playlist-button">
+                <i class="fa fa-play"></i>
+            </button>
+        </div>
+
         <ul class="list-track">
         </ul>
     `;
