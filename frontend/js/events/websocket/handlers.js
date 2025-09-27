@@ -99,6 +99,7 @@ function handleYTSE(payload) {
     renderPlaylist(searchDropdownEl, payload.content);
 }
 
+//actual download message
 function handleYTDO(payload) {
     const track = payload.content;
 
