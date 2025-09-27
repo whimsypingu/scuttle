@@ -34,6 +34,9 @@ class ObservableQueue(Generic[T], ABC):
             )
             await self._event_bus.publish(event)
 
+    def _clear(self):
+        self._dll.clear()
+
     def _push(self, item: T):
         self._dll.push(item)
 

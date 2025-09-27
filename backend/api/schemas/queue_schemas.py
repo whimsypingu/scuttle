@@ -1,6 +1,10 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 from backend.core.models.track import Track
+
+
+class QueueSetAllTracksRequest(BaseModel):
+    ids: List[str]
 
 class QueueSetFirstTrackRequest(BaseModel):
     id: str

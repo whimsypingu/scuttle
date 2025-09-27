@@ -1,9 +1,22 @@
+from typing import List
 from backend.core.models.track import Track
 from backend.core.queue.base.observable_dll import ObservableQueue
 
 from backend.core.models.enums import PlayQueueAction as PQA
 
 class PlayQueue(ObservableQueue[str]):
+
+    async def set_all(self, ids: List[str]):
+        #replace all items in the queue as if setting a shuffled playlist
+        async with self._lock:
+            self._clear()
+            for id in ids:
+                self._push(id)
+            await self._emit_event(action=PQA.SET_ALL, payload={"ids": ids, "content": self.to_json()})
+
+            print(f"[DEBUG]: contents of play queue: {self.to_json()}")
+
+
     async def set_first(self, id: str):
         #replacing the first item in the queue, as if pressing play overwriting the current song
         async with self._lock:

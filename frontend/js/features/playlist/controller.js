@@ -16,6 +16,7 @@ import {
 
 import { 
     queuePushTrack,
+    queueSetAllTracks,
     queueSetFirstTrack,
     redrawQueueUI
 } from "../queue/index.js";
@@ -81,27 +82,33 @@ export async function onClickPlaylist(e) {
 async function onClickPlayPlaylistButton(dataset) {
     const queueIds = getPlaylistIds(dataset);
 
-    //1. set queue locally
-    QueueStore.setAll(queueIds);
+    try {
+        //1. set queue locally
+        QueueStore.setAll(queueIds);
 
-    //2. load in audio
-    const trackId = QueueStore.peekId();
+        //2. load in audio
+        const trackId = QueueStore.peekId();
 
-    await cleanupCurrentAudio();
-    await loadTrack(trackId);
+        await cleanupCurrentAudio();
+        await loadTrack(trackId);
 
-    //3. make optimistic ui changes
-    const track = TrackStore.get(trackId);
-    logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+        //3. make optimistic ui changes
+        const track = TrackStore.get(trackId);
+        logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
 
-    updateMediaSession(track, true);
-    redrawQueueUI(QueueStore.getTracks());
-    resetUI();
-    updatePlayPauseButtonDisplay(true);
+        updateMediaSession(track, true);
+        redrawQueueUI(QueueStore.getTracks());
+        resetUI();
+        updatePlayPauseButtonDisplay(true);
 
-    //4. play audio
-    await playLoadedTrack();
-
+        //4. play audio
+        await playLoadedTrack();
+    
+        //5. sync with backend
+        await queueSetAllTracks(queueIds);
+    } catch (err) {
+        logDebug("Failed to play playlist:", err);
+    }
 }
 
 
@@ -111,32 +118,34 @@ async function onClickShufflePlaylistButton(dataset) {
     const queueIds = getPlaylistIds(dataset);
     const shuffledIds = fisherYatesShuffle(queueIds);
 
-    //1. set queue locally
-    QueueStore.setAll(shuffledIds);
+    try {
+        //1. set queue locally
+        QueueStore.setAll(shuffledIds);
 
-    //2. load in audio
-    const trackId = QueueStore.peekId();
+        //2. load in audio
+        const trackId = QueueStore.peekId();
 
-    await cleanupCurrentAudio();
-    await loadTrack(trackId);
+        await cleanupCurrentAudio();
+        await loadTrack(trackId);
 
-    //3. make optimistic ui changes
-    const track = TrackStore.get(trackId);
-    logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+        //3. make optimistic ui changes
+        const track = TrackStore.get(trackId);
+        logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
 
-    updateMediaSession(track, true);
-    redrawQueueUI(QueueStore.getTracks());
-    resetUI();
-    updatePlayPauseButtonDisplay(true);
+        updateMediaSession(track, true);
+        redrawQueueUI(QueueStore.getTracks());
+        resetUI();
+        updatePlayPauseButtonDisplay(true);
 
-    //4. play audio
-    await playLoadedTrack();
+        //4. play audio
+        await playLoadedTrack();
 
+        //5. sync with backend
+        await queueSetAllTracks(shuffledIds);
+    } catch (err) {
+        logDebug("Failed to shuffle/play playlist:", err);
+    }
 }
-
-
-
-
 
 
 
@@ -160,9 +169,9 @@ async function onClickPlayButton(dataset) {
 
     try {
         //1. make changes to local queue
-        console.log("QueueStore check 1:", QueueStore.getTracks());
+        //console.log("QueueStore check 1:", QueueStore.getTracks());
         QueueStore.setFirst(trackId);
-        console.log("QueueStore check 2:", QueueStore.getTracks());
+        //console.log("QueueStore check 2:", QueueStore.getTracks());
 
         //2. load in the audio
         await cleanupCurrentAudio();

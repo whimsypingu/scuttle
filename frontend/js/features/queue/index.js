@@ -1,6 +1,7 @@
 import { domEls } from "../../dom/selectors.js";
 
 export { 
+    queueSetAllTracks,
     queueSetFirstTrack, 
     queuePushTrack,
     queuePopTrack,

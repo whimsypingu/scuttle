@@ -20,6 +20,11 @@ class DoublyLinkedList(Generic[T]):
             yield current.value
             current = current.next
 
+    def clear(self):
+        self.head = None
+        self.tail = None
+        self.size = 0
+
     def push(self, item: T):
         node = Node(item)
         if not self.tail:

@@ -22,6 +22,8 @@ class DownloadQueueAction(str, Enum):
 
 #backend/core/queue/implementations/play_queue.py
 class PlayQueueAction(str, Enum):
+    CLEAR = "clear"
+    SET_ALL = "set_all"
     SET_FIRST = "set_first"
     INSERT_NEXT = "insert_next"
     PUSH = "push"
