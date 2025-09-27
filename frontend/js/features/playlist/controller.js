@@ -17,8 +17,7 @@ import {
 import { 
     queuePushTrack,
     queueSetFirstTrack,
-    redrawQueueUI,
-    renderQueueList
+    redrawQueueUI
 } from "../queue/index.js";
 
 import { toggleLike } from "./lib/api.js";
@@ -31,7 +30,9 @@ import { LikeStore } from "../../cache/LikeStore.js";
 import { showEditTrackPopup } from "../popup/controller.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 import { showToast } from "../toast/index.js";
-import { PlaylistStore } from "../../cache/PlaylistStore.js";
+
+import { fisherYatesShuffle, getPlaylistIds } from "./lib/utils.js";
+
 
 
 //clicking the playlist will check for this
@@ -53,11 +54,11 @@ export async function onClickPlaylist(e) {
         //playlist-wide play or shuffle buttons
         if (buttonEl.classList.contains("play-playlist-button")) {
             logDebug("Play playlist clicked");
-
-            onClickPlayPlaylistButton(playlistDataset);
+            await onClickPlayPlaylistButton(playlistDataset);
 
         } else if (buttonEl.classList.contains("shuffle-playlist-button")) {
             logDebug("Shuffle playlist clicked");
+            await onClickShufflePlaylistButton(playlistDataset);
         } 
         
         //individual buttons clicked (desktop)?
@@ -78,30 +79,7 @@ export async function onClickPlaylist(e) {
 
 //play an entire playlist
 async function onClickPlayPlaylistButton(dataset) {
-
-    const playlistIdRaw = dataset.id;
-    const playlistId = parseInt(playlistIdRaw, 10);
-
-    let queueIds = null;
-
-    if (isNaN(playlistId)) {
-        //system playlist
-        switch (playlistIdRaw) {
-            case "library":
-                queueIds = TrackStore.getIds(); //TODO: ordering is sus!
-                break;
-            
-            case "liked":
-                queueIds = LikeStore.getIds();
-                break;
-
-            default:
-                console.warn("Unknown system playlist:", playlistIdRaw);
-        }
-    } else {
-        //user playlist
-        queueIds = PlaylistStore.getTrackIds(playlistId);
-    }
+    const queueIds = getPlaylistIds(dataset);
 
     //1. set queue locally
     QueueStore.setAll(queueIds);
@@ -125,6 +103,42 @@ async function onClickPlayPlaylistButton(dataset) {
     await playLoadedTrack();
 
 }
+
+
+
+//shuffle an entire playlist
+async function onClickShufflePlaylistButton(dataset) {
+    const queueIds = getPlaylistIds(dataset);
+    const shuffledIds = fisherYatesShuffle(queueIds);
+
+    //1. set queue locally
+    QueueStore.setAll(shuffledIds);
+
+    //2. load in audio
+    const trackId = QueueStore.peekId();
+
+    await cleanupCurrentAudio();
+    await loadTrack(trackId);
+
+    //3. make optimistic ui changes
+    const track = TrackStore.get(trackId);
+    logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+
+    updateMediaSession(track, true);
+    redrawQueueUI(QueueStore.getTracks());
+    resetUI();
+    updatePlayPauseButtonDisplay(true);
+
+    //4. play audio
+    await playLoadedTrack();
+
+}
+
+
+
+
+
+
 
 
 

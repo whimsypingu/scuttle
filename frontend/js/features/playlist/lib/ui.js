@@ -1,4 +1,4 @@
-//static/js/features/library/ui.js
+//static/js/features/playlist/lib/ui.js
 
 import { PlaylistStore } from "../../../cache/PlaylistStore.js";
 import { buildNewPlaylist } from "../../../dom/builder.js";
