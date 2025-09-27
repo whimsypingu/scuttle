@@ -3,6 +3,10 @@
     -webkit-overflow-scrolling: touch; /* smooth scroll for iOS */
 
     position: relative;
+    height: auto;
+    overflow-x: hidden;
+
+    transition: transform 0.5s ease;
 }
 
 /* When any playlist is expanded, fade out all other playlists */
@@ -23,13 +27,19 @@
     margin-bottom: var(--space-content-margin);
     border-radius: var(--radius-l);
 
+    overflow-x: hidden;
+
     /* padding: var(--space-xl); */
     padding: 0;
+
+    height: auto;
+    max-height: 30vh;
 
     transition: all 0.5s ease;
 }
 .playlist.expanded {
     border-radius: var(--radius-m);
+    max-height: 100vh;
 } 
 
 
@@ -69,19 +79,24 @@
     padding-inline: var(--space-xl);
     padding-block: 0;
     overflow: hidden;
-    height: 0;
+    height: auto;
+    max-height: 0;
 
-    transition: height 0.5s ease;
+    transition: max-height 0.5s ease, padding 0.5s ease;
 
     display: flex;
     flex-direction: row;
     gap: var(--space-l);
     justify-content: flex-end;
     align-items: stretch;
+
+    padding-block: 0;
 }
 
 .playlist.expanded .playlist-options {
     overflow: auto;
+    max-height: 30vh;
+    padding-block: var(--space-l);
 
     /* height set dynamically -- js/events/dom/playlists.js */
 }
@@ -100,8 +115,6 @@
     border: none;
     color: var(--text-2);
     cursor: pointer;
-
-    margin-top: var(--space-l);
 }
 
 
@@ -126,7 +139,6 @@
 .playlist.expanded .list-track {
     
     padding-block: var(--space-l);
-    overflow: auto;
 
     /* height set dynamically -- js/events/dom/playlists.js */
 }

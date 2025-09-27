@@ -74,7 +74,7 @@
 }
 
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     :root {
         --space-xxs: 0.1rem;   /* 2px */
         --space-xs:  0.125rem;    /* 4px */

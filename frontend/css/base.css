@@ -42,7 +42,8 @@ body.mobile #title-search-playlists {
         var(--bg-4),
         var(--bg-3)
     );
-    border-radius: var(--radius-l);
+    border-radius: 0;
+    /* border-radius: var(--radius-l); */
 
     flex: 1 1 auto;
     overflow: hidden;
@@ -88,8 +89,9 @@ body.mobile #playbar-queue {
         var(--bg-3),
         var(--bg-2)
     );
-    border-top-left-radius: var(--radius-l);
-    border-top-right-radius: var(--radius-l);
+    border-radius: 0;
+    /* border-top-left-radius: var(--radius-l);
+    border-top-right-radius: var(--radius-l); */
     flex-grow: 1;
     display: flex;
     flex-direction: column;
