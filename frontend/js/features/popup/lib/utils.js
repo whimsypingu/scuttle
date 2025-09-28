@@ -4,3 +4,7 @@ export function getSelectedPlaylists(optionEls) {
         checked: el.classList.contains("checked")
     }));
 }
+
+export function getInputValue(inputEl) {
+    return inputEl.value.trim();
+}

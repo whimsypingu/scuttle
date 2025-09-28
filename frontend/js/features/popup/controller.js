@@ -8,7 +8,7 @@ import { renderNewCustomPlaylist, renderPlaylist, renderPlaylistById } from "../
 import { createPlaylist } from "../playlist/lib/api.js";
 
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
-import { getSelectedPlaylists } from "./lib/utils.js";
+import { getInputValue, getSelectedPlaylists } from "./lib/utils.js";
 import { editTrack } from "./lib/api.js";
 import { showToast } from "../toast/index.js";
 import { TrackStore } from "../../cache/TrackStore.js";
@@ -44,6 +44,7 @@ export function showEditTrackPopup(trackId) {
         hidePopup(popupOverlayEl);
     });
 
+    //playlist selection
     const selectionMenuEl = newPopupEl.querySelector(".playlist-selection-menu");
     selectionMenuEl.addEventListener("click", (e) => {
         const optionEl = e.target.closest(".playlist-option");
@@ -51,12 +52,18 @@ export function showEditTrackPopup(trackId) {
         optionEl.classList.toggle("checked");
     });
 
+
+    //track metadata
+    const trackTitleEl = newPopupEl.querySelector(".js-track-title");
+    const trackArtistEl = newPopupEl.querySelector(".js-track-artist");
+
+
     const saveButtonEl = newPopupEl.querySelector(".js-save");
     saveButtonEl.addEventListener("click", () => {
         logDebug("save playlist triggered"); //more logic here required
 
         const optionEls = newPopupEl.querySelectorAll(".playlist-option");
-        onSaveTrackEdits(trackId, optionEls);
+        onSaveTrackEdits(trackId, optionEls, trackTitleEl, trackArtistEl);
 
         hidePopup(popupOverlayEl);
     })
@@ -65,7 +72,7 @@ export function showEditTrackPopup(trackId) {
     showPopup(popupOverlayEl);
 }
 
-async function onSaveTrackEdits(trackId, optionEls) {
+async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
     const selections = getSelectedPlaylists(optionEls);
 
     //optimistic ui update
@@ -85,10 +92,16 @@ async function onSaveTrackEdits(trackId, optionEls) {
         }
     }
 
+    //track info
+    const trackTitle = getInputValue(titleEl);
+    const trackArtist = getInputValue(artistEl);
+
+    console.log("SAVED TRACK TITLE AND ARTIST:", trackTitle, trackArtist);
+
     showToast(`Saved`);
 
     console.log("onSaveTrackEdits", "trackId:", trackId, "playlists:", selections);
-    await editTrack(trackId, "", "", selections);
+    await editTrack(trackId, trackTitle, trackArtist, selections);
 }
 
 

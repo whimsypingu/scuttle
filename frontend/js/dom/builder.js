@@ -124,9 +124,9 @@ export function buildEditTrackPopup(playlists, track) {
             <h3 class="popup-message">Track Information</h3>
 
             <div class="edit-track-metadata-menu">
-                <input type="text" class="menu-input" value="${track.title}" placeholder="Title..." />
+                <input type="text" class="menu-input js-track-title" value="${track.title}" placeholder="Title..." />
             
-                <input type="text" class="menu-input" value="${track.uploader}" placeholder="Artist..." />
+                <input type="text" class="menu-input js-track-artist" value="${track.uploader}" placeholder="Artist..." />
             </div>
 
             <div class="spacing-block">

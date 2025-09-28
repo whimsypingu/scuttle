@@ -92,7 +92,7 @@ async def edit_track(body: EditTrackRequest, req: Request) -> Response:
     Creates a new playlist in the database.
 
     Args:
-        body (QueuePushTrackRequest): Request body containing the track id, title, author, and playlists it should be in
+        body (QueuePushTrackRequest): Request body containing the track id, custom title, custom artist, and playlists it should be in
         req (Request): FastAPI request object to access app state.
 
     Returns:
@@ -100,16 +100,16 @@ async def edit_track(body: EditTrackRequest, req: Request) -> Response:
     """
     track_id = body.id
     title = body.title
-    uploader = body.author
+    artist = body.artist
     playlist_updates = [pl.model_dump() for pl in body.playlists] #build the right data structure from PlaylistSelections
     
     db: AudioDatabase = req.app.state.db
 
-    #await db.update_track_metadata(track_id=track_id, title=title, uploader=uploader)
-
-    print(f"UPDATED METADATA: TITLE: {title}, UPLOADER: {uploader}")
+    print(f"UPDATED METADATA: TITLE: {title}, ARTIST: {artist}")
 
     await db.update_track_playlists(track_id=track_id, playlist_updates=playlist_updates)
+
+    await db.set_custom_metadata(track_id, title, artist)
 
     return JSONResponse(content={"status": "updated"}, status_code=200)
 
