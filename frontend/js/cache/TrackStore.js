@@ -4,6 +4,7 @@ let tracksById = {};
 /**
  * TrackStore: a singleton for managing all track objects in memory.
  * Tracks are stored by their unique ID.
+ * Tracks are of the form: {id, title, artist, duration}
  */
 export const TrackStore = {
     /**
@@ -25,6 +26,31 @@ export const TrackStore = {
     insert(track) {
         tracksById[track.id] = track;
     },
+
+
+    /**
+     * Updates a track's metadata
+     * Given a track ID, merges the provided fields into the existing track.
+     * If the track does not exist, nothing happens.
+     *
+     * @param {string} id - The unique ID of the track to update.
+     * @param {Object} fields - An object containing the fields to update.
+     * @param {string} [fields.title] - (Optional) The new title of the track.
+     * @param {string} [fields.artist] - (Optional) The new artist/uploader of the track.
+     * @param {number} [fields.duration] - (Optional) The new duration of the track, in seconds.
+     *
+     * @example
+     * TrackStore.update("YT___abc123", { title: "New Title", artist: "New Artist" });
+     */
+    update(id, fields) {
+        if (tracksById[id]) {
+            tracksById[id] = {
+                ...tracksById[id],
+                ...fields
+            };
+        }
+    },
+
 
     /**
      * Remove a track from the store by its ID.

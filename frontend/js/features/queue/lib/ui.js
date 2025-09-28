@@ -4,15 +4,15 @@ import { buildTrackListItem, buildTrackListEmptyItem } from "../../../dom/index.
 
 
 //renders the top element of the queue here
-export function renderNowPlaying(titleEl, authorEl, track) {
+export function renderNowPlaying(titleEl, artistEl, track) {
     if (!track) {
         titleEl.textContent = "---";
-        authorEl.textContent = "---";
+        artistEl.textContent = "---";
         return;
     }
 
     titleEl.textContent = track.title || "Unknown Title";
-    authorEl.textContent = track.uploader || "Unknown Artist";
+    artistEl.textContent = track.artist || "Unknown Artist";
 }
 
 

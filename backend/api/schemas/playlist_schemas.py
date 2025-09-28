@@ -14,5 +14,5 @@ class PlaylistSelection(BaseModel):
 class EditTrackRequest(BaseModel):
     id: str
     title: Optional[str]
-    author: Optional[str]
+    artist: Optional[str]
     playlists: List[PlaylistSelection]

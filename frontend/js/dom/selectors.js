@@ -26,7 +26,7 @@ export const SELECTORS = {
 		ids: {
 			PLAYER: "audio-player",
 			TITLE: "now-playing-title",
-			AUTHOR: "now-playing-author",
+			ARTIST: "now-playing-artist",
 
 			CURRENT_TIME: "audio-current-time",
 			PROGRESS_BAR: "audio-progress-bar",
@@ -54,7 +54,7 @@ export const SELECTORS = {
 			FOREGROUND: "foreground",
 			POSITION: "position-value",
 			TITLE: "title",
-			AUTHOR: "author",
+			ARTIST: "artist",
 			DURATION: "duration-value",
 		},
 	},
@@ -134,7 +134,7 @@ export const SELECTORS = {
 };
 
 
-//const { audioEl, titleEl, authorEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
+//const { audioEl, titleEl, artistEl, currTimeEl, progBarEl, durationEl, ppButtonEl, queueListEl } = domEls;
 export const domEls = {
     //audio and playbar
 	audioEl: $(SELECTORS.audio.ids.PLAYER),
@@ -149,7 +149,7 @@ export const domEls = {
     prevButtonEl: $(SELECTORS.audio.ids.PREVIOUS_BUTTON),
 
     titleEl: $(SELECTORS.audio.ids.TITLE),
-    authorEl: $(SELECTORS.audio.ids.AUTHOR),
+    artistEl: $(SELECTORS.audio.ids.ARTIST),
 
 	//queue
 	queueListEl: $(SELECTORS.queue.ids.LIST),

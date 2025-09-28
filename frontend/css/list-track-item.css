@@ -74,7 +74,7 @@
     overflow: hidden;
     white-space: nowrap;
 }
-.list-track-item .foreground .info .author {
+.list-track-item .foreground .info .artist {
     font: var(--p2);
     color: var(--text-3);
     text-overflow: ellipsis;

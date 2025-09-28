@@ -59,7 +59,7 @@
 .popup-message {
     text-align: left;
     font: var(--h1);
-    color: var(--text-2);
+    color: var(--text-1);
 }
 
 
@@ -78,12 +78,13 @@
     gap: 0.5rem;
     cursor: pointer;
 
+    font: var(--p);
     color: var(--text-2);
 }
 .checkbox {
   width: 1rem;
   height: 1rem;
-  border: 2px solid var(--text-2);
+  border: 1px solid var(--text-2);
   border-radius: 0.25rem;
   display: inline-block;
   position: relative;

@@ -18,10 +18,10 @@ router = APIRouter(prefix="/search")
 @router.get("/")
 async def search(req: Request, q: Optional[str] = Query(None)):
     """
-    Search for tracks in the local database by title or uploader.
+    Search for tracks in the local database by title or artist.
 
     Args:
-        q (str, optional): The search query string. Matches against lowercase title or uploader.
+        q (str, optional): The search query string. Matches against lowercase title or artist.
 
     Returns:
         JSONResponse: A list of matching tracks from the local SQLite database.

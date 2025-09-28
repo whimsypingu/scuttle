@@ -16,7 +16,7 @@ export function populateMockLibraryItems() {
                 </div>
                 <div class="info">
                     <p class="title">extremely long title way too long #${i + 1}</p>
-                    <p class="author">author ${i + 1}</p>
+                    <p class="artist">artist ${i + 1}</p>
                 </div>
                 <div class="duration">
                     <p class="duration-value">${Math.floor(Math.random() * 10)}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}</p>
@@ -59,7 +59,7 @@ export function populateMockQueueItems() {
                 </div>
                 <div class="info">
                     <p class="title">extremely long title way too long #${i + 1}</p>
-                    <p class="author">author ${i + 1}</p>
+                    <p class="artist">artist ${i + 1}</p>
                 </div>
                 <div class="duration">
                     <p class="duration-value">${Math.floor(Math.random() * 10)}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}</p>
@@ -108,7 +108,7 @@ export function populateMockRecentSearchItems() {
                 </div>
                 <div class="info">
                     <p class="title">extremely long title way too long #${i + 1}</p>
-                    <p class="author">author ${i + 1}</p>
+                    <p class="artist">artist ${i + 1}</p>
                 </div>
                 <div class="duration">
                     <p class="duration-value">${Math.floor(Math.random() * 10)}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}</p>

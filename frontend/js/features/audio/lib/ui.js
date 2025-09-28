@@ -73,7 +73,7 @@ export function updateMediaSession(track, isPlaying) {
     document.dispatchEvent(new CustomEvent("trackChangedMediaSession", {
         detail: {
             title: track.title,
-            artist: track.uploader,
+            artist: track.artist,
             playing: isPlaying
         }
     }));

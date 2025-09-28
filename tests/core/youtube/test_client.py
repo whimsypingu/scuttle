@@ -19,7 +19,7 @@ async def test_download_by_id(tmp_path: Path):
     # track = Track(
     #     id="dQw4w9WgXcQ",  # Rickroll for test
     #     title="Rick Astley - Never Gonna Give You Up",
-    #     uploader="RickAstleyVEVO",
+    #     artist="RickAstleyVEVO",
     #     duration=213
     # )
     id = "dQw4w9WgXcQ"

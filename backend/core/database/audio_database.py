@@ -108,8 +108,10 @@ class AudioDatabase:
                 CREATE TABLE IF NOT EXISTS {self.TRACKS_TABLE} (
                     id TEXT PRIMARY KEY,
                     title TEXT NOT NULL,
-                    uploader TEXT,
-                    duration INTEGER
+                    artist TEXT,
+                    duration INTEGER,
+                    custom_title TEXT,
+                    custom_artist TEXT
                 );
             ''')
             await self._execute(f'''
@@ -186,13 +188,13 @@ class AudioDatabase:
         async with self._lock:
             await self._execute(f'''
                 INSERT OR REPLACE INTO {self.TRACKS_TABLE}
-                (id, title, uploader, duration)
-                VALUES (?, ?, ?, ?);
+                (id, title, artist, duration, custom_title, custom_artist)
+                VALUES (?, ?, ?, ?, NULL, NULL);
             ''', (
                 track.id,
                 track.title,
-                track.uploader,
-                track.duration
+                track.artist,
+                track.duration,
             ))
 
 
@@ -203,13 +205,49 @@ class AudioDatabase:
                 VALUES (?, CURRENT_TIMESTAMP);
             ''', (id,))
 
+    
+    async def set_custom_metadata(self, id: str, custom_title: Optional[str] = None, custom_artist: Optional[str] = None):
+        async with self._lock:
+            #some robustness for handling None or "" values
+            custom_title_val = custom_title if custom_title not in (None, "") else None
+            custom_artist_val = custom_artist if custom_artist not in (None, "") else None
+
+            await self._execute(f'''
+                UPDATE {self.TRACKS_TABLE}
+                SET custom_title = ?,
+                    custom_artist = ?
+                WHERE id = ?;
+            ''', (custom_title_val, custom_artist_val, id))
+
+            #compute effective title/artist (unfortunately uses another query but it works)
+            row = await self._fetchone(f'''
+                SELECT 
+                    COALESCE(t.custom_title, t.title) AS title,
+                    COALESCE(t.custom_artist, t.artist) AS artist
+                FROM {self.TRACKS_TABLE} t
+                WHERE id = ?;
+            ''', (id,))
+
+            content = {
+                "id": id,
+                "title": row["title"],
+                "artist": row["artist"]
+            }
+
+            await self._emit_event(action=ADA.SET_METADATA, payload={"content": content})
+
+            return content
+
 
     async def search(self, q: str) -> List[Track]:
         async with self._lock:
             if not q:
                 #no filtering, return all entries from downloads
                 query = f"""
-                    SELECT t.id, t.title, t.uploader, t.duration 
+                    SELECT t.id,
+                        COALESCE(t.custom_title, t.title) AS title,
+                        COALESCE(t.custom_artist, t.artist) AS artist,
+                        t.duration
                     FROM {self.TRACKS_TABLE} t
                     INNER JOIN {self.DOWNLOADS_TABLE} d ON t.id = d.id
                     ORDER BY d.downloaded_at DESC;
@@ -219,10 +257,14 @@ class AudioDatabase:
             else:
                 pattern = f"%{q.lower()}%"
                 query = f"""
-                SELECT t.id, t.title, t.uploader, t.duration
+                SELECT t.id, 
+                    COALESCE(t.custom_title, t.title) AS title,
+                    COALESCE(t.custom_artist, t.artist) AS artist,
+                    t.duration
                 FROM {self.TRACKS_TABLE} t
                 LEFT JOIN {self.DOWNLOADS_TABLE} d ON t.id = d.id
-                WHERE title LIKE ? COLLATE NOCASE OR uploader LIKE ? COLLATE NOCASE
+                WHERE COALESCE(t.custom_title, t.title) LIKE ? COLLATE NOCASE 
+                    OR COALESCE(t.custom_artist, t.artist) LIKE ? COLLATE NOCASE
                 ORDER BY d.downloaded_at DESC, t.title COLLATE NOCASE;
                 """
                 params = (pattern, pattern)
@@ -232,7 +274,7 @@ class AudioDatabase:
                 Track(
                     id=row["id"], 
                     title=row["title"],
-                    uploader=row["uploader"],
+                    artist=row["artist"],
                     duration=row["duration"]
                 )
                 for row in rows
@@ -386,34 +428,3 @@ class AudioDatabase:
                 else:
                     #none or undefined do nothing
                     continue
-
-    async def update_track_metadata(self, track_id: str, title: str = None, uploader: str = None):
-        """
-        Update track metadata for a given track_id.
-        Only non-empty, non-null fields will be updated
-
-        Args:
-            track_id (str): ID of the track
-            title (str, optional): New title. If none or empty, no updates.
-            uploader (str, optional): New uploader. If none or empty, no updates.
-        """
-        async with self._lock:
-            fields = {}
-            if title not in (None, ""):
-                fields["title"] = title
-            if uploader not in (None, ""):
-                fields["uploader"] = uploader
-            
-            if not fields:
-                return
-            
-            #build query
-            set_clause = ", ".join(f"{k} = ?" for k in fields.keys())
-            query = f'''
-                UPDATE {self.TRACKS_TABLE}
-                SET {set_clause}
-                WHERE id = ?;
-            '''
-            params = tuple(fields.values()) + (track_id,)
-
-            await self._execute(query, params)
