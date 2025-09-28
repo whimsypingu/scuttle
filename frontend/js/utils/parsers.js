@@ -4,15 +4,15 @@
 export function parseTrackFromDataset(dataset) {
     const id = dataset.id;
     const title = dataset.title;
-    const uploader = dataset.uploader;
+    const artist = dataset.artist;
     const duration = parseInt(dataset.duration);
 
-    if (!id || !title || !uploader || isNaN(duration)) {
+    if (!id || !title || !artist || isNaN(duration)) {
         console.error("Null track data");
         return null;
     }
     
-    return { id, title, uploader, duration };
+    return { id, title, artist, duration };
 }
 
 

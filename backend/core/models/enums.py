@@ -34,6 +34,8 @@ class PlayQueueAction(str, Enum):
 
 #backend/core/database/audio_database.py
 class AudioDatabaseAction(str, Enum):
+    SET_METADATA = "set_metadata"
+
     SEARCH = "search"
 
     FETCH_LIKES = "fetch_likes"

@@ -21,6 +21,8 @@ export const handlers = {
         remove: handlePQRE
     },
     audio_database: {
+        set_metadata: handleADSM,
+
         search: handleADSE,
         create_playlist: handleADCP,
         fetch_likes: handleADFL,
@@ -78,6 +80,36 @@ function handlePQRE(payload) {
 
 const libraryListEl = $(SELECTORS.library.ids.LIST);
 const searchDropdownEl = $(SELECTORS.search.ids.DROPDOWN);
+
+function handleADSM(payload) {
+    console.log("SET_METADATA RECEIVED:", payload.content);
+
+    //update the local TrackStore
+    TrackStore.update(payload.content.id, {
+        title: payload.content.title,
+        artist: payload.content.artist,
+    })
+    console.log("TRACKSTORE:", TrackStore.get(payload.content.id));
+
+
+    //select all list elements with dataset.trackId = id
+    const els = document.querySelectorAll(`li[data-track-id="${payload.content.id}"]`)
+
+    //select p.title and set value to payload.content.title, select p.artist and set to payload.content.artist)
+    //note: this doesn't update the playbar right away since it's not tied to the id of the audio that is currently playing
+    els.forEach(el => {
+        const titleEl = el.querySelector("p.title");
+        const artistEl = el.querySelector("p.artist");
+
+        if (titleEl) {
+            titleEl.textContent = payload.content.title;
+        }
+
+        if (artistEl) {
+            artistEl.textContent = payload.content.artist;
+        }
+    });
+}
 
 function handleADSE(payload) {
     //do something with RecentStore.js here

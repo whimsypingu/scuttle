@@ -22,17 +22,17 @@ import {
 
 
 //ui update
-const { queueListEl, titleEl, authorEl } = domEls;
+const { queueListEl, titleEl, artistEl } = domEls;
 
 export async function redrawQueueUI(tracks) {
     if (!Array.isArray(tracks) || tracks.length === 0) {
-        renderNowPlaying(titleEl, authorEl, null);
+        renderNowPlaying(titleEl, artistEl, null);
         renderQueueList(queueListEl, null);
         return;
     }
 
     const currTrack = tracks[0];
-    renderNowPlaying(titleEl, authorEl, currTrack);
+    renderNowPlaying(titleEl, artistEl, currTrack);
 
     const remainingQueue = tracks.slice(1);
     renderQueueList(queueListEl, remainingQueue);

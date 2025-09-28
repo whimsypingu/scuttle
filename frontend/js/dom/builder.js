@@ -39,7 +39,7 @@ export function buildTrackListItem(track) {
             </div>
             <div class="info">
                 <p class="title">${track.title || "Untitled"}</p>
-                <p class="author">${track.uploader || "Unknown artist"}</p>
+                <p class="artist">${track.artist || "Unknown artist"}</p>
             </div>
             <div class="duration">
                 <p class="duration-value">${formatTime(track.duration)}</p>
@@ -126,7 +126,7 @@ export function buildEditTrackPopup(playlists, track) {
             <div class="edit-track-metadata-menu">
                 <input type="text" class="menu-input js-track-title" value="${track.title}" placeholder="Title..." />
             
-                <input type="text" class="menu-input js-track-artist" value="${track.uploader}" placeholder="Artist..." />
+                <input type="text" class="menu-input js-track-artist" value="${track.artist}" placeholder="Artist..." />
             </div>
 
             <div class="spacing-block">

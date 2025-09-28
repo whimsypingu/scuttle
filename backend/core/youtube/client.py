@@ -185,13 +185,13 @@ class YouTubeClient:
                     print(f"[WARN]: Unexpected line format: {line}")
                     continue
 
-                id, title, uploader, duration = parts
+                id, title, artist, duration = parts
                 true_id = f"{self.id_src}{id}"
 
                 track = Track(
                     id=true_id,
                     title=title or "Unknown Title",
-                    uploader=uploader or "Unknown Uploader",
+                    artist=artist or "Unknown Artist",
                     duration=int(duration) if duration.isdigit() else 0,
                 )
                 results.append(track)
@@ -290,13 +290,13 @@ class YouTubeClient:
 
             # Parse metadata from stdout
             line = out.strip().splitlines()[0]  # first line
-            id, title, uploader, duration = line.split(delim)
+            id, title, artist, duration = line.split(delim)
             true_id = f"{self.id_src}{id}"
 
             track = Track(
                 id=true_id,
                 title=title or "Unknown Title",
-                uploader=uploader or "Unknown Uploader",
+                artist=artist or "Unknown Artist",
                 duration=int(duration) if duration.isdigit() else 0
             )
 

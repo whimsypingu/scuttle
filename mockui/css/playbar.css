@@ -44,7 +44,7 @@
     border-radius: var(--radius-l);
 }
 
-/* Title and Author */
+/* Title and Artist */
 #now-playing-info {
     text-align: center;
     width: 100%;
@@ -58,7 +58,7 @@
     overflow: hidden;
     white-space: nowrap;
 }
-#now-playing-author {
+#now-playing-artist {
     font: var(--p);
     color: var(--text-3);
     text-overflow: ellipsis;

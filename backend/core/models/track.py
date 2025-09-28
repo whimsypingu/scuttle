@@ -3,7 +3,7 @@ from pydantic import BaseModel
 class Track(BaseModel):
     id: str
     title: str
-    uploader: str
+    artist: str
     duration: int
 
     def to_json(self):
