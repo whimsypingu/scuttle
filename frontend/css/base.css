@@ -38,11 +38,13 @@ body.mobile #title-search-playlists {
 }
 
 #title-search-playlists-contents {
-    background: linear-gradient(
+    /* background: linear-gradient(
         to bottom,
         var(--bg-4),
         var(--bg-3)
-    );
+    ); */
+
+    background-color: transparent;
     border-radius: 0;
     /* border-radius: var(--radius-l); */
 
@@ -87,9 +89,10 @@ body.mobile #playbar-queue {
 #playbar-queue-contents {
     background: linear-gradient(
         to bottom,
-        var(--bg-3),
-        var(--bg-2)
+        var(--bg-2),
+        var(--bg-1)
     );
+
     border-radius: 0;
     /* border-top-left-radius: var(--radius-l);
     border-top-right-radius: var(--radius-l); */
