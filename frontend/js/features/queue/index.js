@@ -1,3 +1,4 @@
+import { QueueStore } from "../../cache/QueueStore.js";
 import { domEls } from "../../dom/selectors.js";
 
 export { 
@@ -24,7 +25,9 @@ import {
 //ui update
 const { queueListEl, titleEl, artistEl } = domEls;
 
-export async function redrawQueueUI(tracks) {
+export async function renderQueue() {
+    const tracks = QueueStore.getTracks();
+
     if (!Array.isArray(tracks) || tracks.length === 0) {
         renderNowPlaying(titleEl, artistEl, null);
         renderQueueList(queueListEl, null);

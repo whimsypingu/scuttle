@@ -1,9 +1,10 @@
 //static/js/events/websocket/handlers.js
 
+import { LikeStore } from "../../cache/LikeStore.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 import { $, SELECTORS } from "../../dom/index.js";
-import { renderNewCustomPlaylist, renderPlaylist } from "../../features/playlist/index.js";
+import { renderLibrary, renderLiked, renderNewCustomPlaylist, renderPlaylist, renderPlaylistById, updateAllListTrackItems } from "../../features/playlist/index.js";
 import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 import { showToast } from "../../features/toast/index.js";
 
@@ -22,6 +23,8 @@ export const handlers = {
     },
     audio_database: {
         set_metadata: handleADSM,
+        edit_playlist: handleADEP,
+        delete_track: handleADDT,
 
         search: handleADSE,
         create_playlist: handleADCP,
@@ -84,32 +87,75 @@ const searchDropdownEl = $(SELECTORS.search.ids.DROPDOWN);
 function handleADSM(payload) {
     console.log("SET_METADATA RECEIVED:", payload.content);
 
+    const trackId = payload.content.id;
+    const customTitle = payload.content.title;
+    const customArtist = payload.content.artist;
+
     //update the local TrackStore
-    TrackStore.update(payload.content.id, {
-        title: payload.content.title,
-        artist: payload.content.artist,
+    TrackStore.update(trackId, {
+        title: customTitle,
+        artist: customArtist
     })
-    console.log("TRACKSTORE:", TrackStore.get(payload.content.id));
+    console.log("TRACKSTORE:", TrackStore.get(trackId));
 
+    updateAllListTrackItems(trackId, customTitle, customArtist);
 
-    //select all list elements with dataset.trackId = id
-    const els = document.querySelectorAll(`li[data-track-id="${payload.content.id}"]`)
-
-    //select p.title and set value to payload.content.title, select p.artist and set to payload.content.artist)
-    //note: this doesn't update the playbar right away since it's not tied to the id of the audio that is currently playing
-    els.forEach(el => {
-        const titleEl = el.querySelector("p.title");
-        const artistEl = el.querySelector("p.artist");
-
-        if (titleEl) {
-            titleEl.textContent = payload.content.title;
-        }
-
-        if (artistEl) {
-            artistEl.textContent = payload.content.artist;
-        }
-    });
+    //notif
+    showToast("Saved");
 }
+
+function handleADEP(payload) {
+    //see backend/core/database/audio_database.py
+    const trackId = payload.content.id;
+    const updates = payload.content.updates;
+
+    console.log("UPDATES:", updates);
+
+    for (const { id, checked } of updates) {
+        const inPlaylist = PlaylistStore.hasTrack(id, trackId);
+
+        if (checked && !inPlaylist) {
+            //user checked but not in playlist -> add
+            PlaylistStore.addTrackId(id, trackId);
+
+            renderPlaylistById(id);
+        } else if (!checked && inPlaylist) {
+            //user unchecked and in playlist -> remove
+            PlaylistStore.removeTrack(id, trackId);
+
+            renderPlaylistById(id);
+        } else {
+            console.log("SYNCED");
+        }
+    }
+
+    //ignore notif because frontend handles optimistically
+}
+
+function handleADDT(payload) {
+    console.log("DELETE_TRACK RECEIVED:", payload.content);
+
+    //update local stores
+    const trackId = payload.content.id;
+
+    TrackStore.remove(trackId);
+    renderLibrary();
+    
+    LikeStore.remove(trackId);
+    renderLiked();
+
+    const allPlaylists = PlaylistStore.getAll();
+    Object.keys(allPlaylists).forEach(playlistId => {
+        PlaylistStore.removeTrack(playlistId, trackId);
+
+        renderPlaylistById(playlistId);
+    })
+    
+    //notif
+    showToast("Deleted");
+}
+
+
 
 function handleADSE(payload) {
     //do something with RecentStore.js here

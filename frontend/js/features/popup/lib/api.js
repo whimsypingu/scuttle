@@ -12,3 +12,13 @@ export async function editTrack(id, title, artist, playlists) {
 
     console.log("editTrack status:", response.status);    
 }
+
+
+export async function deleteTrack(id) {
+    const body = {
+        id
+    }
+    const response = await postRequest(`/playlists/delete-track`, body);
+
+    console.log("deleteTrack status:", response.status);
+}

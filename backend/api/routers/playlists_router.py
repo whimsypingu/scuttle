@@ -3,7 +3,7 @@ from fastapi import APIRouter, Query, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 
 
-from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, EditTrackRequest
+from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, DeleteTrackRequest, EditTrackRequest
 from backend.core.database.audio_database import AudioDatabase
 
 
@@ -89,10 +89,10 @@ async def get_likes(req: Request):
 @router.post("/edit-track")
 async def edit_track(body: EditTrackRequest, req: Request) -> Response:
     """
-    Creates a new playlist in the database.
+    Edits track data in the database
 
     Args:
-        body (QueuePushTrackRequest): Request body containing the track id, custom title, custom artist, and playlists it should be in
+        body (EditTrackRequest): Request body containing the track id, custom title, custom artist, and playlists it should be in
         req (Request): FastAPI request object to access app state.
 
     Returns:
@@ -105,12 +105,29 @@ async def edit_track(body: EditTrackRequest, req: Request) -> Response:
     
     db: AudioDatabase = req.app.state.db
 
-    print(f"UPDATED METADATA: TITLE: {title}, ARTIST: {artist}")
-
     await db.update_track_playlists(track_id=track_id, playlist_updates=playlist_updates)
-
     await db.set_custom_metadata(track_id, title, artist)
 
     return JSONResponse(content={"status": "updated"}, status_code=200)
 
 
+
+@router.post("/delete-track")
+async def delete_track(body: DeleteTrackRequest, req: Request) -> Response:
+    """
+    Deletes track in the database
+
+    Args:
+        body (DeleteTrackRequest): Request body containing track id to delete
+        req (Request): FastAPI request object to access app state.
+
+    Returns:
+        status
+    """
+    track_id = body.id
+
+    db: AudioDatabase = req.app.state.db
+
+    await db.delete_track(track_id)
+
+    return JSONResponse(content={"status": "deleted"}, status_code=200)

@@ -21,7 +21,7 @@ import {
     resetUI
 } from "./index.js";
 
-import { redrawQueueUI } from "../queue/index.js";
+import { renderQueue } from "../queue/index.js";
 
 import { logDebug } from "../../utils/debug.js";
 
@@ -54,7 +54,7 @@ export async function onAudioEnded() {
 
         //5. make optimistic ui changes
         updateMediaSession(track, true);
-        redrawQueueUI(QueueStore.getTracks());
+        renderQueue();
         resetUI();
         updatePlayPauseButtonDisplay(true);
         
@@ -96,7 +96,7 @@ export async function onNextButtonClick() {
         await loadTrack(track.id);
 
         //5. make optimistic ui changes
-        redrawQueueUI(QueueStore.getTracks());
+        renderQueue();
         resetUI();
         updatePlayPauseButtonDisplay(true);
         

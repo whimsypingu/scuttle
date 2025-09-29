@@ -18,7 +18,7 @@ import {
 import { 
     queuePushTrack,
     queueSetFirstTrack,
-    redrawQueueUI,
+    renderQueue
 } from "./index.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
@@ -77,7 +77,7 @@ async function onClickPlayButton(dataset) {
 
         //3. make optimistic ui changes
         updateMediaSession(track, true);
-        redrawQueueUI(QueueStore.getTracks());
+        renderQueue();
         resetUI();
         updatePlayPauseButtonDisplay(true);
         
@@ -111,7 +111,7 @@ async function onClickQueueButton(dataset) {
     //1. update queue (local and backend)
     try {
         QueueStore.push(track.id);
-        redrawQueueUI(QueueStore.getTracks());
+        renderQueue();
         showToast(`Queued`);
 
         await queuePushTrack(track.id);

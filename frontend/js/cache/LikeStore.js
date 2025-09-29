@@ -26,12 +26,25 @@ export const LikeStore = (() => {
         /**
          * Check if a track is liked.
          *
-         * @param {string} trackId - The track ID to check.
+         * @param {string} id - The track ID to check.
          * @returns {boolean} - True if the track is liked, otherwise false.
          */
-        has(trackId) {
-            return store.has(trackId);
+        has(id) {
+            return store.has(id);
         },
+
+
+        /**
+         * Remove a track from the likes
+         * 
+         * @param {string} id - The track ID to remove.
+         * @returns {boolean} - True if track is removed, or was never here. Should always return true.
+         */
+        remove(id) {
+            store.remove(id);
+            return true;
+        },
+
 
         /**
          * Get all liked track IDs.

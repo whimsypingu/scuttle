@@ -35,6 +35,8 @@ class PlayQueueAction(str, Enum):
 #backend/core/database/audio_database.py
 class AudioDatabaseAction(str, Enum):
     SET_METADATA = "set_metadata"
+    EDIT_PLAYLIST = "edit_playlist"
+    DELETE_TRACK = "delete_track"
 
     SEARCH = "search"
 
@@ -44,5 +46,3 @@ class AudioDatabaseAction(str, Enum):
     
     GET_ALL_PLAYLISTS = "get_all_playlists"
     GET_PLAYLIST_CONTENT = "get_playlist_content"
-
-    ADD_TO_PLAYLIST = "add_to_playlist"
