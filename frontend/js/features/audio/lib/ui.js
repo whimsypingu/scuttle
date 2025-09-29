@@ -51,6 +51,11 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
     if (!icon) return;
 
     icon.className = isPlaying ? "fa fa-pause" : "fa fa-play";
+
+    //sync media session api
+    if ("mediaSession" in navigator) {
+        navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    }
 }
 
 
