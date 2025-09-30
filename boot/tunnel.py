@@ -40,8 +40,8 @@ def find_cloudflared():
     Find cloudflared binary.
     
     Lookup order:
-    1. local file named 'cloudflared' or 'cloudflared.exe'
-    2. binary on PATH via shutil.which('cloudflared')
+        1. local file named 'cloudflared' or 'cloudflared.exe'
+        2. binary on PATH via shutil.which('cloudflared')
     
     Returns:
         Absolute path to binary or None if found.
@@ -98,9 +98,9 @@ def start_cloudflared(file_path=None, url="http://localhost:8000"):
     """
     Start cloudflared as a subprocess.
     
-    Params:
-    - file_path: path to cloudflared binary; if None, find_cloudflared() is used
-    - url: --url value forwarded to origin
+    Args:
+        file_path (str, optional): path to cloudflared binary; if None, find_cloudflared() is used
+        url (str, optional): --url value forwarded to origin. Defaults to "http://localhost:8000"
     
     Returns:
         subprocess.Popen object(stdout is a PIPE combined with stderr)
@@ -152,9 +152,9 @@ def read_tunnel_url(stdout_queue, timeout=60):
     """
     Read queued lines from stdout until we get a public tunnel URL or timeout
     
-    Params:
-    - stdout_queue: Queue returned by start_cloudflared()
-    - timeout: seconds to wait before giving up
+    Args:
+        stdout_queue (Queue): Queue returned by start_cloudflared()
+        timeout (float): seconds to wait before giving up
     """
     last_url = None
     deadline = time.time() + timeout
@@ -181,7 +181,7 @@ def read_tunnel_url(stdout_queue, timeout=60):
 
 
 
-
+# Optional CLI interface for standalone usage thank you yapgpt
 if __name__ == "__main__":
     bin_path = find_cloudflared()
     print("\ncloudflared binary:", bin_path)

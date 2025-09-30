@@ -28,7 +28,7 @@ def start_uvicorn(host="0.0.0.0", port=8000):
     print(f"[uvicorn] Started wit PID {proc.pid}")
     return proc
 
-# Optional CLI interface for standalone usage
+# Optional CLI interface for standalone usage thank you yapgpt
 if __name__ == "__main__":
     proc = start_uvicorn()
     try:
