@@ -2,7 +2,15 @@ from queue import Queue
 import subprocess
 from threading import Thread
 
-def terminate_process(proc, name=""):
+def terminate_process(proc, name="", verbose=False):
+    """
+    Terminates a process.
+
+    Parameters
+        proc: Process to kill
+        name: Description of the process
+        verbose: Logs
+    """
 
     if name != "":
         name = f"[{name}] "
@@ -12,10 +20,14 @@ def terminate_process(proc, name=""):
 
         try:
             proc.wait(timeout=5)
-            print(f"Subprocess {name}terminated gracefully.")
+
+            if verbose:
+                print(f"[terminate_process] Subprocess {name}terminated gracefully.")
 
         except subprocess.TimeoutExpired:
-            print(f"Subprocess {name}did not terminate, escalating to SIGKILL")
+
+            if verbose:
+                print(f"[terminate_process] Subprocess {name}did not terminate, escalating to SIGKILL")
 
             proc.kill()
     
@@ -26,7 +38,9 @@ def terminate_process(proc, name=""):
     finally:
         #safe cleanup call
         proc.wait()
-        print(f"Subprocess {name}cleanup complete. Exit code: {proc.returncode}")
+
+        if verbose:
+            print(f"[terminate_process] Subprocess {name}cleanup complete. Exit code: {proc.returncode}")
 
 
 def _enqueue_stream(stream, queue: Queue):
@@ -36,7 +50,7 @@ def _enqueue_stream(stream, queue: Queue):
         queue.put(raw.rstrip("\n"))
     queue.put(None)
 
-def drain_output(proc, name=""):
+def drain_output(proc):
     stdout_queue = Queue()
     thread = Thread(target=_enqueue_stream, args=(proc.stdout, stdout_queue), daemon=True)
     thread.start()

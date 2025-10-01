@@ -3,8 +3,7 @@
 main.py
 
 Usage:
-  python main.py --webhook https://discord.com/api/webhooks/.... 
-  or set env var DISCORD_WEBHOOK and run `python main.py`
+    python main.py
 
 What it does:
 - starts: uvicorn backend.server:app --host 0.0.0.0
@@ -32,13 +31,25 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 if not DISCORD_WEBHOOK_URL:
     raise ValueError("DISCORD_WEBHOOK_URL not found in environment")
 
+#messages
+def log(message, send_webhook=False):
+    """
+    Logs a message and optionally sends it to a Discord webhook
+    
+    Parameters
+        message (str): Message
+        send_webhook (bool): Whether to post or not
+    """
+    print(message)
+    if send_webhook:
+        post_webhook_json(DISCORD_WEBHOOK_URL, {"content": message})
 
-verbose=False
 
 def main():
 
     #------------------------------- Keep system awake -------------------------------#
-    #keep_awake_proc = prevent_sleep()
+    verbose=False
+    keep_awake_proc = prevent_sleep(verbose=verbose)
 
     num_restarts = 0
     last_restart = datetime.now()
@@ -46,25 +57,24 @@ def main():
     try:
         while True:
             #------------------------------- Start server -------------------------------#
-            print("🚀 Starting Uvicorn server...")
+            log("🚀 Starting Uvicorn server...")
             server_proc, server_queue = start_uvicorn(verbose=verbose)
             wait_for_uvicorn(verbose=verbose)
 
 
             #------------------------------- Start tunnel -------------------------------#
-            print("🌐 Starting Cloudflared tunnel...")
+            log("🌐 Starting Cloudflared tunnel...")
             tunnel_proc, tunnel_queue = start_cloudflared()
 
             #extract tunnel url
-            print("⏳ Waiting for tunnel URL...")
+            log("⏳ Waiting for tunnel URL...")
             tunnel_url = get_cloudflared_url(tunnel_queue, timeout=60, verbose=verbose)
         
             if tunnel_url:
-                print(f"✅ Tunnel URL: {tunnel_url}")
-                post_webhook_json(DISCORD_WEBHOOK_URL, {"content": f"Tunnel started: {tunnel_url}"})
-                print("📨 Discord webhook sent!")
+                log(f"✅ Tunnel URL: {tunnel_url}", send_webhook=True)
+                log("📨 Discord webhook sent!")
             else:
-                print("❌ Failed to get tunnel URL in time.")
+                log("❌ Failed to get tunnel URL in time.", send_webhook=True)
 
         
             #------------------------------- Monitor loop -------------------------------#
@@ -72,16 +82,16 @@ def main():
                 time.sleep(5)
 
                 #periodically restart
-                if datetime.now() - last_restart > timedelta(hours=2): #magic number 2 here!
-                    print("⏳ Restarting both processes after 2h refresh...")
+                if datetime.now() - last_restart > timedelta(hours=2): #magic number here!??
+                    log("⏳ Restarting both processes after refresh...", send_webhook=True)
                     break
             
                 if server_proc.poll() is not None:
-                    print("❌ Server crashed, restarting both...")
+                    log("❌ Server crashed, restarting both...", send_webhook=True)
                     break
 
                 if tunnel_proc.poll() is not None:
-                    print("⚠️ Tunnel crashed, restarting tunnel only...")
+                    log("⚠️ Tunnel crashed, restarting tunnel only...", send_webhook=True)
 
                     #kill and restart tunnel
                     terminate_process(tunnel_proc)
@@ -90,28 +100,28 @@ def main():
                     tunnel_url = get_cloudflared_url(tunnel_queue, timeout=60, verbose=verbose)
 
                     if tunnel_url:
-                        print(f"✅ Tunnel URL restarted: {tunnel_url}")
-                        post_webhook_json(DISCORD_WEBHOOK_URL, {"content": f"Tunnel restarted: {tunnel_url}"})
+                        log(f"✅ Tunnel URL restarted: {tunnel_url}", send_webhook=True)
+                    else:
+                        log("❌ Failed to get tunnel URL in time.", send_webhook=True)                
                     continue
 
 
             #------------------------------- Cleanup before restart -------------------------------#
-            terminate_process(tunnel_proc, "Tunnel")
-            terminate_process(server_proc, "Server")
+            terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
+            terminate_process(server_proc, "Server", verbose=verbose)
 
             num_restarts += 1
             last_restart = datetime.now()
 
-            print(f"\n🔄 {num_restarts} Restart cycle complete\n")
-            post_webhook_json(DISCORD_WEBHOOK_URL, payload={"content": f"Restart {num_restarts}"})
+            log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=True)
     
     except KeyboardInterrupt:
-        print("\n⏹ KeyboardInterrupt received, shutting down supervisor...")
+        log("\n⏹ KeyboardInterrupt received, shutting down supervisor...", send_webhook=True)
      
     finally:
-        # cleanup keep-awake process
-        #allow_sleep(keep_awake_proc)
-        print("💤 System allowed to sleep again.")
+        #cleanup keep-awake process
+        allow_sleep(keep_awake_proc, verbose=verbose)
+        log("💤 System allowed to sleep again.")
 
 if __name__ == "__main__":
     main()

@@ -61,18 +61,24 @@ def prevent_sleep(verbose=False):
     #windows
     if platform.startswith("win"):
         _prevent_sleep_windows()
-        return True
+        proc = True
     
     elif platform.startswith("darwin"):
         proc = _prevent_sleep_macos()
-        return proc
 
     elif platform.startswith("linux"):
         proc = _prevent_sleep_linux()
-        return proc
 
     else:
+        if verbose:
+            print(f"[prevent_sleep] failed: Platform [{platform}] not identified")
         return False
+    
+    #logging
+    if verbose:
+        print(f"[prevent_sleep] successful")
+        
+    return proc
 
 def allow_sleep(proc, verbose=False):
     """
@@ -93,5 +99,12 @@ def allow_sleep(proc, verbose=False):
     elif platform.startswith("linux"):
         _allow_sleep_linux(proc)
 
+    else:
+        if verbose:
+            print(f"[allow_sleep] failed: Platform [{platform}] not identified")
+
+    #logging
+    if verbose:
+        print(f"[allow_sleep] successful")
     return 
         
