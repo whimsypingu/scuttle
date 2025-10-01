@@ -1,0 +1,53 @@
+
+/* this is for loading in on boot */
+#boot-loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: black;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+
+    transition: transform 1s ease;
+}
+
+#boot-loading-overlay.hidden {
+    transform: translateY(-100%); /*slide up off screen*/
+    pointer-events: none;
+}
+
+#boot-loading-overlay img {
+    width: 100px;
+    height: auto;
+    filter: invert(1) brightness(2);
+}
+
+.loader-dots {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.loader-dots span {
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 1.6s infinite;
+}
+
+.loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+

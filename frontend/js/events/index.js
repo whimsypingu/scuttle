@@ -1,4 +1,5 @@
 import { bootstrapAll } from "./bootstrap/bootstrap.js";
+import { hideBootLoadingOverlay } from "./bootstrap/loadingScreen.js";
 
 import { setupAudioEventListeners } from "./dom/audio.js";
 import { setupPlaylistEventListeners } from "./dom/playlists.js";
@@ -57,5 +58,6 @@ export async function initEvents() {
     await setupWebsocketEvents();
     await setupMobileEvents();
     setupPlatformEvents();
+    hideBootLoadingOverlay();
     logDebug("INIT EVENTS");
 }
