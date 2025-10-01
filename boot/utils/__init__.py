@@ -1,1 +1,1 @@
-from .terminate_process import terminate_process
+from .threads import terminate_process, drain_output

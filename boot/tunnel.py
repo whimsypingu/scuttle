@@ -10,6 +10,7 @@ import re
 import time
 
 from boot.utils import terminate_process
+from boot.utils.threads import drain_output
 
 
 ################################################################
@@ -86,14 +87,6 @@ def get_cloudflared_version(file_path=None, timeout=5):
 
 ################################################################
 
-def _enqueue_stream(stream, queue: Queue):
-    """Read lines from stream and push into queue, to be eaten by another thread."""
-    #blocking until new data from the stream (PIPE)
-    for raw in iter(stream.readline, ""):
-        queue.put(raw.rstrip("\n"))
-    queue.put(None)
-
-
 def start_cloudflared(file_path=None, url="http://localhost:8000"):
     """
     Start cloudflared as a subprocess.
@@ -123,11 +116,9 @@ def start_cloudflared(file_path=None, url="http://localhost:8000"):
     )
 
     #start background reader thread to drain output
-    stdout_queue = Queue()
-    thread = Thread(target=_enqueue_stream, args=(proc.stdout, stdout_queue), daemon=True)
-    thread.start()
+    stdout_queue = drain_output(proc)
     
-    #return proc and queue so caller can read lines non-blocking by attaching it as a property
+    #return proc and queue so caller can read lines
     return proc, stdout_queue
 
 
@@ -135,7 +126,7 @@ def start_cloudflared(file_path=None, url="http://localhost:8000"):
 
 _url_re = re.compile(r"https?://[a-z0-9-]+\.trycloudflare\.com/?", re.IGNORECASE)
 
-def _extract_url(line: str):
+def _extract_cloudflared_url(line: str):
     """Returns the most likely http(s) URL in a line or None."""
     if not line:
         return None
@@ -148,13 +139,14 @@ def _extract_url(line: str):
     return m.group(0).strip()
 
 
-def read_tunnel_url(stdout_queue, timeout=60):
+def get_cloudflared_url(stdout_queue, timeout=60, verbose=False):
     """
     Read queued lines from stdout until we get a public tunnel URL or timeout
     
     Args:
         stdout_queue (Queue): Queue returned by start_cloudflared()
-        timeout (float): seconds to wait before giving up
+        timeout (float): seconds to wait before giving up. Defaults to 60s.
+        verbose (bool): Logs. Defaults to False.
     """
     last_url = None
     deadline = time.time() + timeout
@@ -166,17 +158,23 @@ def read_tunnel_url(stdout_queue, timeout=60):
             continue
         
         #log
-        print("[cloudflared]", line)
+        if verbose:
+            print("[cloudflared]", line)
 
-        url = _extract_url(line)
+        url = _extract_cloudflared_url(line)
         if url:
             if url.startswith("https://"):
+
+                #log
+                if verbose:
+                    print(f"[cloudflared] extracted url successfully at {url}")
                 return url
             
             #keeps looking if not a secure link
             last_url = url
     
     #timed out
+    print(f"[cloudflared] Timed out, last url found is {last_url}")
     return last_url
 
 
@@ -191,7 +189,7 @@ if __name__ == "__main__":
     proc, stdout_queue = start_cloudflared(bin_path)
 
     try:
-        url = read_tunnel_url(stdout_queue=stdout_queue, timeout=60)
+        url = get_cloudflared_url(stdout_queue=stdout_queue, timeout=60)
         if url:
             print(f"\n✅ Tunnel URL found: {url}\n")
         else:
