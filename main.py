@@ -54,6 +54,8 @@ def main():
     num_restarts = 0
     last_restart = datetime.now()
 
+    log("========================\n🚀 Scuttle Booting Up!", send_webhook=True)
+
     try:
         while True:
             #------------------------------- Start server -------------------------------#
@@ -116,7 +118,7 @@ def main():
             log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=True)
     
     except KeyboardInterrupt:
-        log("\n⏹ KeyboardInterrupt received, shutting down supervisor...", send_webhook=True)
+        log("\n⏹ KeyboardInterrupt received, shutting down Scuttle...", send_webhook=True)
      
     finally:
         #cleanup keep-awake process
