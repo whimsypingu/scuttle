@@ -5,6 +5,8 @@ import {
 } from "../queue/index.js";
 
 import { 
+    rebuildAudioGraph,
+
     loadTrack,
     playLoadedTrack,
     pauseLoadedTrack,
@@ -64,7 +66,7 @@ export async function onAudioEnded() {
         //7. send changes to server (returns websocket message to sync ui)
         await queuePopTrack();
     } catch (err) {
-        logDebug("Failed to play audio:", err);
+        logDebug("[onAudioEnded] Failed to play audio:", err);
     }
 }
 
@@ -107,7 +109,7 @@ export async function onNextButtonClick() {
         //7. send changes to server (returns websocket message to sync ui)
         await queuePopTrack();
     } catch (err) {
-        logDebug("Failed to play audio:", err);
+        logDebug("[onNextButtonClick] Failed to play audio:", err);
     }
 }
 
@@ -122,6 +124,7 @@ export async function onPlayPauseButtonClick() {
     //2. handle click
     if (trackState()) {
         try {
+            await loadTrack(track.id);
             await playLoadedTrack();            
             updatePlayPauseButtonDisplay(true);
         } catch {
@@ -142,6 +145,19 @@ export function onPreviousButtonClick() {
     syncCurrentTimeDisplay();
     syncProgressBar();
 }
+
+
+
+//suspended
+export async function onRefocus() {
+    logDebug("[onRefocus] TrackState:", trackState());
+    if (trackState()) {
+        
+        renderQueue();
+        updatePlayPauseButtonDisplay(false);
+    }
+}
+
 
 
 //scrubber logic and events

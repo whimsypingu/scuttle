@@ -12,7 +12,11 @@ export {
 } from "./lib/ui.js";
 import * as audioUI from "./lib/ui.js";
 
-import { getPlayerEl } from "./lib/streamTrick.js";
+import { getPlayerEl, rebuildAudioGraph as rebuildAudioGraphTrick } from "./lib/streamTrick.js";
+
+export const rebuildAudioGraph = async () => {
+    rebuildAudioGraphTrick(audioEl);
+};
 
 export const setCurrentTimeDisplay = (value) => audioUI.setCurrentTimeDisplay(currTimeEl, value);
 export const syncCurrentTimeDisplay = () => audioUI.syncCurrentTimeDisplay(currTimeEl, getPlayerEl());
@@ -26,6 +30,7 @@ export const syncProgressBar = () => audioUI.syncProgressBar(progBarEl, getPlaye
 export const updatePlayPauseButtonDisplay = (isPlaying) => audioUI.updatePlayPauseButtonDisplay(ppButtonEl, isPlaying);
 
 export const resetUI = () => audioUI.resetUI(getPlayerEl(), currTimeEl, progBarEl, durationEl);
+export const setUI = (currTime, totalTime) => audioUI.setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime);
 
 
 
