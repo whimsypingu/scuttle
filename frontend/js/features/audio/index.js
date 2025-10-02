@@ -12,11 +12,7 @@ export {
 } from "./lib/ui.js";
 import * as audioUI from "./lib/ui.js";
 
-import { getPlayerEl, rebuildAudioGraph as rebuildAudioGraphTrick } from "./lib/streamTrick.js";
-
-export const rebuildAudioGraph = async () => {
-    rebuildAudioGraphTrick(audioEl);
-};
+import { getPlayerEl } from "./lib/streamTrick.js";
 
 export const setCurrentTimeDisplay = (value) => audioUI.setCurrentTimeDisplay(currTimeEl, value);
 export const syncCurrentTimeDisplay = () => audioUI.syncCurrentTimeDisplay(currTimeEl, getPlayerEl());
