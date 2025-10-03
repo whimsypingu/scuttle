@@ -72,6 +72,8 @@ def wait_for_uvicorn(host="127.0.0.1", port=8000, timeout=10, verbose=False):
     return False
 
 
+
+################################################
 # Optional CLI interface for standalone usage thank you yapgpt
 if __name__ == "__main__":
     proc, stdout_queue = start_uvicorn(verbose=True)

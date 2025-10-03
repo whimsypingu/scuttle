@@ -6,15 +6,11 @@ import sys
 import platform
 import time
 import requests
+import os
+from dotenv import load_dotenv
 
-from boot.utils.misc import ENV_FILE, IS_WINDOWS, TOOLS_DIR, vprint
+from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, update_env
 from boot.utils.threads import drain_output
-
-
-def save_cloudflared_path(file_path):
-    kv = f"TUNNEL_BIN_PATH={file_path}\n"
-    with ENV_FILE.open("a") as f:
-        f.write(kv)
 
 
 def _get_cloudflared_name():
@@ -95,7 +91,7 @@ def download_cloudflared(target_path=None, verbose=False):
         vprint(f"Saved cloudflared to {target_path}", verbose)
 
         #save to .env file
-        save_cloudflared_path(target_path)
+        update_env("TUNNEL_BIN_PATH", target_path)
 
         return target_path
 
@@ -111,19 +107,26 @@ def download_cloudflared(target_path=None, verbose=False):
 
 
 
-def start_cloudflared(bin_path, url="http://localhost:8000"):
+def start_cloudflared(bin_path=None, url="http://localhost:8000", verbose=False):
     """
     Start cloudflared as a subprocess.
     
     Args:
-        bin_path (str, optional): path to cloudflared binary; if None, find_cloudflared() is used
+        bin_path (str, optional): path to cloudflared binary; if None, tries .env file for "TUNNEL_BIN_PATH"
         url (str, optional): --url value forwarded to origin. Defaults to "http://localhost:8000"
+        verbose (bool): logs. Defaults to false.
     
     Returns:
         subprocess.Popen object(stdout is a PIPE combined with stderr)
     """
     if not bin_path:
-        raise FileNotFoundError("Cloudflared binary not found supplied")
+        try: 
+            load_dotenv(override=True)
+            bin_path = os.environ.get("TUNNEL_BIN_PATH")
+            vprint(f"Path to Cloudflared binary found {bin_path}", verbose)
+        except:
+            vprint("No path to Cloudflared binary", verbose)
+            raise FileNotFoundError("Cloudflared binary not found supplied")
     
     cmd = [
         bin_path,
@@ -199,7 +202,32 @@ def get_cloudflared_url(stdout_queue, timeout=60, verbose=False):
 
 
 
+
+################################################
 if __name__ == "__main__":
+    import os
+    from boot.utils.threads import terminate_process
     from dotenv import load_dotenv
     load_dotenv()
+
     download_cloudflared(verbose=True)
+
+    print("\nStarting tunnel for manual test (ctrl+c to stop)...\n")
+
+    proc, stdout_queue = start_cloudflared(verbose=True)
+
+    try:
+        url = get_cloudflared_url(stdout_queue=stdout_queue, timeout=60, verbose=True)
+        if url:
+            print(f"\n✅ Tunnel URL found: {url}\n")
+        else:
+            print("\n❌ Timed out waiting for tunnel URL.\n")
+
+        #keep tunnel process alive
+        while proc.poll() is None:
+            time.sleep(1)
+    
+    except KeyboardInterrupt:
+        print("\nKeyboardInterrupt received, stopping cloudflared...")
+        
+        terminate_process(proc)
