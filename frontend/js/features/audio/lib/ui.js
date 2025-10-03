@@ -73,6 +73,12 @@ export function resetUI(playerEl, currTimeEl, progBarEl, durationEl) {
     syncDurationDisplay(durationEl, playerEl);
 }
 
+export function setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime) {
+    setCurrentTimeDisplay(currTimeEl, currTime);
+    setProgressBar(progBarEl, currTime / totalTime);
+    setDurationDisplay(durationEl, totalTime);
+}
+
 
 export function updateMediaSession(track, isPlaying) {
     document.dispatchEvent(new CustomEvent("trackChangedMediaSession", {

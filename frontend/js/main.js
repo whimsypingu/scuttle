@@ -1,9 +1,13 @@
 import { initEvents } from "./events/index.js";
 
-import { logDebug } from "./utils/debug.js";
+import { logDebug, setDebugEnabled } from "./utils/debug.js";
 
 
 window.addEventListener("DOMContentLoaded", async () => {
+
+    //enable: true, disable: false
+    setDebugEnabled(false);
+
     logDebug("HELLO WORLD");
     initEvents();
 

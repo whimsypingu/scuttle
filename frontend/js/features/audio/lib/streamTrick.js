@@ -4,6 +4,7 @@ let audioCtx, dest;
 
 let currentPlayer = null; //either audioEl (non-ios) or trackEl (ios)
 
+let savedState = null; //to save the state of the audio graph if AudioContext is interrupted (ios)
 
 
 //credit:
@@ -17,25 +18,147 @@ export function getPlayerEl() {
     return currentPlayer;
 }
 
+export function getAudioCtx() {
+    return audioCtx;
+}
+
 
 
 function isIosSafari() {
     return /iP(ad|hone|od).+Version\/[\d.]+.*Safari/i.test(navigator.userAgent);
 }
 
+/**
+ * Handles interruptions to the AudioContext (iOS Safari, phone calls, other media)
+ * - Triggered by AudioContext `statechange` events
+ * - Marks the context as `_interrupted = true` so "ensureAudioContext" knows to rebuild the AudioContext on next play
+ * - Saves the current playback state (src, currentTime) so playback can resume after rebuilding
+ */
+const handleAudioContextInterrupt = () => {
+    if (!currentPlayer) return;
+    if (audioCtx.state !== "suspended" && audioCtx.state !=="interrupted") return;
 
-function ensureAudioContext(audioEl) {
-    if (!audioCtx) {
-        audioCtx = new AudioContext();
-        dest = audioCtx.createMediaStreamDestination();
-        // Your visible <audio> element plays this stream:
-        audioEl.srcObject = dest.stream;
-        audioEl.play();
+    //mark as interrupted and save state
+    audioCtx._interrupted = true;
 
-        logDebug("ensureAudioContext Visible element played");
-    }
+    savedState = {
+        src: currentPlayer.src,
+        currentTime: currentPlayer.currentTime,
+    };
+
+    logDebug("[handler] Saved current audio state:", savedState);
 }
 
+
+/**
+ * Ensures the AudioContext and track wiring are valid before playback for flippity iOS
+ * Assumes this is only called for iOS btw!!
+ * 
+ * Scenarios:
+ * - First playback (no AudioContext yet): creates a fresh AudioContext and destination node
+ * - User paused playback: No AudioContext rebuild or track element rebuild
+ * - Interrupted playback (ex, iOS media or phone call): rebuilds both AudioContext and track element
+ * - Next track naturally plays: No AudioContext rebuild, but builds the new element for the new track
+ * 
+ * Always attaches a `statechange` event listener to track interruptions on any new AudioContext
+ * 
+ * @param {HTMLAudioElement} audioEl - visible <audio> element used to play the MediaStreamDestination
+ * @param {string} srcUrl - source URL of the audio track to be loaded if a new track element
+ * @returns 
+ */
+async function ensureAudioContext(audioEl, srcUrl = null) {
+    const initAudioCtx = !audioCtx; //true if there is no existing AudioContext
+    const rebuildAudioCtx = audioCtx?._interrupted; //true if an existing AudioContext has been flagged interrupted
+    const buildTrackEl = !audioCtx?._paused; //true if AudioContext exists and is not intentionaally paused
+
+    //debugging
+    if (initAudioCtx) logDebug("[ensureAudioContext] Initializing fresh AudioContext");
+    if (rebuildAudioCtx) logDebug("[ensureAudioContext] Rebuilding AudioContext due to interruption");
+    if (audioCtx?._paused) logDebug("[ensureAudioContext] Paused context, skipping rebuild");
+
+    //for rebuilding, tear down first
+    if (rebuildAudioCtx) {
+        try {
+            await audioCtx.close();
+            logDebug("[ensureAudioContext] AudioContext closed for rebuild");
+        } catch (e) {
+            logDebug("[ensureAudioContext] Failed to close AudioContext:", e);
+        }
+
+        audioCtx = null;
+        dest = null;
+
+        //clean up the audio element
+        if (currentPlayer) {
+            currentPlayer.pause();
+
+            if (currentPlayer.parentNode) {
+                currentPlayer.parentNode.removeChild(currentPlayer);
+            }
+            currentPlayer = null;
+
+            logDebug("[ensureAudioContext] Nulled currentPlayer");
+        }
+    }
+
+    //for building a new AudioContext
+    if (initAudioCtx || rebuildAudioCtx) {
+        audioCtx = new AudioContext();
+        audioCtx._paused = false;
+        audioCtx._interrupted = false;
+        
+        audioCtx.addEventListener("statechange", handleAudioContextInterrupt);
+
+        dest = audioCtx.createMediaStreamDestination();
+
+        // Your visible <audio> element plays this stream:
+        audioEl.srcObject = dest.stream;
+        try {
+            await audioEl.play();
+            logDebug("[ensureAudioContext] Visible element played");
+        } catch (err) {
+            logDebug("[ensureAudioContext] failed to play visible element:", err);
+        }
+    }
+
+    //for building a new track element and wiring it up
+    if (buildTrackEl) {
+        //1. build trackEl and connect it
+        const trackEl = new Audio(srcUrl);
+        trackEl.crossOrigin = "anonymous";
+
+        const node = audioCtx.createMediaElementSource(trackEl);
+        node.connect(dest);
+
+        logDebug("loadTrack node connected.");
+
+        //2. prepare the element
+        currentPlayer = trackEl;
+        trackEl.load();
+
+        //3. set up the event listener on end
+        trackEl.addEventListener("ended", () => {
+            audioEl.dispatchEvent(new CustomEvent("trackEnded"));
+        }, { once: true });
+
+        //4. prepare by setting it on savedState if it exists
+        return new Promise((resolve) => {
+            trackEl.addEventListener("canplaythrough", () => {
+                if (savedState) {
+                    //5. trackEl.currentTime should be ready now but who knows really
+                    try {
+                        trackEl.currentTime = savedState.currentTime || 0;
+                        logDebug("loadTrack: restored currentTime:", trackEl.currentTime);
+                        logDebug("loadTrack: expected to restore to:", savedState.currentTime);                            
+                    } catch (e) {
+                        logDebug("loadTrack: failed to set currentTime:", e);
+                    }
+                }
+                resolve(true);
+            }, { once: true });
+        });
+    }
+}
 
 
 export async function loadTrack(audioEl, trackId) {
@@ -50,34 +173,9 @@ export async function loadTrack(audioEl, trackId) {
     if (isIosSafari()) {
         //
         logDebug("loadTrack iOS detected.")
-        ensureAudioContext(audioEl);
+        await ensureAudioContext(audioEl, fullUrl);
 
-        //
-        logDebug("loadTrack audioContext ensured.")
-        
-        const trackEl = new Audio(fullUrl);
-        trackEl.crossOrigin = "anonymous";
-
-        const node = audioCtx.createMediaElementSource(trackEl);
-        node.connect(dest);
-
-        //
-        logDebug("loadTrack node connected.")        
-
-        currentPlayer = trackEl;
-        trackEl.load();
-
-        //4. set up the event listener on end
-        trackEl.addEventListener("ended", () => {
-            audioEl.dispatchEvent(new CustomEvent("trackEnded"));
-        }, { once: true });
-
-        //5.
-        return new Promise((resolve) => {
-            trackEl.addEventListener("canplaythrough", () => resolve(true), { once: true });
-        });
-
-    //5. non-ios
+    //4. non-ios
     } else {
         audioEl.src = fullUrl;
         audioEl.load();
@@ -92,13 +190,14 @@ export async function loadTrack(audioEl, trackId) {
 export async function playLoadedTrack() {
     if (!currentPlayer) return;
 
-    //
+    //debug notif
     logDebug("playLoadedTrack entered.");
 
     // unlock the AudioContext if needed (iOS Safari)
-    if (audioCtx && audioCtx.state === "suspended") {
+    if (audioCtx && (audioCtx.state === "suspended" || audioCtx.state === "interrupted")) {
         try {
             await audioCtx.resume();
+
             logDebug("AudioContext resumed");
         } catch (err) {
             logDebug("Failed to resume AudioContext:", err);
@@ -106,15 +205,20 @@ export async function playLoadedTrack() {
     }
 
     try {
+        //play actual audio element, and pause the audioContext
         await currentPlayer.play();
+        audioCtx._paused = false; 
 
         logDebug("playback success");
 
     } catch (err) {
+        //desperate retry for ios
         logDebug("playback failed, retrying:", err);
         setTimeout(async () => {
             try {
                 await currentPlayer.play();
+                audioCtx._paused = false;
+
                 logDebug("playback success on retry");
             } catch (retryErr) {
                 logDebug("playback failed again:", retryErr);
@@ -126,10 +230,20 @@ export async function playLoadedTrack() {
 export function pauseLoadedTrack() {
     if (!currentPlayer) return;
 
+    audioCtx._paused = true;
+    savedState = null;
+
     currentPlayer.pause();
 }
 
-
+/**
+ * Returns the current playback state of the active audio track.
+ *
+ * @returns {boolean|undefined} 
+ *   - `true` if the current track is paused,
+ *   - `false` if it is playing,
+ *   - `undefined` if no track is loaded.
+ */
 export function trackState() {
     if (!currentPlayer) return;
 
@@ -159,6 +273,10 @@ export async function cleanupCurrentAudio() {
     }
 
     currentPlayer = null;
+
+    //some extra cleanup just in case, may not be necessary here
+    savedState = null;
+    audioCtx._paused = false;
 
     // tiny delay for iOS
     await new Promise(r => setTimeout(r, 100));

@@ -193,7 +193,7 @@ async function onClickPlayButton(dataset) {
         await queueSetFirstTrack(track.id);
 
     } catch (err) {
-        logDebug("Failed to play audio:", err);
+        logDebug("[onClickPlayButton] Failed to play audio:", err);
     }
 }
 
