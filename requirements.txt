@@ -1,0 +1,7 @@
+yt-dlp
+fastapi
+uvicorn[standard]
+websockets
+pydantic
+python-dotenv
+requests

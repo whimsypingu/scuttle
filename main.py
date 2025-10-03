@@ -21,15 +21,20 @@ from boot.awake import prevent_sleep, allow_sleep
 from boot.utils import terminate_process
 
 from boot.notify import post_webhook_json
-from boot.tunnel import start_cloudflared, get_cloudflared_url
 from boot.uvicorn import start_uvicorn, wait_for_uvicorn
+from boot.tunnel.cloudflared import start_cloudflared, get_cloudflared_url
+
 
 #load in environment variables
 load_dotenv()
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-
 if not DISCORD_WEBHOOK_URL:
     raise ValueError("DISCORD_WEBHOOK_URL not found in environment")
+
+TUNNEL_BIN_PATH = os.getenv("TUNNEL_BIN_PATH")
+if not TUNNEL_BIN_PATH:
+    raise ValueError("TUNNEL_BIN_PATH not found in environment")
+
 
 #messages
 def log(message, send_webhook=False):
@@ -66,7 +71,7 @@ def main():
 
             #------------------------------- Start tunnel -------------------------------#
             log("🌐 Starting Cloudflared tunnel...")
-            tunnel_proc, tunnel_queue = start_cloudflared()
+            tunnel_proc, tunnel_queue = start_cloudflared(TUNNEL_BIN_PATH)
 
             #extract tunnel url
             log("⏳ Waiting for tunnel URL...")
@@ -98,7 +103,7 @@ def main():
                     #kill and restart tunnel
                     terminate_process(tunnel_proc)
                     
-                    tunnel_proc, tunnel_queue = start_cloudflared()
+                    tunnel_proc, tunnel_queue = start_cloudflared(TUNNEL_BIN_PATH)
                     tunnel_url = get_cloudflared_url(tunnel_queue, timeout=60, verbose=verbose)
 
                     if tunnel_url:
@@ -121,6 +126,10 @@ def main():
         log("\n⏹ KeyboardInterrupt received, shutting down Scuttle...", send_webhook=True)
      
     finally:
+        #clean up correctly when keyboard interrupted
+        terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
+        terminate_process(server_proc, "Server", verbose=verbose)
+
         #cleanup keep-awake process
         allow_sleep(keep_awake_proc, verbose=verbose)
         log("💤 System allowed to sleep again.")
