@@ -119,6 +119,7 @@ def main():
     
     except KeyboardInterrupt:
 
+        #backup cleanup on keyboard interrupt so we don't have leftover processes
         terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
         terminate_process(server_proc, "Server", verbose=verbose)
 
