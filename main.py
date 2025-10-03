@@ -118,6 +118,10 @@ def main():
             log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=True)
     
     except KeyboardInterrupt:
+
+        terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
+        terminate_process(server_proc, "Server", verbose=verbose)
+
         log("\n⏹ KeyboardInterrupt received, shutting down Scuttle...", send_webhook=True)
      
     finally:
