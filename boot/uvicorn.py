@@ -4,6 +4,7 @@ import requests
 import time
 
 from boot.utils import terminate_process
+from boot.utils.misc import vprint
 from boot.utils.threads import drain_output
 
 def start_uvicorn(host="0.0.0.0", port=8000, verbose=False):
@@ -33,8 +34,7 @@ def start_uvicorn(host="0.0.0.0", port=8000, verbose=False):
         bufsize=1, #line buffer
     )
 
-    if verbose:
-        print(f"[uvicorn] Started with PID {proc.pid}")
+    vprint(f"[uvicorn] Started with PID {proc.pid}", verbose)
 
     #start background reader thread to drain output
     stdout_queue = drain_output(proc)
@@ -63,8 +63,7 @@ def wait_for_uvicorn(host="127.0.0.1", port=8000, timeout=10, verbose=False):
             r = requests.get(url)
             if r.status_code < 500:  # server responded
                 
-                if verbose:
-                    print(f"[uvicorn] Done waiting after {time.time() - start}s")
+                vprint(f"[uvicorn] Done waiting after {time.time() - start}s", verbose)
                 return True
         except requests.exceptions.ConnectionError:
             pass
@@ -73,6 +72,8 @@ def wait_for_uvicorn(host="127.0.0.1", port=8000, timeout=10, verbose=False):
     return False
 
 
+
+################################################
 # Optional CLI interface for standalone usage thank you yapgpt
 if __name__ == "__main__":
     proc, stdout_queue = start_uvicorn(verbose=True)

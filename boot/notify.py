@@ -1,20 +1,33 @@
 
+import os
 import json
+
+from dotenv import load_dotenv
+
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
-def post_webhook_json(webhook_url: str, payload: dict, timeout=10):
+
+def post_webhook_json(webhook_url=None, payload={"content": "Hello World"}, timeout=10):
     """
     Send a JSON payload to a Discord webhook URL.
 
     Args:
-        webhook_url (str): Full Discord webhook URL.
+        webhook_url (str | None): Full Discord webhook URL.
         payload (dict): JSON payload to send (e.g., {"content": "Hello"}).
         timeout (int, optional): Timeout in seconds. Defaults to 10.
 
     Raises:
         URLError, HTTPError: If the request fails.
     """
+    if webhook_url is None:
+        try:
+            load_dotenv(override=True)
+            webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+        except:
+            raise ValueError("Webhook URL not found")
+
+    #make request
     req = Request(
         webhook_url,
         data=json.dumps(payload).encode("utf-8"),
@@ -38,19 +51,18 @@ def post_webhook_json(webhook_url: str, payload: dict, timeout=10):
 
 
 ################################################
-
-import os
-from dotenv import load_dotenv
-
-from boot.notify import post_webhook_json
-
-#load in environment variables
-load_dotenv()
-
-#read webhook url
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-
 if __name__ == "__main__":
+    import os
+    from dotenv import load_dotenv
+
+    from boot.notify import post_webhook_json
+
+    #load in environment variables
+    load_dotenv()
+
+    #read webhook url
+    DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+
     payload = {"content": "🚀 Supervisor test: webhook is working!"}
     print(DISCORD_WEBHOOK_URL)
     try:

@@ -1,7 +1,11 @@
-import ctypes
 import subprocess
-import os
-import sys
+
+from boot.utils.misc import IS_LINUX, IS_MAC, IS_WINDOWS, SYS_PLATFORM, vprint #uses os specific fixes
+
+#conditional import for windows to sleep
+if IS_WINDOWS:
+    import ctypes
+
 
 def _prevent_sleep_windows():
     ES_CONTINUOUS = 0x80000000
@@ -56,27 +60,22 @@ def prevent_sleep(verbose=False):
     Returns
         proc (Popen object): For windows returns True, for macOS or linux returns a process, otherwise False
     """
-    platform = sys.platform
-
-    #windows
-    if platform.startswith("win"):
+    if IS_WINDOWS:
         _prevent_sleep_windows()
         proc = True
     
-    elif platform.startswith("darwin"):
+    elif IS_MAC:
         proc = _prevent_sleep_macos()
 
-    elif platform.startswith("linux"):
+    elif IS_LINUX:
         proc = _prevent_sleep_linux()
 
     else:
-        if verbose:
-            print(f"[prevent_sleep] failed: Platform [{platform}] not identified")
+        vprint(f"[prevent_sleep] failed: Platform [{SYS_PLATFORM}] not identified", verbose)
         return False
     
     #logging
-    if verbose:
-        print(f"[prevent_sleep] successful")
+    vprint(f"[prevent_sleep] successful", verbose)
         
     return proc
 
@@ -88,23 +87,19 @@ def allow_sleep(proc, verbose=False):
         proc (Popen object): Only necessary for macOS and linux
         verbose (bool): Logs. Defaults to False
     """
-    platform = sys.platform
-
-    if platform.startswith("win"):
+    if IS_WINDOWS:
         _allow_sleep_windows()
     
-    elif platform.startswith("darwin"):
+    elif IS_MAC:
         _allow_sleep_macos(proc)
     
-    elif platform.startswith("linux"):
+    elif IS_LINUX:
         _allow_sleep_linux(proc)
 
     else:
-        if verbose:
-            print(f"[allow_sleep] failed: Platform [{platform}] not identified")
+        vprint(f"[allow_sleep] failed: Platform [{SYS_PLATFORM}] not identified", verbose)
 
     #logging
-    if verbose:
-        print(f"[allow_sleep] successful")
+    vprint(f"[allow_sleep] successful", verbose)
     return 
         
