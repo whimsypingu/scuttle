@@ -129,6 +129,7 @@
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* smooth native scrolling */
+    touch-action: pan-y;
 
     display: flex;
     flex-direction: column;
