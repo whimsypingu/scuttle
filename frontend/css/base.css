@@ -1,12 +1,16 @@
 html, body {
-    min-height: 100vh;
-    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh; /*this is necessary for ios overshooting with just vh due to url bar etc*/
     margin: 0;
-    overscroll-behavior: contain;
-    touch-action: pan-y;
-    overflow: hidden; /*lock scrolling*/
     font-family: var(--ff);
-    -webkit-overflow-scrolling: touch;
+
+    overflow: hidden; /*lock scrolling*/
+    overscroll-behavior: none; /* prevent scroll bounce on Android or Chrome*/
+    -webkit-overflow-scrolling: auto;
+    touch-action: none;
 }
 
 
@@ -19,6 +23,7 @@ html, body {
         var(--bg-2),
         var(--bg-1)
     );
+    background-color: white;
     z-index: -9999;
 }
 
@@ -35,7 +40,7 @@ html, body {
 }
 body.mobile #title-search-playlists {
     padding: 0;
-    height: 100vh;
+    height: 100%;
 }
 
 #title-search-playlists-contents {
