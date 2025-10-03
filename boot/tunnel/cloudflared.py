@@ -52,7 +52,7 @@ def _get_cloudflared_name():
 
 def download_cloudflared(target_path=None, verbose=False):
     """
-    Download cloudflared binary for this platform into target_path (Path).
+    Download cloudflared binary for this platform into target_path (Path). Defaults to scuttle/tools/
     This uses Cloudflare's GitHub releases pattern
     https://github.com/cloudflare/cloudflared/releases
     """
