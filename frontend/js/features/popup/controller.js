@@ -9,7 +9,7 @@ import { createPlaylist } from "../playlist/lib/api.js";
 
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { getInputValue, getSelectedPlaylists } from "./lib/utils.js";
-import { editTrack } from "./lib/api.js";
+import { deleteTrack, editTrack } from "./lib/api.js";
 import { showToast } from "../toast/index.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 
@@ -53,17 +53,27 @@ export function showEditTrackPopup(trackId) {
     });
 
 
-    //track metadata
-    const trackTitleEl = newPopupEl.querySelector(".js-track-title");
-    const trackArtistEl = newPopupEl.querySelector(".js-track-artist");
-
-
     const saveButtonEl = newPopupEl.querySelector(".js-save");
     saveButtonEl.addEventListener("click", () => {
-        logDebug("save playlist triggered"); //more logic here required
+        logDebug("save triggered"); //more logic here required
 
         const optionEls = newPopupEl.querySelectorAll(".playlist-option");
+
+        //track metadata
+        const trackTitleEl = newPopupEl.querySelector(".js-track-title");
+        const trackArtistEl = newPopupEl.querySelector(".js-track-artist");
+
         onSaveTrackEdits(trackId, optionEls, trackTitleEl, trackArtistEl);
+
+        hidePopup(popupOverlayEl);
+    })
+
+    //delete track entirely
+    const deleteButtonEl = newPopupEl.querySelector(".js-delete");
+    deleteButtonEl.addEventListener("click", () => {
+        logDebug("delete triggered");
+
+        onDeleteTrack(trackId);
 
         hidePopup(popupOverlayEl);
     })
@@ -75,7 +85,7 @@ export function showEditTrackPopup(trackId) {
 async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
     const selections = getSelectedPlaylists(optionEls);
 
-    //optimistic ui update
+    //optimistic ui updates
     for (const { id, checked } of selections) {
         const inPlaylist = PlaylistStore.hasTrack(id, trackId);
 
@@ -96,14 +106,14 @@ async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
     const trackTitle = getInputValue(titleEl);
     const trackArtist = getInputValue(artistEl);
 
-    console.log("SAVED TRACK TITLE AND ARTIST:", trackTitle, trackArtist);
-
-    showToast(`Saved`);
-
-    console.log("onSaveTrackEdits", "trackId:", trackId, "playlists:", selections);
+    // doesn't update track metadata optimistically because 
+    // backend needs to check if empty and use original string if necessary
     await editTrack(trackId, trackTitle, trackArtist, selections);
 }
 
+async function onDeleteTrack(trackId) {
+    await deleteTrack(trackId);
+}
 
 
 

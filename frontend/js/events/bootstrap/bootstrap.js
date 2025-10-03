@@ -1,5 +1,5 @@
 import { domEls, playlistDomEls } from "../../dom/selectors.js";
-import { getQueueContent, redrawQueueUI } from "../../features/queue/index.js";
+import { getQueueContent, renderQueue } from "../../features/queue/index.js";
 
 import { getLibraryContent, getLikedContent, renderNewCustomPlaylist, renderPlaylist } from "../../features/playlist/index.js";
 import { getPlaylistContent, getPlaylists } from "../../features/playlist/lib/api.js"; //move to index.js
@@ -30,9 +30,8 @@ async function bootstrapQueue() {
         console.log("Bootstrap queue content:", data.content); //NEED TO CHANGE THIS TO JUST IDS
 
         QueueStore.setAll(data.content); //accepts ids
-        const tracks = QueueStore.getTracks();
 
-        redrawQueueUI(tracks);
+        renderQueue();
     } catch (err) {
         console.error("Bootstrap failed", err);
     }

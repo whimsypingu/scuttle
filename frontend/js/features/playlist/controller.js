@@ -18,7 +18,7 @@ import {
     queuePushTrack,
     queueSetAllTracks,
     queueSetFirstTrack,
-    redrawQueueUI
+    renderQueue
 } from "../queue/index.js";
 
 import { toggleLike } from "./lib/api.js";
@@ -97,7 +97,7 @@ async function onClickPlayPlaylistButton(dataset) {
         logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
 
         updateMediaSession(track, true);
-        redrawQueueUI(QueueStore.getTracks());
+        renderQueue();
         resetUI();
         updatePlayPauseButtonDisplay(true);
 
@@ -133,7 +133,7 @@ async function onClickShufflePlaylistButton(dataset) {
         logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
 
         updateMediaSession(track, true);
-        redrawQueueUI(QueueStore.getTracks());
+        renderQueue();
         resetUI();
         updatePlayPauseButtonDisplay(true);
 
@@ -182,7 +182,7 @@ async function onClickPlayButton(dataset) {
         logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
 
         updateMediaSession(track, true);
-        redrawQueueUI(QueueStore.getTracks());
+        renderQueue();
         resetUI();
         updatePlayPauseButtonDisplay(true);
         
@@ -193,7 +193,7 @@ async function onClickPlayButton(dataset) {
         await queueSetFirstTrack(track.id);
 
     } catch (err) {
-        logDebug("Failed to play audio:", err);
+        logDebug("[onClickPlayButton] Failed to play audio:", err);
     }
 }
 
@@ -215,7 +215,7 @@ async function onClickQueueButton(dataset) {
     //1. update queue (local and backend)
     try {
         QueueStore.push(track.id);
-        redrawQueueUI(QueueStore.getTracks());
+        renderQueue();
         showToast(`Queued`);
 
         await queuePushTrack(track.id);
@@ -251,7 +251,7 @@ export async function onSwipe(dataset, action) {
     if (action === "queue") {
         try {
             QueueStore.push(track.id);
-            redrawQueueUI(QueueStore.getTracks());
+            renderQueue();
             showToast(`Queued`); //optionally include track.title but should probably prevent js injection
 
             await queuePushTrack(track.id); //backend

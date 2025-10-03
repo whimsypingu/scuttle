@@ -20,14 +20,13 @@ export function createElem(tag, attrs = {}, children = []) {
     return el;
 }
 
-export function buildTrackListItem(track) {
+export function buildTrackListItem(track, index) {
     const li = document.createElement("li");
     li.classList.add("list-track-item");
 
     //store the trackId
     li.dataset.trackId = track.id;
         
-    const index = 99;
     li.innerHTML = `
         <div class="swipe-action left">
             <i class="fa fa-plus-square"></i>
@@ -35,7 +34,7 @@ export function buildTrackListItem(track) {
 
         <div class="foreground">
             <div class="position">
-                <p class="position-value">${index}</p>
+                <p class="position-value">${index + 1}</p>
             </div>
             <div class="info">
                 <p class="title">${track.title || "Untitled"}</p>

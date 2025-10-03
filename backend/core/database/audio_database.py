@@ -198,6 +198,20 @@ class AudioDatabase:
             ))
 
 
+    async def delete_track(self, id: str):
+        #deletes via ON DELETE CASCADE foreign keys automatically cleaning up tables
+        async with self._lock:
+            await self._execute(f'''
+                DELETE FROM {self.TRACKS_TABLE}
+                WHERE id = ?;
+            ''', (id,))
+
+            content = {
+                "id": id
+            }
+            await self._emit_event(action=ADA.DELETE_TRACK, payload={"content": content})
+
+
     async def log_download(self, id: str):
         async with self._lock:
             await self._execute(f'''
@@ -414,17 +428,19 @@ class AudioDatabase:
                         VALUES (?, ?);
                     ''', (playlist_id, track_id))
 
-                    #await self._emit_event(action=ADA.ADD_TO_PLAYLIST, payload={"content": content}) #emit updated state?
-
                 elif checked is False:
                     #remove if exists
                     await self._execute(f'''
                         DELETE FROM {self.PLAYLIST_TRACKS_TABLE}
                         WHERE playlist_id = ? AND track_id = ?;
                     ''', (playlist_id, track_id))
-
-                    #await self._emit_event(action=ADA.ADD_TO_PLAYLIST, payload={"content": content})
                 
                 else:
                     #none or undefined do nothing
                     continue
+
+            content = {
+                "id": track_id,
+                "updates": playlist_updates
+            }
+            await self._emit_event(ADA.EDIT_PLAYLIST, payload={"content": content})

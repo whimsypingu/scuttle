@@ -16,3 +16,6 @@ class EditTrackRequest(BaseModel):
     title: Optional[str]
     artist: Optional[str]
     playlists: List[PlaylistSelection]
+
+class DeleteTrackRequest(BaseModel):
+    id: str

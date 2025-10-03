@@ -51,6 +51,11 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
     if (!icon) return;
 
     icon.className = isPlaying ? "fa fa-pause" : "fa fa-play";
+
+    //sync media session api
+    if ("mediaSession" in navigator) {
+        navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    }
 }
 
 
@@ -66,6 +71,12 @@ export function resetUI(playerEl, currTimeEl, progBarEl, durationEl) {
     syncCurrentTimeDisplay(currTimeEl, playerEl);
     syncProgressBar(progBarEl, playerEl);
     syncDurationDisplay(durationEl, playerEl);
+}
+
+export function setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime) {
+    setCurrentTimeDisplay(currTimeEl, currTime);
+    setProgressBar(progBarEl, currTime / totalTime);
+    setDurationDisplay(durationEl, totalTime);
 }
 
 

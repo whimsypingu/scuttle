@@ -1,4 +1,5 @@
 import { bootstrapAll } from "./bootstrap/bootstrap.js";
+import { hideBootLoadingOverlay } from "./bootstrap/loadingScreen.js";
 
 import { setupAudioEventListeners } from "./dom/audio.js";
 import { setupPlaylistEventListeners } from "./dom/playlists.js";
@@ -15,6 +16,7 @@ import { setLayoutDesktop, setLayoutMobile } from "./mobile/setMobile.js";
 import { isMobile } from "../utils/index.js"; 
 import { logDebug } from "../utils/debug.js";
 import { setupPopupListeners } from "./dom/popup.js";
+import { setupRefocus } from "./bootstrap/focusApp.js";
 
 
 async function setupDomEvents() {
@@ -37,6 +39,7 @@ async function setupMobileEvents() {
         logDebug("MOBILE ACTIVE");
 
         setLayoutMobile();
+        setupRefocus();
 
         const { setupSwipeEventListeners } = await import("./mobile/swipe.js");
         setupSwipeEventListeners();
@@ -57,5 +60,6 @@ export async function initEvents() {
     await setupWebsocketEvents();
     await setupMobileEvents();
     setupPlatformEvents();
+    hideBootLoadingOverlay();
     logDebug("INIT EVENTS");
 }

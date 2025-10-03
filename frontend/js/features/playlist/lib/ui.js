@@ -43,11 +43,41 @@ export function renderPlaylist(listEl, tracks) { //rename to renderList
     }
     
     //build rows
-    tracks.forEach(track => {
-        const item = buildTrackListItem(track);
+    tracks.forEach((track, index) => {
+        const item = buildTrackListItem(track, index);
         listEl.appendChild(item);
     });
 }
+
+
+export function updateAllListTrackItems(trackId, title, artist) {
+    const els = document.querySelectorAll(`li[data-track-id="${trackId}"]`);
+
+    //select p.title and set value to payload.content.title, select p.artist and set to payload.content.artist)
+    //note: this doesn't update the playbar right away since it's not tied to the id of the audio that is currently playing
+    els.forEach(el => {
+        const titleEl = el.querySelector("p.title");
+        const artistEl = el.querySelector("p.artist");
+
+        if (titleEl) {
+            titleEl.textContent = title;
+        }
+
+        if (artistEl) {
+            artistEl.textContent = artist;
+        }
+    });
+}
+
+
+// export function deleteAllListTrackItems(trackId) {
+//     const els = document.querySelectorAll(`li[data-track-id="${trackId}"]`);
+
+//     els.forEach(el => {
+//         el.remove();
+//     });
+// }
+
 
 
 //renders a custom playlist by id (just a simple refresh) based on current status in playlistStore
@@ -59,3 +89,5 @@ export function renderPlaylistById(id) {
 
     renderPlaylist(listEl, tracks);
 }
+
+

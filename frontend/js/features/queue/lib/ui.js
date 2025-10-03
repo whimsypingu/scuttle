@@ -27,8 +27,8 @@ export function renderQueueList(queueListEl, tracks) {
     }
 
     //build rows
-    tracks.forEach(track => {
-        const item = buildTrackListItem(track);
+    tracks.forEach((track, index) => {
+        const item = buildTrackListItem(track, index);
         queueListEl.appendChild(item);
     });
 }

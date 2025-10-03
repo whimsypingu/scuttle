@@ -18,6 +18,8 @@
     
 	<link rel="stylesheet" href="/frontend/css/variables.css ">
 
+    <link rel="stylesheet" href="/frontend/css/loading-screen.css">
+
     <link rel="stylesheet" href="/frontend/css/base.css"> 
     <link rel="stylesheet" href="/frontend/css/scrollbars.css">
     <link rel="stylesheet" href="/frontend/css/title-search.css">
@@ -56,8 +58,7 @@
         z-index: 9999;
 
 
-        display: none;
-
+        /*display: none;*/
 
     ">blurb</div>
 
@@ -208,12 +209,15 @@
         </div>
     </div>
 
-	<!--<script type="module" src="/frontend/js/main.js" defer></script>-->
-    
-    <!--<script type="module" src="js/toggle.js"></script>
-    <script type="module" src="js/slider.js"></script>
-    <script type="module" src="js/swipe.js"></script>
-    -->
+    <div id="boot-loading-overlay">
+        <img src="/frontend/assets/logo.png" alt="Scuttle Logo" class="logo">
+        <div class="loader-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
     <script type="module" src="/frontend/js/main.js"></script>
 
     </body>
