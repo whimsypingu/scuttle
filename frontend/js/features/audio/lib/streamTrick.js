@@ -72,12 +72,10 @@ const handleAudioContextInterrupt = () => {
 async function ensureAudioContext(audioEl, srcUrl = null) {
     const initAudioCtx = !audioCtx; //true if there is no existing AudioContext
     const rebuildAudioCtx = audioCtx?._interrupted; //true if an existing AudioContext has been flagged interrupted
-    const buildTrackEl = !audioCtx?._paused; //true if AudioContext exists and is not intentionaally paused
 
     //debugging
     if (initAudioCtx) logDebug("[ensureAudioContext] Initializing fresh AudioContext");
     if (rebuildAudioCtx) logDebug("[ensureAudioContext] Rebuilding AudioContext due to interruption");
-    if (audioCtx?._paused) logDebug("[ensureAudioContext] Paused context, skipping rebuild");
 
     //for rebuilding, tear down first
     if (rebuildAudioCtx) {
@@ -107,7 +105,6 @@ async function ensureAudioContext(audioEl, srcUrl = null) {
     //for building a new AudioContext
     if (initAudioCtx || rebuildAudioCtx) {
         audioCtx = new AudioContext();
-        audioCtx._paused = false;
         audioCtx._interrupted = false;
         
         audioCtx.addEventListener("statechange", handleAudioContextInterrupt);
@@ -122,10 +119,7 @@ async function ensureAudioContext(audioEl, srcUrl = null) {
         } catch (err) {
             logDebug("[ensureAudioContext] failed to play visible element:", err);
         }
-    }
 
-    //for building a new track element and wiring it up
-    if (buildTrackEl) {
         //1. build trackEl and connect it
         const trackEl = new Audio(srcUrl);
         trackEl.crossOrigin = "anonymous";
@@ -210,7 +204,6 @@ export async function playLoadedTrack() {
     try {
         //play actual audio element, and pause the audioContext
         await currentPlayer.play();
-        audioCtx._paused = false; 
 
         logDebug("playback success");
 
@@ -220,7 +213,6 @@ export async function playLoadedTrack() {
         setTimeout(async () => {
             try {
                 await currentPlayer.play();
-                audioCtx._paused = false;
 
                 logDebug("playback success on retry");
             } catch (retryErr) {
@@ -233,8 +225,7 @@ export async function playLoadedTrack() {
 export function pauseLoadedTrack() {
     if (!currentPlayer) return;
 
-    audioCtx._paused = true;
-    savedState = null;
+    handleAudioContextInterrupt();
 
     currentPlayer.pause();
 }
@@ -279,7 +270,6 @@ export async function cleanupCurrentAudio() {
 
     //some extra cleanup just in case, may not be necessary here
     savedState = null;
-    audioCtx._paused = false;
 
     // tiny delay for iOS
     await new Promise(r => setTimeout(r, 100));
