@@ -23,10 +23,13 @@ export function getAudioCtx() {
 }
 
 
-
-function isIosSafari() {
-    return /iP(ad|hone|od).+Version\/[\d.]+.*Safari/i.test(navigator.userAgent);
+//HOLY JESUS THIS IS TURBO GARBAGE 
+function isIosSafari() { 
+    const userAgent = navigator.userAgent; 
+    logDebug(`userAgent: ${userAgent}`); 
+    return /Safari/i.test(userAgent) && /AppleWebKit/i.test(userAgent) && !/Chrome|Android/i.test(userAgent); 
 }
+
 
 /**
  * Handles interruptions to the AudioContext (iOS Safari, phone calls, other media)
