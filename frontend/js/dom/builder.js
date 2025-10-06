@@ -103,18 +103,26 @@ export function buildEditTrackPopup(playlists, track) {
     //     {"id": 3, "name": "test3", "checked": true}        
     // ]
     console.log("TRACK DATA", track);
+
+    const playlistsHTML = playlists.length > 0
+        ? playlists.map(pl => `
+            label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
+                <span class="checkbox"></span>
+                <p class="playlist-name">${pl.name}</p>
+            </label>
+        `).join("")
+        : 
+        `<div class="no-playlists-message">
+            <p>No playlists available</p>
+        </div>`;
+
     popup.innerHTML = `
         <div class="scrollable-popup-content">
 
             <h3 class="popup-message">Playlists</h3>
 
             <div class="playlist-selection-menu">
-                ${playlists.map(pl => `
-                    <label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
-                        <span class="checkbox"></span>
-                        <p class="playlist-name">${pl.name}</p>
-                    </label>
-                `).join("")}
+                ${playlistsHTML}
             </div>
 
             <div class="spacing-block">
