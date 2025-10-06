@@ -6,6 +6,8 @@ class YouTubeClientAction(str, Enum):
     SEARCH = "search"
     DOWNLOAD = "download"
 
+    ERROR = "error"
+
     START = "task_start"
     FINISH = "task_finish"
 

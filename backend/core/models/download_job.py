@@ -1,30 +1,38 @@
 from typing import Optional
-from backend.core.models.track import Track
 
 class DownloadJob:
     def __init__(
         self,
-        track: Optional[Track] = None,
         id: Optional[str] = None,
-        query: Optional[str] = None
+        query: Optional[str] = None,
+        metadata: Optional[dict] = None
     ):
-        self.track = track
         self.id = id
         self.query = query
+        self.metadata = metadata
 
     def get_type(self) -> str:
-        if self.track:
-            return "Track"
         if self.id:
             return "id"
         if self.query:
             return "query"
         return "unknown"
+    
+    def get_id(self) -> str | None:
+        return self.id
+    
+    def get_query(self) -> str | None:
+        return self.query
+    
+    def get_metadata(self) -> dict | None:
+        return self.metadata
 
     def get_identifier(self) -> str:
-        """Return a string uniquely identifying this job."""
-        if self.track:
-            return self.track.id
+        """
+        Return a string uniquely identifying this job.
+        For id, returns the id.
+        For query, returns the entire query string.
+        """
         if self.id:
             return self.id
         if self.query:
