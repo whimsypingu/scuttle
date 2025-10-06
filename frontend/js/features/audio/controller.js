@@ -26,7 +26,7 @@ import { renderQueue } from "../queue/index.js";
 import { logDebug } from "../../utils/debug.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
-import { getPlayerEl } from "./lib/streamTrick.js";
+import { getPlayerEl, setIosPlaybackInterrupt } from "./lib/streamTrick.js";
 
 
 //autoplay
@@ -154,6 +154,12 @@ export async function onRefocus() {
         renderQueue();
         updatePlayPauseButtonDisplay(false);
     }
+}
+
+//backgrounded
+export async function onBackgrounded() {
+    logDebug("[onBackgrounded] TrackState:", trackState());
+    setIosPlaybackInterrupt(); //for iOS set recovery position to rebuild audioContext
 }
 
 

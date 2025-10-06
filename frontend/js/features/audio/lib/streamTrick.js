@@ -24,11 +24,12 @@ export function getAudioCtx() {
 
 
 //HOLY JESUS THIS IS TURBO GARBAGE 
-function isIosSafari() { 
+//function isIosSafari() { 
+const IS_IOS_SAFARI = (() => {
     const userAgent = navigator.userAgent; 
     logDebug(`userAgent: ${userAgent}`); 
     return /Safari/i.test(userAgent) && /AppleWebKit/i.test(userAgent) && !/Chrome|Android/i.test(userAgent); 
-}
+})();
 
 
 /**
@@ -39,6 +40,7 @@ function isIosSafari() {
  */
 const handleAudioContextInterrupt = () => {
     if (!currentPlayer) return;
+    logDebug(`[handler] State: ${audioCtx.state}`);
     if (audioCtx.state !== "suspended" && audioCtx.state !=="interrupted") return;
 
     //mark as interrupted and save state
@@ -50,6 +52,26 @@ const handleAudioContextInterrupt = () => {
     };
 
     logDebug("[handler] Saved current audio state:", savedState);
+}
+
+
+/**
+ * iOS specific helper to resume playback after losing audioContext
+ */
+export function setIosPlaybackInterrupt() {
+    if (IS_IOS_SAFARI && audioCtx && audioCtx._paused) {
+        audioCtx._paused = false;
+        audioCtx._interrupted = true;
+
+        savedState = {
+            src: currentPlayer.src,
+            currentTime: currentPlayer.currentTime,
+        };
+
+        logDebug("[setIos] Saved current audio state:", savedState);
+        return true;
+    }
+    return false;
 }
 
 
@@ -173,13 +195,20 @@ export async function loadTrack(audioEl, trackId) {
     const fullUrl = new URL(srcPath, window.location.href).href;
 
     //3. 
-    if (isIosSafari()) {
-        //
+    if (IS_IOS_SAFARI) {
+        //handle the ugly details of audioContext because ios is a humongous pain in the butt
         logDebug("loadTrack iOS detected.")
         await ensureAudioContext(audioEl, fullUrl);
 
     //4. non-ios
     } else {
+        //handle non-rebuild in non-ios systems since audioContext is beautifully handled for us
+        const isSameTrack = audioEl.src === fullUrl;
+        if (isSameTrack) {
+            logDebug("[loadTrack] Reusing existing audio element (non-iOS, manually paused).");
+            return Promise.resolve(true);
+        }        
+        
         audioEl.src = fullUrl;
         audioEl.load();
         currentPlayer = audioEl;
@@ -210,7 +239,10 @@ export async function playLoadedTrack() {
     try {
         //play actual audio element, and pause the audioContext
         await currentPlayer.play();
-        audioCtx._paused = false; 
+
+        if (IS_IOS_SAFARI) {
+            audioCtx._paused = false; 
+        }
 
         logDebug("playback success");
 
@@ -220,7 +252,10 @@ export async function playLoadedTrack() {
         setTimeout(async () => {
             try {
                 await currentPlayer.play();
-                audioCtx._paused = false;
+
+                if (IS_IOS_SAFARI) {
+                    audioCtx._paused = false;
+                }
 
                 logDebug("playback success on retry");
             } catch (retryErr) {
@@ -233,8 +268,10 @@ export async function playLoadedTrack() {
 export function pauseLoadedTrack() {
     if (!currentPlayer) return;
 
-    audioCtx._paused = true;
-    savedState = null;
+    if (IS_IOS_SAFARI) {
+        audioCtx._paused = true;
+        savedState = null;
+    }
 
     currentPlayer.pause();
 }
@@ -271,18 +308,21 @@ export async function cleanupCurrentAudio() {
     currentPlayer.removeAttribute("src");
 
     // remove from DOM only on iOS (hidden trackEl)
-    if (isIosSafari() && currentPlayer.parentNode) {
+    if (IS_IOS_SAFARI && currentPlayer.parentNode) {
         currentPlayer.parentNode.removeChild(currentPlayer);
     }
 
     currentPlayer = null;
 
-    //some extra cleanup just in case, may not be necessary here
-    savedState = null;
-    audioCtx._paused = false;
+    if (IS_IOS_SAFARI) {
+        //some extra cleanup just in case, may not be necessary here
+        savedState = null;
 
-    // tiny delay for iOS
-    await new Promise(r => setTimeout(r, 100));
+        audioCtx._paused = false;
+
+        // tiny delay for iOS
+        await new Promise(r => setTimeout(r, 100));
+    }
 
     logDebug("after cleanup");
 }
