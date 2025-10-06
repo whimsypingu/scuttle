@@ -42,9 +42,9 @@ class DownloadJob:
     def to_json(self) -> dict:
         return {
             "type": self.get_type(),
-            "track": self.track.to_json() if self.track else None,
             "id": self.id,
-            "query": self.query
+            "query": self.query,
+            "metadata": self.metadata
         }
 
     def __repr__(self):

@@ -333,6 +333,7 @@ class YouTubeClient:
         self,
         q: str,
         timeout: int = 60,
+        custom_metadata: Optional[dict] = None
     ) -> bool:
         
         result = await self.robust_search(q=q, limit=1, timeout=timeout) #doesnt emit when searching 1 item
@@ -344,7 +345,7 @@ class YouTubeClient:
         id = result[0].id
         print(f"[DEBUG] Result: {result}, ID: {id}")
 
-        track = await self.download_by_id(id, timeout=timeout)
+        track = await self.download_by_id(id, timeout=timeout, custom_metadata=custom_metadata)
         print(f"[DEBUG] Track: {track}")
 
         return track

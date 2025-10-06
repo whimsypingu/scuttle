@@ -82,6 +82,8 @@ export function buildCreatePlaylistPopup() {
 
         <input class="menu-input js-create-playlist-input" type="text" placeholder="New name">
 
+        <input class="menu-input js-import-playlist-input" type="text" placeholder="(Optional) Link">
+
         <div class="popup-actions">
             <button class="menu-button green js-save">Save</button>
             <button class="menu-button js-cancel">Cancel</button>
