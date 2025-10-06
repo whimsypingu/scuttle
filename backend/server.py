@@ -18,6 +18,9 @@ from backend.core.queue.manager import QueueManager
 from backend.core.queue.implementations.play_queue import PlayQueue
 from backend.core.queue.implementations.download_queue import DownloadQueue
 
+from backend.core.playlists.manager import PlaylistExtractorManager
+
+
 import backend.globals as G
 
 from backend.api.routers import audio_router
@@ -55,6 +58,8 @@ async def lifespan(app: FastAPI):
     queue_manager.add(play_queue)
     queue_manager.add(download_queue)
 
+    playlist_ext_manager = PlaylistExtractorManager()
+
     # workers
     download_worker = DownloadWorker(download_queue=download_queue, youtube_client=yt, audio_database=db)
     download_task = asyncio.create_task(download_worker.run())
@@ -63,6 +68,8 @@ async def lifespan(app: FastAPI):
     app.state.websocket_manager = websocket_manager
     app.state.event_bus = event_bus
     app.state.queue_manager = queue_manager
+
+    app.state.playlist_ext_manager = playlist_ext_manager
 
     app.state.db = db
     app.state.yt = yt

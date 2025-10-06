@@ -26,3 +26,20 @@ def is_downloaded(track_or_id: Union[str, Track], base_dir: Path = G.DOWNLOAD_DI
 
 def get_audio_size(track_or_id: Union[str, Track], base_dir: Path = G.DOWNLOAD_DIR, audio_format: str = G.AUDIO_FORMAT) -> int:
     return get_audio_path(track_or_id, base_dir, audio_format).stat().st_size
+
+
+#recursively search for first occurrence of a key in a nested dict json
+def find_key(obj, key):
+    if isinstance(obj, dict):
+        if key in obj:
+            return obj[key]
+        for v in obj.values():
+            result = find_key(v, key)
+            if result is not None:
+                return result
+    elif isinstance(obj, list):
+        for item in obj:
+            result = find_key(item, key)
+            if result is not None:
+                return result
+    return None
