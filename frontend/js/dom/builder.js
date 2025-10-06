@@ -78,17 +78,24 @@ export function buildCreatePlaylistPopup() {
     popup.classList.add("popup-content");
     
     popup.innerHTML = `
-        <h3 class="popup-message">Create Playlist</h3>
+        <div class="scrollable-popup-content">
 
-        <input class="menu-input js-create-playlist-input" type="text" placeholder="New name">
+            <h3 class="popup-message">Create Playlist</h3>
 
-        <input class="menu-input js-import-playlist-input" type="text" placeholder="(Optional) Link">
+            <div class="multi-input-menu">
+                <input class="menu-input js-create-playlist-input" type="text" placeholder="New name">
+        
+                <input class="menu-input js-import-playlist-input" type="text" placeholder="(Optional) Link">
+            </div>
 
+        </div>
+        
         <div class="popup-actions">
             <button class="menu-button green js-save">Save</button>
             <button class="menu-button js-cancel">Cancel</button>
         </div>
     `;
+
     return popup;
 }
 
@@ -132,7 +139,7 @@ export function buildEditTrackPopup(playlists, track) {
 
             <h3 class="popup-message">Track Information</h3>
 
-            <div class="edit-track-metadata-menu">
+            <div class="multi-input-menu">
                 <input type="text" class="menu-input js-track-title" value="${track.title}" placeholder="Title..." />
             
                 <input type="text" class="menu-input js-track-artist" value="${track.artist}" placeholder="Artist..." />

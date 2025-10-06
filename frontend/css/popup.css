@@ -106,8 +106,8 @@
 }
 
 
-/* edit track metadata */
-.edit-track-metadata-menu {
+/* edit track metadata and track creation import inputs */
+.multi-input-menu {
     display: flex;
     flex-direction: column;
 
