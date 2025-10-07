@@ -40,10 +40,14 @@ export function formatHeader(header) {
 
 
 
-//formats seconds -> MM:SS
-export function formatTime(seconds) {
-    const totalSecs = Math.round(seconds);
+/**
+ * Formats seconds as MM:SS
+ * @param {number} seconds - Time in seconds
+ * @param {boolean} floor - true to floor, false to ceil
+ */
+export function formatTime(seconds, floor=true) {
+    const totalSecs = floor ? Math.floor(seconds) : Math.ceil(seconds);
     const mins = Math.floor(totalSecs / 60);
-    const secs = Math.floor(totalSecs % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    const secs = (totalSecs % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`; //handles 0:00-0:09
 }

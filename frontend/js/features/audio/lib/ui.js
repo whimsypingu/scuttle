@@ -18,7 +18,7 @@ export function syncCurrentTimeDisplay(currTimeEl, playerEl) {
 
 //duration
 export function setDurationDisplay(durationEl, value) {
-    durationEl.textContent = formatTime(value);
+    durationEl.textContent = formatTime(value, false);
 }
 export function syncDurationDisplay(durationEl, playerEl) {
     const duration = isNaN(playerEl.duration) ? 0 : playerEl.duration;
