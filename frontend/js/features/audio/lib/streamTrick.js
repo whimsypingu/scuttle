@@ -94,10 +94,12 @@ export function setIosPlaybackInterrupt() {
 async function ensureAudioContext(audioEl, srcUrl = null) {
     const initAudioCtx = !audioCtx; //true if there is no existing AudioContext
     const rebuildAudioCtx = audioCtx?._interrupted; //true if an existing AudioContext has been flagged interrupted
+    const buildTrackEl = !audioCtx?._paused; //true if AudioContext exists and is not intentionaally paused
 
     //debugging
     if (initAudioCtx) logDebug("[ensureAudioContext] Initializing fresh AudioContext");
     if (rebuildAudioCtx) logDebug("[ensureAudioContext] Rebuilding AudioContext due to interruption");
+    if (audioCtx?._paused) logDebug("[ensureAudioContext] Paused context, skipping rebuild");
 
     //for rebuilding, tear down first
     if (rebuildAudioCtx) {
@@ -127,6 +129,7 @@ async function ensureAudioContext(audioEl, srcUrl = null) {
     //for building a new AudioContext
     if (initAudioCtx || rebuildAudioCtx) {
         audioCtx = new AudioContext();
+        audioCtx._paused = false;
         audioCtx._interrupted = false;
         
         audioCtx.addEventListener("statechange", handleAudioContextInterrupt);
@@ -141,7 +144,10 @@ async function ensureAudioContext(audioEl, srcUrl = null) {
         } catch (err) {
             logDebug("[ensureAudioContext] failed to play visible element:", err);
         }
+    }
 
+    //for building a new track element and wiring it up
+    if (buildTrackEl) {
         //1. build trackEl and connect it
         const trackEl = new Audio(srcUrl);
         trackEl.crossOrigin = "anonymous";
