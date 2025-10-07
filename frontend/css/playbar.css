@@ -187,6 +187,20 @@ body.mobile #play-pause-button i.fa-pause {
 }
 
 
+/* floating loop one indicator */
+#loop-button {
+    position: relative;
+}
+#loop-button #loop-one-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(30%, -80%);
+
+    /*inherits tiny size from the parent button container*/
+}
+
+
 /*couldnt figure out how to get this to obey body.mobile without breaking the spacing of the playbar for whatever reason*/
 @media (max-width: 768px) {
     #queue-toggle {

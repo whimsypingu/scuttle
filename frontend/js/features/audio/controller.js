@@ -15,10 +15,16 @@ import {
     syncCurrentTimeDisplay, 
     updatePlayPauseButtonDisplay, 
     setProgressBar,
-    syncProgressBar, 
+    syncProgressBar,
+    
+    setAudioTime,
 
     updateMediaSession,
-    resetUI
+    resetUI,
+
+    isLoopNone,
+    isLoopAll,
+    isLoopOne
 } from "./index.js";
 
 import { renderQueue } from "../queue/index.js";
@@ -32,9 +38,24 @@ import { getPlayerEl, setIosPlaybackInterrupt } from "./lib/streamTrick.js";
 //autoplay
 export async function onAudioEnded() {
     try {
+        //if looping one song on repeat, just restart current track
+        if (isLoopOne()) {
+            setAudioTime(0);
+            await playLoadedTrack();
+            return;
+        }
+
+
         //instantaneously update everything, and then send the update to the backend
         //1. make changes to local , which will trigger queue ui update
-        QueueStore.pop();
+        const poppedTrackId = QueueStore.pop();
+        logDebug("POPPED TRACK:", poppedTrackId);
+        if (isLoopAll()) {
+            QueueStore.push(poppedTrackId);
+            renderQueue();
+            await queuePushTrack(poppedTrackId); //backend
+        }
+
         const track = QueueStore.peekTrack();
         logDebug("Next track:", track);
 
@@ -137,11 +158,8 @@ export async function onPlayPauseButtonClick() {
 
 //previous --gonna become a mess when previous track is allowed
 export function onPreviousButtonClick() {
-    const playerEl = getPlayerEl();
-
-    playerEl.currentTime = 0;
-    syncCurrentTimeDisplay();
-    syncProgressBar();
+    setAudioTime(0);
+    return;
 }
 
 
@@ -206,9 +224,8 @@ export function commitScrubSeek() {
     const playerEl = getPlayerEl();
 
     const seekTime = (progBarEl.value / 100) * playerEl.duration;
-    playerEl.currentTime = seekTime; //set and sync
-    syncCurrentTimeDisplay();
-    syncProgressBar();
+
+    setAudioTime(seekTime);
 
     isSeeking = false;
 }

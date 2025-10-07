@@ -29,6 +29,16 @@ export const resetUI = () => audioUI.resetUI(getPlayerEl(), currTimeEl, progBarE
 export const setUI = (currTime, totalTime) => audioUI.setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime);
 
 
+//for setting the time of a currently playing song
+export const setAudioTime = (time) => {
+    const playerEl = getPlayerEl();
+
+    playerEl.currentTime = time; //set and sync
+    syncCurrentTimeDisplay();
+    syncProgressBar();
+}
+
+
 
 
 export {
@@ -44,3 +54,10 @@ export async function loadTrack(trackId) {
 }
 
 
+
+export {
+    toggleLoopMode,
+    isLoopNone,
+    isLoopAll,
+    isLoopOne
+} from "./lib/loop.js";
