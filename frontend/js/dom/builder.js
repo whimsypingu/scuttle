@@ -27,6 +27,7 @@ export function buildTrackListItem(track, index) {
     //store the trackId
     li.dataset.trackId = track.id;
         
+    //jesus apple is so FUCKING cringe for putting auto detect links and phone numbers
     li.innerHTML = `
         <div class="swipe-action left">
             <i class="fa fa-plus-square"></i>
@@ -34,7 +35,7 @@ export function buildTrackListItem(track, index) {
 
         <div class="foreground">
             <div class="position">
-                <p class="position-value">${index + 1}</p>
+                <a class="no-link" href="#"><p class="position-value">${index + 1}</p></a>
             </div>
             <div class="info">
                 <p class="title">${track.title || "Untitled"}</p>
