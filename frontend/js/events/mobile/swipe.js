@@ -44,13 +44,17 @@ let trueAbsSwipeDist = null;
  * @param {string} theme1 - Theme for "primary" swipe threshold.
  * @param {string} theme2 - Theme for "secondary" (deeper) swipe threshold.
  */
-function setSwipeTheme(el, swipeDist, theme1, theme2) {
+function setSwipeTheme(el, swipeDist, theme1, icon1, theme2, icon2) {
+    const iconEl = el.querySelector("i");
     if (swipeDist >= flipThreshold2) {
         el.dataset.swipeTheme = theme2;
+        iconEl.className = icon2;
     } else if (swipeDist >= flipThreshold1) {
         el.dataset.swipeTheme = theme1;
+        iconEl.className = icon1;
     } else {
         delete el.dataset.swipeTheme;
+        iconEl.className = icon1;
     }
 }
 
@@ -66,6 +70,7 @@ function updateSwipeBackground(side, swipeDist) {
 
     let el = null;
 
+    //swiping to the right reveals the left, while below this is swiping to the left which reveals the right
     if (side === "left") {
         el = activeEl.querySelector(".swipe-action.left");
 
@@ -73,7 +78,7 @@ function updateSwipeBackground(side, swipeDist) {
             swipeDist > 0 ? `translateX(calc(${swipeDist}px + ${marginOffset}))` : "translateX(0)";
 
         //color
-        setSwipeTheme(el, swipeDist, "green1", "tan1");
+        setSwipeTheme(el, swipeDist, "green1", "fa fa-plus-square", "tan1", "fa fa-plus-circle");
     } else {
         el = activeEl.querySelector(".swipe-action.right");
 
@@ -81,7 +86,7 @@ function updateSwipeBackground(side, swipeDist) {
             swipeDist > 0 ? `translateX(calc(-${swipeDist}px - ${marginOffset}))` : "translateX(0)";
 
         //color
-        setSwipeTheme(el, swipeDist, "green1", "red1");
+        setSwipeTheme(el, swipeDist, "green1", "fa fa-heart", "red1", "fa fa-ellipsis-h");
     }
 
     el.style.width = `${swipeDist}px`;

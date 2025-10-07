@@ -1,7 +1,8 @@
 //static/js/features/audio/controller.js
 
 import { 
-    queuePopTrack 
+    queuePopTrack,
+    queuePushTrack
 } from "../queue/index.js";
 
 import { 
@@ -24,7 +25,11 @@ import {
 
     isLoopNone,
     isLoopAll,
-    isLoopOne
+    isLoopOne,
+    toggleLoopMode,
+
+    spinLoopButton,
+    setLoopButton
 } from "./index.js";
 
 import { renderQueue } from "../queue/index.js";
@@ -164,6 +169,16 @@ export function onPreviousButtonClick() {
 
 
 
+//looping
+export function onLoopButtonClick() {
+    const { looping, one} = toggleLoopMode();
+
+    spinLoopButton();
+
+    setLoopButton(looping, one);
+}
+
+
 //suspended
 export async function onRefocus() {
     logDebug("[onRefocus] TrackState:", trackState());
@@ -229,4 +244,6 @@ export function commitScrubSeek() {
 
     isSeeking = false;
 }
+
+
 

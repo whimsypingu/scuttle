@@ -32,9 +32,11 @@ export const SELECTORS = {
 			PROGRESS_BAR: "audio-progress-bar",
 			DURATION: "audio-duration",
 
+			SHUFFLE_BUTTON: "shuffle-button",
 			PREVIOUS_BUTTON: "previous-button",
 			PLAY_PAUSE_BUTTON: "play-pause-button",
 			NEXT_BUTTON: "next-button",
+			LOOP_BUTTON: "loop-button",
 		},
 		classes: {
 			//
@@ -147,6 +149,9 @@ export const domEls = {
 
     nextButtonEl: $(SELECTORS.audio.ids.NEXT_BUTTON),
     prevButtonEl: $(SELECTORS.audio.ids.PREVIOUS_BUTTON),
+
+	shuffleButtonEl: $(SELECTORS.audio.ids.SHUFFLE_BUTTON),
+	loopButtonEl: $(SELECTORS.audio.ids.LOOP_BUTTON),
 
     titleEl: $(SELECTORS.audio.ids.TITLE),
     artistEl: $(SELECTORS.audio.ids.ARTIST),

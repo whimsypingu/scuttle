@@ -32,7 +32,10 @@ export function toggleLoopMode() {
             setLoopMode(LOOP_NONE);
             break;
     }
-    return loopMode;
+    return {
+        looping: loopMode !== LOOP_NONE,
+        one: loopMode === LOOP_ONE
+    };
 }
 
 //exposed getter functions

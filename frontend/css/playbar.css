@@ -190,15 +190,38 @@ body.mobile #play-pause-button i.fa-pause {
 /* floating loop one indicator */
 #loop-button {
     position: relative;
+    transition: transform 0.5s ease, color 0.3s ease;
+    color: var(--text-1);
+}
+
+/* animations for the looping button */
+@keyframes spin360 {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+#loop-button.spin-once #loop-icon {
+    animation: spin360 0.5s ease forwards;
+}
+#loop-button.looping {
+    color: green;
 }
 #loop-button #loop-one-icon {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(30%, -80%);
+
+    transform: translate(30%, -85%) translateY(-3px); /*start slightly up*/
+    opacity: 0; /*hidden by default*/
+    pointer-events: none;
+
+    transition: opacity 0.3s ease, transform 0.3s ease;
 
     /*inherits tiny size from the parent button container*/
 }
+#loop-button.looping.one #loop-one-icon {
+    opacity: 1;
+    transform: translate(30%, -85%) translateY(0); /*drop into place */
+} 
 
 
 /*couldnt figure out how to get this to obey body.mobile without breaking the spacing of the playbar for whatever reason*/

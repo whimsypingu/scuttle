@@ -89,3 +89,28 @@ export function updateMediaSession(track, isPlaying) {
         }
     }));
 }
+
+
+
+//toggle loop mode button
+export function spinLoopButton(loopButtonEl) {
+    loopButtonEl.classList.remove("spin-once");
+    void loopButtonEl.offsetWidth; //force reflow
+    loopButtonEl.classList.add("spin-once"); //trigger animation
+}
+
+export function setLoopButton(loopButtonEl, looping=false, one=false) {
+    //any loop (coloring)
+    if (looping) {
+        loopButtonEl.classList.add("looping");
+    } else {
+        loopButtonEl.classList.remove("looping");
+    }
+
+    //loop one only
+    if (one) {
+        loopButtonEl.classList.add("one");
+    } else {
+        loopButtonEl.classList.remove("one");
+    }
+}

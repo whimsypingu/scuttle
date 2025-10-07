@@ -1,15 +1,25 @@
 import { domEls } from "../../dom/selectors.js";
-const { audioEl, currTimeEl, durationEl, progBarEl, ppButtonEl } = domEls;
+const { audioEl, currTimeEl, durationEl, progBarEl, ppButtonEl, loopButtonEl } = domEls;
 
 export { 
     getAudioStream 
 } from "./lib/api.js";
 
 
-//dom inject these here
+//looping
+export {
+    toggleLoopMode,
+    isLoopNone,
+    isLoopAll,
+    isLoopOne
+} from "./lib/loop.js";
+
 export {
     updateMediaSession
 } from "./lib/ui.js";
+
+
+//dom inject these here
 import * as audioUI from "./lib/ui.js";
 
 import { getPlayerEl } from "./lib/streamTrick.js";
@@ -27,6 +37,10 @@ export const updatePlayPauseButtonDisplay = (isPlaying) => audioUI.updatePlayPau
 
 export const resetUI = () => audioUI.resetUI(getPlayerEl(), currTimeEl, progBarEl, durationEl);
 export const setUI = (currTime, totalTime) => audioUI.setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime);
+
+
+export const spinLoopButton = () => audioUI.spinLoopButton(loopButtonEl);
+export const setLoopButton = (looping, one) => audioUI.setLoopButton(loopButtonEl, looping, one);
 
 
 //for setting the time of a currently playing song
@@ -54,10 +68,3 @@ export async function loadTrack(trackId) {
 }
 
 
-
-export {
-    toggleLoopMode,
-    isLoopNone,
-    isLoopAll,
-    isLoopOne
-} from "./lib/loop.js";
