@@ -101,7 +101,8 @@
         --mobile-button-m: 3rem; /* 48px */
         --mobile-button-l: 4rem; /* 64px recommended by apple and google apparently*/
 
-        --mobile-button-font: bold 1.4rem/1.3em var(--ff);
+        --mobile-button-font-m-downscaled: 0.7rem/1.3em var(--ff); /* downscaled to accommodate fa button sizing */
+        --mobile-button-font-m: bold 1.4rem/1.3em var(--ff);
     }
 }
 

@@ -263,7 +263,7 @@ body.mobile #play-pause-button i.fa-pause {
         align-items: center;
         flex: 1;
         justify-content: center;
-        gap: var(--space-m);
+        gap: var(--space-xxs);
         padding: var(--space-s);
         margin-top: var(--space-xxl);
         margin-inline: var(--space-m);
@@ -276,9 +276,10 @@ body.mobile #play-pause-button i.fa-pause {
 
         background: transparent;
         color: var(--text-1);
-        font: var(--mobile-button-font);
+        font: var(--mobile-button-font-m-downscaled);
     }
 
+    /* override play pause button styles */
     #playbar-queue:not(.expanded) #play-pause-button {
         grid-column: 2 / 3;
         grid-row: 1 / 2;
@@ -295,8 +296,10 @@ body.mobile #play-pause-button i.fa-pause {
     }
 
     /* Hide prev and next buttons */
+    #playbar-queue:not(.expanded) #shuffle-button,
     #playbar-queue:not(.expanded) #previous-button,
-    #playbar-queue:not(.expanded) #next-button {
+    #playbar-queue:not(.expanded) #next-button,
+    #playbar-queue:not(.expanded) #loop-button {
         display: none;
     }
 }
