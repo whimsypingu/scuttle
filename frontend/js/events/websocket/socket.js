@@ -2,10 +2,35 @@
 
 import { logDebug } from "../../utils/debug.js";
 
+
+/**
+ * Global reference to the active WebSocket connection.
+ * May be null if the connection is closed or not yet initialized.
+ * @type {WebSocket | null}
+ */
 let socket = null;
 
+
+/**
+ * How long (in milliseconds) to wait before automatically attempting
+ * to reconnect after an unexpected close.
+ * 
+ * @type {number}
+ */
 const reconnectTimeout = 3000; //ms
 
+
+/**
+ * Initialize and open a WebSocket connection to the server if not already open.
+ *
+ * - Determines the correct protocol (`ws` vs `wss`) based on the current page.
+ * - Creates the WebSocket instance and attaches event listeners.
+ * - Automatically schedules a reconnect on unexpected close.
+ * 
+ * If a socket is already open, this function simply returns the existing instance.
+ *
+ * @returns {WebSocket} The active WebSocket instance.
+ */
 export function initWebSocket() {
 
     //websocket failure ciould be that you have to pip install "uvicorn[standard]" for websocket support
@@ -38,6 +63,17 @@ export function initWebSocket() {
     return socket;
 }
 
+
+/**
+ * Cleanly close and destroy the active WebSocket connection, if any.
+ *
+ * - Removes all event listeners from the socket.
+ * - Closes the connection.
+ * - Resets the global `socket` reference to `null`.
+ *
+ * This is useful on iOS Safari or other mobile browsers where
+ * backgrounding the tab may cause suspended sockets and stale handlers.
+ */
 export function destroyWebSocket() {
     if (socket) {
         logDebug("[INFO] Destroying WebSocket connection");
@@ -48,7 +84,11 @@ export function destroyWebSocket() {
 }
 
 
-
+/**
+ * Get the current active WebSocket instance, if any.
+ *
+ * @returns {WebSocket | null} The active WebSocket, or null if not initialized.
+ */
 export function getWebSocket() {
     if (!socket) {
         logDebug("[WARN] WebSocket not initialized. Call initWebSocket() first.");
