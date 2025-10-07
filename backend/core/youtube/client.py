@@ -243,8 +243,13 @@ class YouTubeClient:
     async def download_by_id(
         self,
         id: str, 
-        timeout: int = 60
+        timeout: int = 60,
+        custom_metadata: Optional[dict] = None
     ) -> bool:
+        """
+        Downloads a track given a Youtube ID using ytdlp and returns a Track object.
+        If custom_track is provided, its fields override the downloaded metadata.
+        """
         #send task start notification
         await self._emit_event(action=YTCA.START, payload={})
 
@@ -278,21 +283,26 @@ class YouTubeClient:
         ]
         print(f"Running command: {' '.join(cmd)}")
 
+        track = None
         try:
             start_time = time.time()
             code, out, err = await self._run_subprocess(cmd, timeout=timeout)
 
             if code != 0:
-                raise RuntimeError(f"yt-dlp exited with code {code}: {err.strip()}")
+                raise RuntimeError(f"[download_by_id] yt-dlp exited with code {code}: {err.strip()}")
         
             elapsed = time.time() - start_time
             print(f"[INFO] Downloaded {id} in {elapsed:.2f}s")
 
             # Parse metadata from stdout
-            line = out.strip().splitlines()[0]  # first line
-            id, title, artist, duration = line.split(delim)
-            true_id = f"{self.id_src}{id}"
+            try:
+                line = out.strip().splitlines()[0]  # first line
+                id, title, artist, duration = line.split(delim)
+            except Exception as e:
+                raise ValueError(f"[download_by_id] Failed to parse metadata: {e}, Output was: {out}")
 
+            #build track object
+            true_id = f"{self.id_src}{id}"
             track = Track(
                 id=true_id,
                 title=title or "Unknown Title",
@@ -300,22 +310,30 @@ class YouTubeClient:
                 duration=int(duration) if duration.isdigit() else 0
             )
 
+            #override custom fields
+            if custom_metadata:
+                for k, v in custom_metadata.items():
+                    if v not in (None, "") and hasattr(track, k):
+                        setattr(track, k, v)
+
+            await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
+            return track
+
         except Exception as e:
             print(f"[ERROR] Failed to download {id}: {e}")
+            await self._emit_event(action=YTCA.ERROR, payload={})
             raise
         
         finally:
             #complete task notification
-            await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
             await self._emit_event(action=YTCA.FINISH, payload={})
-        
-        return track
-        
+                
 
     async def download_by_query(
         self,
         q: str,
         timeout: int = 60,
+        custom_metadata: Optional[dict] = None
     ) -> bool:
         
         result = await self.robust_search(q=q, limit=1, timeout=timeout) #doesnt emit when searching 1 item
@@ -327,7 +345,7 @@ class YouTubeClient:
         id = result[0].id
         print(f"[DEBUG] Result: {result}, ID: {id}")
 
-        track = await self.download_by_id(id, timeout=timeout)
+        track = await self.download_by_id(id, timeout=timeout, custom_metadata=custom_metadata)
         print(f"[DEBUG] Track: {track}")
 
         return track

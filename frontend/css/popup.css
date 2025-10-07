@@ -71,6 +71,17 @@
     gap: var(--space-m);
 }
 
+/* no playlists available */
+.no-playlists-message {
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: none;
+    font: var(--p);
+    color: var(--text-3);
+}
+
 .playlist-selection-menu .playlist-option {
     display: flex;
     flex-direction: row;
@@ -95,8 +106,8 @@
 }
 
 
-/* edit track metadata */
-.edit-track-metadata-menu {
+/* edit track metadata and track creation import inputs */
+.multi-input-menu {
     display: flex;
     flex-direction: column;
 

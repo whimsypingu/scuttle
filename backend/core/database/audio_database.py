@@ -348,7 +348,7 @@ class AudioDatabase:
             }
             await self._emit_event(action=ADA.CREATE_PLAYLIST, payload={"content": content})
             
-            return 
+            return content
         
     async def get_all_playlists(self):
         async with self._lock:

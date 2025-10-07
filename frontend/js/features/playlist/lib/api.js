@@ -40,7 +40,7 @@ export async function getPlaylistContent(id) {
     return data;
 }
 
-export async function createPlaylist(tempId, name) {
-    const response = await postRequest(`/playlists/create`, { "temp_id": tempId, "name": name });
+export async function createPlaylist(tempId, name, importUrl) {
+    const response = await postRequest(`/playlists/create`, { "temp_id": tempId, "name": name, "import_url": importUrl });
     console.log("createPlaylist status:", response.status);
 }
