@@ -41,10 +41,15 @@ class DownloadWorker:
                     case _:
                         print(f"[WARN] Unknown DownloadJob type: {job.get_type()}")
                         continue
-                    
+
+                #client should return the classic Track metadata with {id, title, artist, dur} 
                 if track:
                     await self.audio_database.log_track(track)
                     await self.audio_database.log_download(track.id)
+
+                    #put into a playlist right away? in the case of importing a playlist then yes
+                    if job.get_updates():
+                        await self.audio_database.update_track_playlists(track.id, job.get_updates())
 
             except Exception as e:
                 print(f"[ERROR] DownloadWorker error ({e}) handling DownloadJob: {job}\n{traceback.format_exc()}")

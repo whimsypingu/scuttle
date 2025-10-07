@@ -5,6 +5,7 @@ from backend.core.models.track import Track
 class CreatePlaylistRequest(BaseModel):
     temp_id: str
     name: str
+    import_url: Optional[str]
 
 
 class PlaylistSelection(BaseModel):

@@ -136,22 +136,25 @@ export function showCreatePlaylistPopup() {
     });
 
     const saveButtonEl = newPopupEl.querySelector(".js-save");
-    saveButtonEl.addEventListener("click", () => {
+    saveButtonEl.addEventListener("click", async () => {
         const createPlaylistInputEl = newPopupEl.querySelector(".js-create-playlist-input");
+        const importPlaylistInputEl = newPopupEl.querySelector(".js-import-playlist-input");
 
-        onCreatePlaylist(customPlaylistEl, createPlaylistInputEl); //no await?
         hidePopup(popupOverlayEl);
+        await onCreatePlaylist(customPlaylistEl, createPlaylistInputEl, importPlaylistInputEl); //no await?
     })
 
     //show
     showPopup(popupOverlayEl);
 }
 
-async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl) {
+async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl, importPlaylistInputEl) {
     //if length of input > 0 then 
     // 1) update local playlists, 2) update visuals via playlistUI, 3) send rest call via playlistAPI.
-    //listen for websocket update.    
+    //listen for websocket update.
     const name = createPlaylistInputEl.value.trim(); //extract and only do stuff if greater than length 0
+    const importUrl = importPlaylistInputEl.value.trim();
+
     if (name.length > 0) {
         logDebug("create playlist triggered");
 
@@ -161,7 +164,8 @@ async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl) {
         const newCustomListEl = renderNewCustomPlaylist(customPlaylistEl, name, null, tempId);
         renderPlaylist(newCustomListEl, []);
 
-        await createPlaylist(tempId, name);
+        //backend call
+        await createPlaylist(tempId, name, importUrl);
     }
 }
 
