@@ -115,7 +115,7 @@ export function buildEditTrackPopup(playlists, track) {
 
     const playlistsHTML = playlists.length > 0
         ? playlists.map(pl => `
-            label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
+            <label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
                 <span class="checkbox"></span>
                 <p class="playlist-name">${pl.name}</p>
             </label>

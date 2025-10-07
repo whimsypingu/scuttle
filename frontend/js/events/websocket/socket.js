@@ -1,5 +1,7 @@
 //static/js/websocket/socket.js
 
+import { logDebug } from "../../utils/debug.js";
+
 let socket = null;
 
 const reconnectTimeout = 3000; //ms
@@ -8,8 +10,8 @@ export function initWebSocket() {
 
     //websocket failure ciould be that you have to pip install "uvicorn[standard]" for websocket support
 
-    if (socket) {
-        console.warn("WebSocket already initialized");
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        logDebug("[WARN] WebSocket already initialized");
         return socket;
     }
 
@@ -20,26 +22,36 @@ export function initWebSocket() {
     socket = new WebSocket(webSocketUrl); //ex. "ws://localhost:8000/websocket");
 
     socket.onopen = () => {
-        console.log("WebSocket connection established.");
+        logDebug("WebSocket connection established.");
     };
 
-    socket.onclose = () => {
-        console.warn("WebSocket connection closed.");
+    socket.onclose = (event) => {
+        logDebug("[WARN] WebSocket connection closed.", event.code, event.reason); //1006 on ios typically
         socket = null;
         setTimeout(initWebSocket, reconnectTimeout);
     };
 
     socket.onerror = (err) => {
-        console.error("WebSocket error:", err);
+        logDebug("[ERROR] WebSocket error:", err); //ios gives vague websocket failure
     };
 
     return socket;
 }
 
+export function destroyWebSocket() {
+    if (socket) {
+        logDebug("[INFO] Destroying WebSocket connection");
+        socket.onopen = socket.onclose = socket.onmessage = socket.onerror = null;
+        socket.close();
+        socket = null;
+    }
+}
+
+
 
 export function getWebSocket() {
     if (!socket) {
-        console.warn("WebSocket not initialized. Call initWebSocket() first.");
+        logDebug("[WARN] WebSocket not initialized. Call initWebSocket() first.");
     }
     return socket;
 }
