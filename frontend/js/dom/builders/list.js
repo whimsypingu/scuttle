@@ -51,10 +51,43 @@ export const queueActions = {
 }
 
 /**
- * Build a customizable <li> track list item with flexible swipe and action configurations.
+ * Build a customizable `<li>` track list item with flexible swipe and action configurations.
  *
+ * Each list item can include:
+ * - Optional numeric index (position in playlist)
+ * - Track info: title, artist, duration
+ * - Foreground with swipe-action areas on left and right
+ * - Dataset attributes for swipe actions to allow dynamic handling
  *
- * @returns {HTMLLIElement} A fully built <li> DOM node.
+ * @param {Object} track - Track data object.
+ * @param {string|number} track.id - Unique track identifier.
+ * @param {string} [track.title] - Track title (defaults to "Untitled").
+ * @param {string} [track.artist] - Track artist (defaults to "Unknown artist").
+ * @param {number} [track.duration] - Track duration in seconds.
+ *
+ * @param {Object} [options] - Optional customization.
+ * @param {number} [options.index] - Position in playlist (if specified, will display index number). Defaults to nothing
+ * @param {Object} [options.actions] - Swipe actions configuration (defaults to `queueActions`).
+ * @param {Object} [options.actions.left] - Left swipe action (primary). Object with `name` and `icon`.
+ * @param {Object} [options.actions.leftDeep] - Left swipe deep action (secondary). Object with `name` and `icon`.
+ * @param {Object} [options.actions.right] - Right swipe action (primary). Object with `name` and `icon`.
+ * @param {Object} [options.actions.rightDeep] - Right swipe deep action (secondary). Object with `name` and `icon`.
+ *
+ * @returns {HTMLLIElement} A fully built `<li>` DOM element ready to be inserted into a track list.
+ *
+ * @example
+ * const trackItem = buildTrackListItem(
+ *     { id: "abc123", title: "Song Title", artist: "Artist Name", duration: 245 },
+ *     { 
+ *         index: 0,
+ *         actions: {
+ *             left: { name: "queue", icon: "fa fa-plus-square" },
+ *             leftDeep: { name: "queueFirst", icon: "fa fa-plus-circle" },
+ *             right: { name: "like", icon: "fa fa-heart" },
+ *             rightDeep: { name: "more", icon: "fa fa-ellipsis-h" }
+ *         }
+ *     }
+ * );
  */
 export function buildTrackListItem(track, options = {}) {
     const {

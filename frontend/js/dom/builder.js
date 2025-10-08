@@ -21,58 +21,6 @@ export function createElem(tag, attrs = {}, children = []) {
 }
 
 
-export function buildTrackListItem(track, index) {
-    const li = document.createElement("li");
-    li.classList.add("list-track-item");
-
-    //store the trackId
-    li.dataset.trackId = track.id;
-        
-    //jesus apple is so FUCKING cringe for putting auto detect links and phone numbers
-    li.innerHTML = `
-        <div class="swipe-action left">
-            <i class="fa fa-plus-square"></i>
-        </div>
-
-        <div class="foreground">
-            <div class="position">
-                <a class="no-link" href="#"><p class="position-value">${index + 1}</p></a>
-            </div>
-            <div class="info">
-                <p class="title">${track.title || "Untitled"}</p>
-                <p class="artist">${track.artist || "Unknown artist"}</p>
-            </div>
-            <div class="duration">
-                <p class="duration-value">${formatTime(track.duration)}</p>
-            </div>
-        </div>
-
-        <div class="actions">
-            <button class="queue-button normal-button">
-                <i class="fa fa-plus-square"></i>
-            </button>
-            <button class="more-button normal-button">
-                <i class="fa fa-cog"></i>
-            </button>
-        </div>
-
-        <div class="swipe-action right">
-            <i class="fa fa-heart"></i>
-        </div>
-    `;
-    return li;
-}
-
-export function buildTrackListEmptyItem() {
-    const li = document.createElement("li");
-    li.classList.add("list-track-empty-item");
-        
-    li.innerHTML = `
-        <p>No tracks available</p>
-    `;
-    return li;
-}
-
 
 
 export function buildCreatePlaylistPopup() {

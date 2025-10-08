@@ -3,11 +3,12 @@
 import { PlaylistStore } from "../../../cache/PlaylistStore.js";
 import { buildNewPlaylist } from "../../../dom/builder.js";
 import { 
-    //buildTrackListItem, 
-    buildTrackListEmptyItem 
+    buildTrackListItem, 
+    buildTrackListEmptyItem, 
+    
+    defaultActions
 } from "../../../dom/index.js";
 
-import { buildTrackListItem } from "../../../dom/builders/list.js";
 
 
 //adds a new empty playlist element inside the custom playlists section
@@ -50,8 +51,9 @@ export function renderPlaylist(listEl, tracks) { //rename to renderList
     //build rows
     tracks.forEach((track, index) => {
         const options = {
-            index: index
-        }
+            index: index,
+            actions: defaultActions,
+        };
         const item = buildTrackListItem(track, options);
         listEl.appendChild(item);
     });
