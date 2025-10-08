@@ -199,6 +199,10 @@ body.mobile #play-pause-button i.fa-pause {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+#loop-button #loop-icon {
+    display: inline-block;
+    transform-origin: center;
+}
 #loop-button.spin-once #loop-icon {
     animation: spin360 0.5s ease forwards;
 }

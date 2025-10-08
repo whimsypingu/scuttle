@@ -57,8 +57,6 @@ export async function onAudioEnded() {
         logDebug("POPPED TRACK:", poppedTrackId);
         if (isLoopAll()) {
             QueueStore.push(poppedTrackId);
-            renderQueue();
-            await queuePushTrack(poppedTrackId); //backend
         }
 
         const track = QueueStore.peekTrack();
@@ -88,6 +86,9 @@ export async function onAudioEnded() {
         await playLoadedTrack();
 
         //7. send changes to server (returns websocket message to sync ui)
+        if (isLoopAll()) {
+            await queuePushTrack(poppedTrackId); //backend
+        }
         await queuePopTrack();
     } catch (err) {
         logDebug("[onAudioEnded] Failed to play audio:", err);
