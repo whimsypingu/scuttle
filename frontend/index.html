@@ -87,13 +87,18 @@
                 
             </div>
 
-            <div id="playlists">
-                <!-- search dropdown menu absolutely positioned inside the playlists body -->
+
+            <div id="playlists-dropdown-container">
+                <!-- search dropdown menu absolutely positioned inside the container -->
                 <div id="search-dropdown" class="hidden">
-                    <ul id="live-search-results" class="list-track">
-                    </ul>
+
+                    <div id="search-dropdown-content">
+                        <ul id="search-list" class="list-track">
+                        </ul>
+                    </div>
                 </div>
 
+            <div id="playlists">
 
                 <div id="library" data-id="library" class="playlist">
                     <div class="list-header">
@@ -142,6 +147,7 @@
                         <i class="fa fa-plus"></i>
                     </button>
                 </div>
+            </div>
             </div>
         </div>
 

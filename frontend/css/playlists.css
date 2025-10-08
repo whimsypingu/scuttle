@@ -1,3 +1,12 @@
+#playlists-dropdown-container {
+    position: relative;
+    height: auto;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
 #playlists {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* smooth scroll for iOS */

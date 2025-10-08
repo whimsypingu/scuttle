@@ -17,7 +17,8 @@ export const SELECTORS = {
 			SEARCH_GET_RESULTS_BUTTON: "search-get-results-button",
 			SEARCH_AND_DOWNLOAD_BUTTON: "search-and-download-button",
 
-			DROPDOWN: "search-dropdown"
+			DROPDOWN: "search-dropdown",
+			LIST: "search-list"
 		},
 		classes: {
 			SEARCH_BUTTON: "search-button",
@@ -179,7 +180,8 @@ export const searchDomEls = {
 	deepSearchButtonEl: $(SELECTORS.search.ids.SEARCH_GET_RESULTS_BUTTON),
 	downloadSearchButtonEl: $(SELECTORS.search.ids.SEARCH_AND_DOWNLOAD_BUTTON),
 
-	searchDropdownEl: $(SELECTORS.search.ids.DROPDOWN)
+	searchDropdownEl: $(SELECTORS.search.ids.DROPDOWN),
+	searchListEl: $(SELECTORS.search.ids.LIST)
 };
 
 export const popupDomEls = {
