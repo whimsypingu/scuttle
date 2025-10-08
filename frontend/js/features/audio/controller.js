@@ -1,7 +1,8 @@
 //static/js/features/audio/controller.js
 
 import { 
-    queuePopTrack 
+    queuePopTrack,
+    queuePushTrack
 } from "../queue/index.js";
 
 import { 
@@ -15,10 +16,20 @@ import {
     syncCurrentTimeDisplay, 
     updatePlayPauseButtonDisplay, 
     setProgressBar,
-    syncProgressBar, 
+    syncProgressBar,
+    
+    setAudioTime,
 
     updateMediaSession,
-    resetUI
+    resetUI,
+
+    isLoopNone,
+    isLoopAll,
+    isLoopOne,
+    toggleLoopMode,
+
+    spinLoopButton,
+    setLoopButton
 } from "./index.js";
 
 import { renderQueue } from "../queue/index.js";
@@ -32,9 +43,22 @@ import { getPlayerEl, setIosPlaybackInterrupt } from "./lib/streamTrick.js";
 //autoplay
 export async function onAudioEnded() {
     try {
+        //if looping one song on repeat, just restart current track
+        if (isLoopOne()) {
+            setAudioTime(0);
+            await playLoadedTrack();
+            return;
+        }
+
+
         //instantaneously update everything, and then send the update to the backend
         //1. make changes to local , which will trigger queue ui update
-        QueueStore.pop();
+        const poppedTrackId = QueueStore.pop();
+        logDebug("POPPED TRACK:", poppedTrackId);
+        if (isLoopAll()) {
+            QueueStore.push(poppedTrackId);
+        }
+
         const track = QueueStore.peekTrack();
         logDebug("Next track:", track);
 
@@ -62,6 +86,9 @@ export async function onAudioEnded() {
         await playLoadedTrack();
 
         //7. send changes to server (returns websocket message to sync ui)
+        if (isLoopAll()) {
+            await queuePushTrack(poppedTrackId); //backend
+        }
         await queuePopTrack();
     } catch (err) {
         logDebug("[onAudioEnded] Failed to play audio:", err);
@@ -137,13 +164,20 @@ export async function onPlayPauseButtonClick() {
 
 //previous --gonna become a mess when previous track is allowed
 export function onPreviousButtonClick() {
-    const playerEl = getPlayerEl();
-
-    playerEl.currentTime = 0;
-    syncCurrentTimeDisplay();
-    syncProgressBar();
+    setAudioTime(0);
+    return;
 }
 
+
+
+//looping
+export function onLoopButtonClick() {
+    const { looping, one} = toggleLoopMode();
+
+    spinLoopButton();
+
+    setLoopButton(looping, one);
+}
 
 
 //suspended
@@ -206,10 +240,11 @@ export function commitScrubSeek() {
     const playerEl = getPlayerEl();
 
     const seekTime = (progBarEl.value / 100) * playerEl.duration;
-    playerEl.currentTime = seekTime; //set and sync
-    syncCurrentTimeDisplay();
-    syncProgressBar();
+
+    setAudioTime(seekTime);
 
     isSeeking = false;
 }
+
+
 

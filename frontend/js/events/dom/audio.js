@@ -10,6 +10,8 @@ import {
     onPlayPauseButtonClick, 
     onPreviousButtonClick,
     
+    onLoopButtonClick,
+
     startScrubSeek,
     inputScrubSeek,
     commitScrubSeek,
@@ -25,6 +27,8 @@ export function setupAudioEventListeners() {
     domEls.nextButtonEl.addEventListener("click", () => onNextButtonClick());
     domEls.ppButtonEl.addEventListener("click", () => onPlayPauseButtonClick());
     domEls.prevButtonEl.addEventListener("click", () => onPreviousButtonClick());
+
+    domEls.loopButtonEl.addEventListener("click", () => onLoopButtonClick());
 
     //scrubber logic
     domEls.progBarEl.addEventListener("pointerdown", () => startScrubSeek());

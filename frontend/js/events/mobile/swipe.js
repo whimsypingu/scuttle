@@ -1,34 +1,233 @@
 import { 
     onSwipe
 } from "../../features/playlist/controller.js";
+import { logDebug } from "../../utils/debug.js";
 
 
-
+// -------------------------------------------------
+// State variables
+// -------------------------------------------------
 let startX = 0;
 let deltaX = 0;
+
+//these get set based on the element
 let maxSwipe = null;
 let flipThreshold1 = null;
 let flipThreshold2 = null;
 
 let startY = 0;
 let deltaY = 0;
-let verticalThreshold = null;
 
-let isSwiping = false;
-let swipeDirection = null; // "left" "right" null
+const SWIPE_LOCK_THRESHOLD = 30; //px before committing to horizontal swipe animation
+const SWIPE_VERTICAL_CANCEL_THRESHOLD = 50; //px before canceling due to vertical swipe
+
+//contains the current element being swiped on
 let activeEl = null;
 
-//handles the state of mobile swipeable actions states
-//consider some kind of action handler that determines inner icon and color
-function setSwipeTheme(el, absX, theme1, theme2) {
-    if (absX > flipThreshold2) {
+// "left" | "right" | null
+// this variable is kind ofa T/F lock on swiping or not
+// holds the direction of the swipe
+let swipeDirection = null; 
+
+// upon a valid swipe being started, this is how much the actual swipe has moved
+let trueAbsSwipeDist = null;
+
+
+// -------------------------------------------------
+// Helpers
+// -------------------------------------------------
+
+/**
+ * Apply swipe theme (background color/icon state) based on swipe distance.
+ * @param {HTMLElement} el - The swipe action element.
+ * @param {number} swipeDist - Absolute horizontal distance of the swipe.
+ * @param {string} theme1 - Theme for "primary" swipe threshold.
+ * @param {string} theme2 - Theme for "secondary" (deeper) swipe threshold.
+ */
+function setSwipeTheme(el, swipeDist, theme1, icon1, theme2, icon2) {
+    const iconEl = el.querySelector("i");
+    if (swipeDist >= flipThreshold2) {
         el.dataset.swipeTheme = theme2;
-    } else if (absX > flipThreshold1) {
+        iconEl.className = icon2;
+    } else if (swipeDist >= flipThreshold1) {
         el.dataset.swipeTheme = theme1;
+        iconEl.className = icon1;
     } else {
         delete el.dataset.swipeTheme;
+        iconEl.className = icon1;
     }
 }
+
+/**
+ * Update swipe background visuals (the "revealed" action area behind the item).
+ * Requires activeEl to be set.
+ * @param {"left"|"right"} side - Which side to reveal.
+ * @param {number} swipeDist - How much to reveal.
+ */
+function updateSwipeBackground(side, swipeDist) {
+    const foreground = activeEl.querySelector(".foreground");
+    const marginOffset = "var(--space-xxl)";
+
+    let el = null;
+
+    //swiping to the right reveals the left, while below this is swiping to the left which reveals the right
+    if (side === "left") {
+        el = activeEl.querySelector(".swipe-action.left");
+
+        foreground.style.transform =
+            swipeDist > 0 ? `translateX(calc(${swipeDist}px + ${marginOffset}))` : "translateX(0)";
+
+        //color
+        setSwipeTheme(el, swipeDist, "green1", "fa fa-plus-square", "tan1", "fa fa-plus-circle");
+    } else {
+        el = activeEl.querySelector(".swipe-action.right");
+
+        foreground.style.transform =
+            swipeDist > 0 ? `translateX(calc(-${swipeDist}px - ${marginOffset}))` : "translateX(0)";
+
+        //color
+        setSwipeTheme(el, swipeDist, "green1", "fa fa-heart", "red1", "fa fa-ellipsis-h");
+    }
+
+    el.style.width = `${swipeDist}px`;
+    el.style.opacity = swipeDist > 0 ? "1" : "0";
+}
+
+
+/**
+ * Reset swipe visual state.
+ */
+function resetSwipeVisuals() {
+    if (!activeEl) return;
+    updateSwipeBackground("left", 0);
+    updateSwipeBackground("right", 0);
+    activeEl.classList.remove("swiping");
+}
+
+
+/**
+ * Fully reset swipe interaction state.
+ */
+function resetSwipeState() {
+    resetSwipeVisuals();
+
+    swipeDirection = null;
+    activeEl = null;
+    startX = startY = deltaX = deltaY = 0;
+    maxSwipe = flipThreshold1 = flipThreshold2 = 0;
+    trueAbsSwipeDist = null;
+}
+
+
+// --------------------
+// Event Handlers
+// --------------------
+
+export function setupSwipeEventListeners() {
+    // Touch start
+    document.addEventListener("touchstart", e => {
+        const target = e.target.closest(".list-track-item");
+        if (!target) return;
+
+        activeEl = target;
+
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+
+        maxSwipe = activeEl.offsetWidth * 0.6;
+        flipThreshold1 = maxSwipe * 0.4;
+        flipThreshold2 = maxSwipe * 0.8;
+
+        swipeDirection = null;
+        activeEl.classList.add("swiping");
+    });
+
+    // Touch move
+    document.addEventListener("touchmove", e => {
+        if (!activeEl) return;
+
+        deltaX = e.touches[0].clientX - startX;
+        deltaY = e.touches[0].clientY - startY;
+
+        // Cancel swipe if vertical motion dominates
+        if (Math.abs(deltaY) > SWIPE_VERTICAL_CANCEL_THRESHOLD) {
+            resetSwipeState();
+            return;
+        }
+
+        // Lock direction only after horizontal threshold is exceeded
+        if (Math.abs(deltaX) > SWIPE_LOCK_THRESHOLD) {
+            //logDebug("swipeDirection:", swipeDirection);
+
+            swipeDirection = deltaX > 0 ? "right" : "left";
+
+            e.preventDefault(); //prevent background scroll if there is any
+        } else {
+            //logDebug("swipeDirection: null");
+
+            swipeDirection = null;
+            updateSwipeBackground("left", 0);
+            updateSwipeBackground("right", 0);
+            return;
+        }
+
+        // Animate background only after direction is locked
+        trueAbsSwipeDist = Math.min(Math.max(Math.abs(deltaX) - SWIPE_LOCK_THRESHOLD, 0), maxSwipe);
+
+        if (swipeDirection === "right") {
+            updateSwipeBackground("left", trueAbsSwipeDist);
+        } else {
+            updateSwipeBackground("right", trueAbsSwipeDist);
+        }
+    });
+
+    // Touch end
+    document.addEventListener("touchend", () => {
+        if (!activeEl) return;
+
+        // Cancel if swipe direction wasn't locked or swipe is too short
+        if (!swipeDirection) {
+            resetSwipeState();
+            return;
+        }
+
+        const isSecondary = trueAbsSwipeDist >= flipThreshold2;
+        const isPrimary = trueAbsSwipeDist >= flipThreshold1;
+
+        if (swipeDirection === "right") {
+            if (isSecondary) {
+                logDebug("SWIPE SECONDARY ACTION RIGHT");
+            } else if (isPrimary) {
+                logDebug("SWIPE PRIMARY ACTION RIGHT");
+                onSwipe(activeEl.dataset, "queue");
+            }
+        } else {
+            if (isSecondary) {
+                logDebug("SWIPE SECONDARY ACTION LEFT");
+                onSwipe(activeEl.dataset, "more");
+            } else if (isPrimary) {
+                logDebug("SWIPE PRIMARY ACTION LEFT");
+                onSwipe(activeEl.dataset, "like");
+            }
+        }
+
+        resetSwipeState();
+    }, { passive: false });
+
+    console.log("Swipe listener active");
+}
+
+
+
+
+
+
+
+
+
+
+/*
+
 function setBg(side, opacity = "0", absX = 0) {
     let el = null;
     const foreground = activeEl.querySelector(".foreground");
@@ -103,7 +302,7 @@ export function setupSwipeEventListeners() {
         }
 
         //lock direction on first significant movement
-        if (!swipeDirection && Math.abs(deltaX) > 5) {
+        if (!swipeDirection && Math.abs(deltaX) > swipeLockThreshold) {
             swipeDirection = deltaX > 0 ? "right" : "left";
         }
 
@@ -160,3 +359,4 @@ export function setupSwipeEventListeners() {
 
     console.log("Swipe listener active");
 }
+*/

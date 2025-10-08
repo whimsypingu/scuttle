@@ -135,6 +135,13 @@ a, button {
     outline: none;
 }
 
+/* prevent apple autodetect links */
+a.no-link {
+    text-decoration: none;
+    pointer-events: none;
+    cursor: default;
+}
+
 /* Optional: remove long-press callout on images/links */
 img, a {
     -webkit-touch-callout: none;

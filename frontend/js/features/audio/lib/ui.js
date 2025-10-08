@@ -18,7 +18,7 @@ export function syncCurrentTimeDisplay(currTimeEl, playerEl) {
 
 //duration
 export function setDurationDisplay(durationEl, value) {
-    durationEl.textContent = formatTime(value);
+    durationEl.textContent = formatTime(value, false);
 }
 export function syncDurationDisplay(durationEl, playerEl) {
     const duration = isNaN(playerEl.duration) ? 0 : playerEl.duration;
@@ -50,7 +50,7 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
 
     if (!icon) return;
 
-    icon.className = isPlaying ? "fa fa-pause" : "fa fa-play";
+    icon.className = isPlaying ? "fa fa-pause fa-2x" : "fa fa-play fa-2x";
 
     //sync media session api
     if ("mediaSession" in navigator) {
@@ -88,4 +88,29 @@ export function updateMediaSession(track, isPlaying) {
             playing: isPlaying
         }
     }));
+}
+
+
+
+//toggle loop mode button
+export function spinLoopButton(loopButtonEl) {
+    loopButtonEl.classList.remove("spin-once");
+    void loopButtonEl.offsetWidth; //force reflow
+    loopButtonEl.classList.add("spin-once"); //trigger animation
+}
+
+export function setLoopButton(loopButtonEl, looping=false, one=false) {
+    //any loop (coloring)
+    if (looping) {
+        loopButtonEl.classList.add("looping");
+    } else {
+        loopButtonEl.classList.remove("looping");
+    }
+
+    //loop one only
+    if (one) {
+        loopButtonEl.classList.add("one");
+    } else {
+        loopButtonEl.classList.remove("one");
+    }
 }

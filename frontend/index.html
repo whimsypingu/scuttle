@@ -3,6 +3,8 @@
 <head>
 	<meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no"> <!--ts do not work-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 	<title>Scuttle</title>
 
@@ -186,16 +188,25 @@
                 </div>
 
                 <div id="playback-buttons">
+                    <button id="shuffle-button" class="normal-button playback-button" title="Shuffle">
+                        <i class="fa fa-random fa-lg"></i>
+                    </button>
+
                     <button id="previous-button" class="normal-button playback-button" title="Previous">
-                        <i class="fa fa-backward"></i>
+                        <i class="fa fa-backward fa-2x"></i>
                     </button>
 
                     <button id="play-pause-button" class="normal-button playback-button" title="Play/Pause">
-                        <i class="fa fa-play"></i>
+                        <i class="fa fa-play fa-2x"></i>
                     </button>
                         
                     <button id="next-button" class="normal-button playback-button" title="Next">
-                        <i class="fa fa-forward"></i>
+                        <i class="fa fa-forward fa-2x"></i>
+                    </button>
+
+                    <button id="loop-button" class="normal-button playback-button" title="Loop">
+                        <i id="loop-icon" class="fa fa-refresh fa-lg"></i>
+                        <i id="loop-one-icon" class="fa fa-bookmark"></i>
                     </button>
                 </div>                 
             </div>
