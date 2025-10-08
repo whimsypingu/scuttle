@@ -12,8 +12,8 @@ let deltaX = 0;
 
 //these get set based on the element
 let maxSwipe = null;
-let flipThreshold1 = null;
-let flipThreshold2 = null;
+let normalThreshold = null;
+let deepThreshold = null;
 
 let startY = 0;
 let deltaY = 0;
@@ -37,26 +37,70 @@ let trueAbsSwipeDist = null;
 // Helpers
 // -------------------------------------------------
 
-/**
- * Apply swipe theme (background color/icon state) based on swipe distance.
- * @param {HTMLElement} el - The swipe action element.
- * @param {number} swipeDist - Absolute horizontal distance of the swipe.
- * @param {string} theme1 - Theme for "primary" swipe threshold.
- * @param {string} theme2 - Theme for "secondary" (deeper) swipe threshold.
- */
-function setSwipeTheme(el, swipeDist, theme1, icon1, theme2, icon2) {
-    const iconEl = el.querySelector("i");
-    if (swipeDist >= flipThreshold2) {
-        el.dataset.swipeTheme = theme2;
-        iconEl.className = icon2;
-    } else if (swipeDist >= flipThreshold1) {
-        el.dataset.swipeTheme = theme1;
-        iconEl.className = icon1;
-    } else {
-        delete el.dataset.swipeTheme;
-        iconEl.className = icon1;
+const iconMapping = {
+    queue: {
+        icon: "fa fa-plus-square",
+        theme: "theme-queue",
+    },
+    queueFirst: {
+        icon: "fa fa-plus-circle",
+        theme: "theme-queue-first",
+    },
+    like: {
+        icon: "fa fa-heart",
+        theme: "theme-like",
+    },
+    more: {
+        icon: "fa fa-ellipsis-h",
+        theme: "theme-more",
     }
 }
+function getActionIconAndTheme(actionName) {
+    return iconMapping[actionName] || { 
+        icon: "fa fa-question",
+        theme: "theme-unknown",
+    };
+}
+
+/**
+ * Apply swipe theme (background color/icon state) based on swipe distance.
+ * @param {HTMLElement} el - The .swipe-action element.
+ * @param {number} swipeDist - Absolute horizontal distance of the swipe.
+ */
+function setSwipeTheme(el, swipeDist, normalAction, deepAction = null) {
+    const iconEl = el.querySelector("i");
+
+    const useDeep = deepAction && swipeDist >= deepThreshold;
+    const useNormal = swipeDist >= normalThreshold;
+
+    const action = useDeep ? deepAction : (useNormal ? normalAction : null);
+
+    if (action) {
+        const { icon, theme } = getActionIconAndTheme(action);
+        el.dataset.swipeTheme = theme;
+        iconEl.className = icon;
+    } else {
+        delete el.dataset.swipeTheme;
+        const { icon } = getActionIconAndTheme(normalAction);
+        iconEl.className = icon;
+    }
+}
+
+function getSwipeActionName(el, swipeDir, isNormal, isDeep) {
+    if (!isNormal) {
+        return null;
+    }
+
+    const deepKey = `${swipeDir}Deep`;
+    const normalKey = swipeDir;
+
+    if (isDeep && el.dataset[deepKey]) {
+        return el.dataset[deepKey];
+    }
+    return el.dataset[normalKey] || null;
+}
+
+
 
 /**
  * Update swipe background visuals (the "revealed" action area behind the item).
@@ -64,30 +108,34 @@ function setSwipeTheme(el, swipeDist, theme1, icon1, theme2, icon2) {
  * @param {"left"|"right"} side - Which side to reveal.
  * @param {number} swipeDist - How much to reveal.
  */
-function updateSwipeBackground(side, swipeDist) {
+function updateSwipeBackground(swipeDir, swipeDist) {
+    if (!activeEl) return;
+
     const foreground = activeEl.querySelector(".foreground");
-    const marginOffset = "var(--space-xxl)";
+    const marginOffset = "var(--space-xxl)"; //does this return ##px?
 
-    let el = null;
-
-    //swiping to the right reveals the left, while below this is swiping to the left which reveals the right
-    if (side === "left") {
-        el = activeEl.querySelector(".swipe-action.left");
-
-        foreground.style.transform =
-            swipeDist > 0 ? `translateX(calc(${swipeDist}px + ${marginOffset}))` : "translateX(0)";
-
-        //color
-        setSwipeTheme(el, swipeDist, "green1", "fa fa-plus-square", "tan1", "fa fa-plus-circle");
-    } else {
-        el = activeEl.querySelector(".swipe-action.right");
-
-        foreground.style.transform =
-            swipeDist > 0 ? `translateX(calc(-${swipeDist}px - ${marginOffset}))` : "translateX(0)";
-
-        //color
-        setSwipeTheme(el, swipeDist, "green1", "fa fa-heart", "red1", "fa fa-ellipsis-h");
+    //swipe direction
+    const config = {
+        right: {
+            el: ".swipe-action.right", //right swipe => reveal left side, which is labeled as right
+            transform: dist => `translateX(calc(${dist}px + ${marginOffset}))`,
+            normalAction: activeEl.dataset.right,
+            deepAction: activeEl.dataset.rightDeep,
+        },
+        left: {
+            el: ".swipe-action.left",
+            transform: dist => `translateX(calc(-${dist}px - ${marginOffset}))`,
+            normalAction: activeEl.dataset.left,
+            deepAction: activeEl.dataset.leftDeep,
+        },
     }
+    
+    const c = config[swipeDir];
+    const el = activeEl.querySelector(c.el);
+
+    foreground.style.transform = swipeDist > 0 ? c.transform(swipeDist) : "translateX(0)";
+    
+    setSwipeTheme(el, swipeDist, c.normalAction, c.deepAction);
 
     el.style.width = `${swipeDist}px`;
     el.style.opacity = swipeDist > 0 ? "1" : "0";
@@ -114,7 +162,7 @@ function resetSwipeState() {
     swipeDirection = null;
     activeEl = null;
     startX = startY = deltaX = deltaY = 0;
-    maxSwipe = flipThreshold1 = flipThreshold2 = 0;
+    maxSwipe = normalThreshold = deepThreshold = 0;
     trueAbsSwipeDist = null;
 }
 
@@ -135,8 +183,8 @@ export function setupSwipeEventListeners() {
         startY = e.touches[0].clientY;
 
         maxSwipe = activeEl.offsetWidth * 0.6;
-        flipThreshold1 = maxSwipe * 0.4;
-        flipThreshold2 = maxSwipe * 0.8;
+        normalThreshold = maxSwipe * 0.4;
+        deepThreshold = maxSwipe * 0.8;
 
         swipeDirection = null;
         activeEl.classList.add("swiping");
@@ -174,11 +222,7 @@ export function setupSwipeEventListeners() {
         // Animate background only after direction is locked
         trueAbsSwipeDist = Math.min(Math.max(Math.abs(deltaX) - SWIPE_LOCK_THRESHOLD, 0), maxSwipe);
 
-        if (swipeDirection === "right") {
-            updateSwipeBackground("left", trueAbsSwipeDist);
-        } else {
-            updateSwipeBackground("right", trueAbsSwipeDist);
-        }
+        updateSwipeBackground(swipeDirection, trueAbsSwipeDist);
     });
 
     // Touch end
@@ -191,25 +235,16 @@ export function setupSwipeEventListeners() {
             return;
         }
 
-        const isSecondary = trueAbsSwipeDist >= flipThreshold2;
-        const isPrimary = trueAbsSwipeDist >= flipThreshold1;
+        const isDeep = trueAbsSwipeDist >= deepThreshold;
+        const isNormal = trueAbsSwipeDist >= normalThreshold;
 
-        if (swipeDirection === "right") {
-            if (isSecondary) {
-                logDebug("SWIPE SECONDARY ACTION RIGHT");
-            } else if (isPrimary) {
-                logDebug("SWIPE PRIMARY ACTION RIGHT");
-                onSwipe(activeEl.dataset, "queue");
-            }
-        } else {
-            if (isSecondary) {
-                logDebug("SWIPE SECONDARY ACTION LEFT");
-                onSwipe(activeEl.dataset, "more");
-            } else if (isPrimary) {
-                logDebug("SWIPE PRIMARY ACTION LEFT");
-                onSwipe(activeEl.dataset, "like");
-            }
+        const actionName = getSwipeActionName(activeEl, swipeDirection, isNormal, isDeep);
+        if (actionName) {
+            onSwipe(activeEl.dataset.trackId, actionName);
+
+            logDebug("actionName:", actionName);
         }
+
 
         resetSwipeState();
     }, { passive: false });

@@ -20,6 +20,7 @@ export function createElem(tag, attrs = {}, children = []) {
     return el;
 }
 
+
 export function buildTrackListItem(track, index) {
     const li = document.createElement("li");
     li.classList.add("list-track-item");
