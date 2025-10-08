@@ -24,7 +24,7 @@ export const defaultActions = {
 };
 
 
-const minimalActions = {
+export const minimalActions = {
     right: {
         name: "queue",
         icon: "fa fa-plus-square"
@@ -35,6 +35,21 @@ const minimalActions = {
     }
 };
 
+export const queueActions = {
+    right: {
+        name: "queue",
+        icon: "fa fa-plus-square"
+    },
+    rightDeep: {
+        name: "queueFirst",
+        icon: "fa fa-plus-circle",
+    },
+    left: {
+        name: "remove",
+        icon: "fa fa-trash"
+    }
+}
+
 /**
  * Build a customizable <li> track list item with flexible swipe and action configurations.
  *
@@ -44,7 +59,7 @@ const minimalActions = {
 export function buildTrackListItem(track, options = {}) {
     const {
         index = null,
-        actions = defaultActions,
+        actions = queueActions,
     } = options;
 
     const li = document.createElement("li");
