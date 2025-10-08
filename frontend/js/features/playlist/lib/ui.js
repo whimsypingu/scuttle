@@ -5,8 +5,8 @@ import { buildNewPlaylist } from "../../../dom/builder.js";
 import { 
     buildTrackListItem, 
     buildTrackListEmptyItem, 
-    
-    defaultActions
+
+    DEFAULT_ACTIONS
 } from "../../../dom/index.js";
 
 
@@ -52,7 +52,7 @@ export function renderPlaylist(listEl, tracks) { //rename to renderList
     tracks.forEach((track, index) => {
         const options = {
             index: index,
-            actions: defaultActions,
+            actions: DEFAULT_ACTIONS,
         };
         const item = buildTrackListItem(track, options);
         listEl.appendChild(item);

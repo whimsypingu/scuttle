@@ -4,7 +4,7 @@ import {
     buildTrackListItem, 
     buildTrackListEmptyItem, 
 
-    queueActions
+    QUEUE_ACTIONS
 } from "../../../dom/index.js";
 
 
@@ -35,7 +35,7 @@ export function renderQueueList(queueListEl, tracks) {
     tracks.forEach((track, index) => {
         const options = {
             index: index,
-            actions: queueActions
+            actions: QUEUE_ACTIONS
         };
         const item = buildTrackListItem(track, options);
         queueListEl.appendChild(item);

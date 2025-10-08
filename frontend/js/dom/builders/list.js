@@ -4,7 +4,7 @@ import { formatTime } from "../../utils/index.js";
  * Default actions set — used if none is provided.
  * This represents the full 4-action layout.
  */
-export const defaultActions = {
+export const DEFAULT_ACTIONS = Object.freeze({
     right: {
         name: "queue",
         icon: "fa fa-plus-square"
@@ -21,10 +21,10 @@ export const defaultActions = {
         name: "more",
         icon: "fa fa-ellipsis-h"
     }
-};
+});
 
 
-export const minimalActions = {
+export const MINIMAL_ACTIONS = Object.freeze({
     right: {
         name: "queue",
         icon: "fa fa-plus-square"
@@ -33,9 +33,9 @@ export const minimalActions = {
         name: "like",
         icon: "fa fa-heart"
     }
-};
+});
 
-export const queueActions = {
+export const QUEUE_ACTIONS = Object.freeze({
     right: {
         name: "queue",
         icon: "fa fa-plus-square"
@@ -48,7 +48,7 @@ export const queueActions = {
         name: "remove",
         icon: "fa fa-trash"
     }
-}
+});
 
 /**
  * Build a customizable `<li>` track list item with flexible swipe and action configurations.

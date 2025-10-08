@@ -4,8 +4,8 @@ export {
     buildTrackListItem, 
     buildTrackListEmptyItem,
 
-    defaultActions,
-    minimalActions,
-    queueActions,
+    DEFAULT_ACTIONS,
+    MINIMAL_ACTIONS,
+    QUEUE_ACTIONS,
 } from "./builders/list.js";
 export { collapsedHeight } from "./collapsedHeight.js";
