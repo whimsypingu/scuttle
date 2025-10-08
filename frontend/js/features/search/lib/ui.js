@@ -7,7 +7,7 @@ export function hideDropdown(searchDropdownEl) {
 }
 
 
-let clearInput = false;
+let clearInput = false; //handles clearing input
 
 export function setClearInput(status) {
     clearInput = status;
@@ -17,7 +17,7 @@ export function focusSearchInput(searchInputEl) {
     if (clearInput) {
         searchInputEl.value = "";
     }
-    searchInputEl.focus(); //probably redundant
+    searchInputEl.focus(); //required now to trigger the focus
 }
 
 export function unfocusSearchInput(searchInputEl) {
