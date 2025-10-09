@@ -268,6 +268,19 @@ async function onClickQueueFrontButton(dataset) {
 import { domEls } from "../../dom/selectors.js";
 const { likedListEl } = domEls;
 
+/**
+ * Handle swipe actions on track list items.
+ *
+ * Depending on the `actionName`, this function performs different queue or like actions:
+ * - `"queue"`: Push the track to the end of the queue (frontend + backend).
+ * - `"queueFirst"`: Push the track to the **front** of the queue (i.e., play next).
+ * - `"like"`: Toggle like/unlike state for the track (frontend + backend).
+ * - `"more"`: Show the edit popup for the track.
+ * - `"remove"`: Remove the track from the queue at a specific index.
+ *
+ * @param {DOMStringMap} dataset - The `data-*` attributes of the swiped element. Should include `trackId` and optionally `index`.
+ * @param {string} actionName - The name of the action to perform (e.g. `"queue"`, `"like"`, `"remove"`).
+ */
 export async function onSwipe(dataset, actionName) {
     const trackId = dataset.trackId;
 
@@ -288,9 +301,9 @@ export async function onSwipe(dataset, actionName) {
 
     switch (actionName) {
         case "queue":
+            // Add to end of the queue (frontend first for snappy UI)
             QueueStore.push(trackId);
             renderQueue();
-            
             showToast(`Queued`); //optionally include track.title but should probably prevent js injection
 
             try {
@@ -301,9 +314,9 @@ export async function onSwipe(dataset, actionName) {
             break;
 
         case "queueFirst":
+            // Insert track at the front of the queue (to be played next)
             QueueStore.pushFront(trackId);
             renderQueue();
-
             showToast(`Next`);
 
             try {
@@ -314,9 +327,9 @@ export async function onSwipe(dataset, actionName) {
             break;
 
         case "like":
+            // Toggle like state locally and update the playlist UI
             const liked = LikeStore.toggle(trackId);
             renderPlaylist(likedListEl, LikeStore.getTracks());
-
             showToast(liked ? "Liked" : "Unliked");
 
             try {
@@ -327,6 +340,7 @@ export async function onSwipe(dataset, actionName) {
             break;
 
         case "more":
+            // Open track edit popup
             try {
                 showEditTrackPopup(trackId);
             } catch (err) {
@@ -335,13 +349,16 @@ export async function onSwipe(dataset, actionName) {
             break;
 
         case "remove": 
-            //either way, all infrastructure should be able to safely handle invalid (-1) indices
-            //-1 => untracked, 0 => currently playing, 1+ => in queue (renderQueue should handle this correctly)
-            //this is for removing from queue only, see frontend/js/dom/builders/list.js
+            /**
+             * Remove a track from the queue at the given index.
+             * - index -1: untracked (should be handled gracefully (by frontend QueueStore and backend ObservableQueue)
+             * - index 0: currently playing track (renderQueue should handle true QueueStore index assignment correctly)
+             * - index 1+: in queue
+             */
             const index = dataset.index;
             const removedId = QueueStore.removeAt(trackId, index);
 
-            logDebug(`[remove] track name: ${track.title}, index: ${index}, trackId: ${trackId}, removedId: ${removedId}`);
+            //logDebug(`[remove] track name: ${track.title}, index: ${index}, trackId: ${trackId}, removedId: ${removedId}`);
 
             if (removedId) {
                 renderQueue();
@@ -349,7 +366,7 @@ export async function onSwipe(dataset, actionName) {
                 showToast(`Removed`);
 
                 try {
-                    await queueRemoveTrack(trackId, index);
+                    await queueRemoveTrack(trackId, index); //backend sync
                 } catch (err) {
                     logDebug("Remove failed", err);
                 }
