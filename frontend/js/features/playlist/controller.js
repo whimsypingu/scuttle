@@ -10,8 +10,7 @@ import {
     updatePlayPauseButtonDisplay,
 
     resetUI,
-    updateMediaSession,
-    getAudioStream
+    updateMediaSession
 } from "../audio/index.js";
 
 import { 
@@ -163,13 +162,15 @@ async function onClickPlayButton(dataset) {
     }
 
     //1. make changes to local queue
-    //console.log("QueueStore check 1:", QueueStore.getTracks());
     QueueStore.setFirst(trackId);
-    //console.log("QueueStore check 2:", QueueStore.getTracks());
 
-    //2. attempt parallelized loading after cleanup
-    await cleanupCurrentAudio();
-    const loadPromise = loadTrack(trackId);
+    //2. attempt loading after cleanup
+    try {
+        await cleanupCurrentAudio();
+        await loadTrack(trackId);
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to clean or load audio:", err);
+    }
 
     //3. make optimistic ui changes
     const track = TrackStore.get(trackId);
@@ -182,16 +183,13 @@ async function onClickPlayButton(dataset) {
 
     //4. send changes to server (returns websocket message to sync ui)
     try {
-        await queueSetFirstTrack(track.id);
+        await queueSetFirstTrack(trackId);
     } catch (err) {
         logDebug("[onClickPlayButton] Failed to set first track in backend:", err);
     }
 
     try {
-        //5. load in the audio
-        await loadPromise;
-        
-        //6. play audio
+        //5. play audio
         await playLoadedTrack();
     } catch (err) {
         logDebug("[onClickPlayButton] Failed to play audio:", err);
@@ -217,13 +215,15 @@ async function onClickQueueButton(dataset) {
         return;
     }
 
-    //1. update queue (local and backend)
+    //1. optimistic ui update
+    QueueStore.push(trackId);
+    renderQueue();
+
+    //2. update queue (local and backend)
     try {
-        QueueStore.push(track.id);
-        renderQueue();
         showToast(`Queued`);
 
-        await queuePushTrack(track.id);
+        await queuePushTrack(trackId);
     } catch (err) {
         logDebug("Failed to queue audio:", err);
     }

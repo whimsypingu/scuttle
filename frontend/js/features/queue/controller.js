@@ -54,6 +54,8 @@ export async function onClickQueueList(e) {
 
 //helpers
 async function onClickPlayButton(dataset) {
+    const start = performance.now();
+
     //0. parse data
     const trackId = dataset.trackId;
 
@@ -62,35 +64,43 @@ async function onClickPlayButton(dataset) {
         return;
     }
 
+    //1. make changes to local queue
+    QueueStore.setFirst(trackId);
+
+    //2. attempt loading after cleanup
+    try {
+        await cleanupCurrentAudio();
+        await loadTrack(trackId);
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to clean or load audio:", err);
+    }
+
+    //3. make optimistic ui changes
     const track = TrackStore.get(trackId);
-    if (!track) {
-        logDebug("Missing track in TrackStore");
-        return;
+    logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+
+    updateMediaSession(track, true);
+    renderQueue();
+    resetUI();
+    updatePlayPauseButtonDisplay(true);
+
+    //4. send changes to server (returns websocket message to sync ui)
+    try {
+        await queueSetFirstTrack(trackId);
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to set first track in backend:", err);
     }
 
     try {
-        //1. make changes to local queue
-        QueueStore.setFirst(track.id);
-
-        //2. load in the audio
-        await cleanupCurrentAudio();
-        await loadTrack(track.id);
-
-        //3. make optimistic ui changes
-        updateMediaSession(track, true);
-        renderQueue();
-        resetUI();
-        updatePlayPauseButtonDisplay(true);
-        
-        //4. play audio
+        //5. play audio
         await playLoadedTrack();
-
-        //5. send changes to server (returns websocket message to sync ui)
-        await queueSetFirstTrack(track.id);
-
     } catch (err) {
-        logDebug("Failed to play audio:", err);
+        logDebug("[onClickPlayButton] Failed to play audio:", err);
     }
+
+    const end = performance.now();
+    const elapsed = (end - start).toFixed(1);
+    logDebug(`[onClickPlayButton] Total elapsed: ${elapsed} ms`);
 }
 
 
@@ -108,14 +118,16 @@ async function onClickQueueButton(dataset) {
         logDebug("Missing track in TrackStore");
         return;
     }
+    
+    //1. optimistic ui update
+    QueueStore.push(trackId);
+    renderQueue();
 
-    //1. update queue (local and backend)
+    //2. update queue (local and backend)
     try {
-        QueueStore.push(track.id);
-        renderQueue();
         showToast(`Queued`);
 
-        await queuePushTrack(track.id);
+        await queuePushTrack(trackId);
     } catch (err) {
         logDebug("Failed to queue audio:", err);
     }
