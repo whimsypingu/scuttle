@@ -19,20 +19,41 @@ const { popupOverlayEl, popupEl, customPlaylistEl } = popupDomEls;
 
 
 
-export function hidePopupOnClick(e) {
-    if (e.target === popupOverlayEl) hidePopup(popupOverlayEl);
+export async function hidePopupOnClick(e) {
+    if (e.target === popupOverlayEl) await hidePopup();
 }
 
+
+
+export function showAreYouSurePopup(options = {}) {
+    return new Promise((resolve) => {
+        const newPopupEl = buildAreYouSurePopup(options);
+        popupEl.append(newPopupEl);
+
+        //bind listeners
+        const cancelButton = newPopupEl.querySelector(".js-cancel");
+        cancelButton.addEventListener("click", async () => {
+            await hidePopup();
+            resolve(false);
+        });
+
+        const saveButtonEl = newPopupEl.querySelector(".js-save");
+        saveButtonEl.addEventListener("click", async () => {
+            await hidePopup();
+            resolve(true);
+        });
+
+        //show
+        showPopup(popupOverlayEl);
+    });
+}
 
 
 //popup to edit which playlists a track is in
 export function showEditTrackPopup(trackId) {
 
     //logic for getting initial checked state
-    const playlists = PlaylistStore.getPlaylistsWithCheck(trackId);
-
-    //clear old popup and set to a new fresh one
-    popupEl.innerHTML = "";
+    const playlists = PlaylistStore.getPlaylistsWithCheck(trackId);    
 
     const track = TrackStore.get(trackId);
     const newPopupEl = buildEditTrackPopup(playlists, track);
@@ -40,8 +61,8 @@ export function showEditTrackPopup(trackId) {
 
     //bind listeners
     const cancelButton = newPopupEl.querySelector(".js-cancel");
-    cancelButton.addEventListener("click", () => {
-        hidePopup(popupOverlayEl);
+    cancelButton.addEventListener("click", async () => {
+        await hidePopup();
     });
 
     //playlist selection
@@ -54,7 +75,7 @@ export function showEditTrackPopup(trackId) {
 
 
     const saveButtonEl = newPopupEl.querySelector(".js-save");
-    saveButtonEl.addEventListener("click", () => {
+    saveButtonEl.addEventListener("click", async () => {
         logDebug("save triggered"); //more logic here required
 
         const optionEls = newPopupEl.querySelectorAll(".playlist-option");
@@ -63,19 +84,26 @@ export function showEditTrackPopup(trackId) {
         const trackTitleEl = newPopupEl.querySelector(".js-track-title");
         const trackArtistEl = newPopupEl.querySelector(".js-track-artist");
 
-        onSaveTrackEdits(trackId, optionEls, trackTitleEl, trackArtistEl);
+        await hidePopup();
 
-        hidePopup(popupOverlayEl);
-    })
+        onSaveTrackEdits(trackId, optionEls, trackTitleEl, trackArtistEl);
+    });
 
     //delete track entirely
     const deleteButtonEl = newPopupEl.querySelector(".js-delete");
-    deleteButtonEl.addEventListener("click", () => {
+    deleteButtonEl.addEventListener("click", async () => {
         logDebug("delete triggered");
 
-        onDeleteTrack(trackId);
-
-        hidePopup(popupOverlayEl);
+        await hidePopup();
+        
+        const options = {
+            saveText: "Yes",
+        }
+        const confirmed = await showAreYouSurePopup(options);
+        if (confirmed) {
+            onDeleteTrack(trackId);
+            await hidePopup();
+        }
     })
 
     //show
@@ -123,16 +151,13 @@ export function showCreatePlaylistPopup() {
 
     const playlists = PlaylistStore.getAll();
 
-    //clear old popup and set to a new fresh one
-    popupEl.innerHTML = "";
-
     const newPopupEl = buildCreatePlaylistPopup(playlists);
     popupEl.append(newPopupEl);
 
     //bind listeners
     const cancelButton = newPopupEl.querySelector(".js-cancel");
-    cancelButton.addEventListener("click", () => {
-        hidePopup(popupOverlayEl);
+    cancelButton.addEventListener("click", async () => {
+        await hidePopup();
     });
 
     const saveButtonEl = newPopupEl.querySelector(".js-save");
@@ -140,7 +165,8 @@ export function showCreatePlaylistPopup() {
         const createPlaylistInputEl = newPopupEl.querySelector(".js-create-playlist-input");
         const importPlaylistInputEl = newPopupEl.querySelector(".js-import-playlist-input");
 
-        hidePopup(popupOverlayEl);
+        await hidePopup();
+
         await onCreatePlaylist(customPlaylistEl, createPlaylistInputEl, importPlaylistInputEl); //no await?
     })
 
@@ -169,32 +195,3 @@ async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl, importP
     }
 }
 
-
-
-export function showAreYouSurePopup() {
-    return new Promise((resolve) => {
-        //clear old popup and set to a new fresh one
-        popupEl.innerHTML = "";
-
-        const newPopupEl = buildAreYouSurePopup();
-        popupEl.append(newPopupEl);
-
-        //bind listeners
-        const cancelButton = newPopupEl.querySelector(".js-cancel");
-        cancelButton.addEventListener("click", () => {
-            hidePopup(popupOverlayEl);
-            popupEl.innerHTML = "";
-            resolve(false);
-        });
-
-        const saveButtonEl = newPopupEl.querySelector(".js-save");
-        saveButtonEl.addEventListener("click", async () => {
-            hidePopup(popupOverlayEl);
-            popupEl.innerHTML = "";
-            resolve(true);
-        })
-
-        //show
-        showPopup(popupOverlayEl);
-    });
-}

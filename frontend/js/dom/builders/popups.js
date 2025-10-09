@@ -92,20 +92,25 @@ export function buildEditTrackPopup(playlists, track) {
 
 
 
-export function buildAreYouSurePopup() {
+export function buildAreYouSurePopup(options = {}) {
+    const {
+        message = "Are you sure?",
+        saveText = "Confirm",
+        saveColor = "red",
+    } = options;
+
     const popup = document.createElement("div");
     popup.classList.add("popup-content");
 
     popup.innerHTML = `
         <div class="scrollable-popup-content">
-            <h3 class="popup-message">Are you sure?</h3>
+            <h3 class="popup-message">${message}</h3>
         </div>
         
         <div class="popup-actions">
-            <button class="menu-button red js-save">Clear</button>
+            <button class="menu-button ${saveColor} js-save">${saveText}</button>
             <button class="menu-button js-cancel">Cancel</button>
         </div>
     `;
     return popup;
-
 }
