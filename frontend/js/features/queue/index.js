@@ -5,6 +5,7 @@ export {
     queueSetAllTracks,
     queueSetFirstTrack, 
     queuePushTrack,
+    queuePushFrontTrack,
     queuePopTrack,
     queueRemoveTrack,
     getQueueContent

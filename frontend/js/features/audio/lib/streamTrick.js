@@ -321,7 +321,7 @@ export async function cleanupCurrentAudio() {
         audioCtx._paused = false;
 
         // tiny delay for iOS
-        await new Promise(r => setTimeout(r, 100));
+        //await new Promise(r => setTimeout(r, 100));
     }
 
     logDebug("after cleanup");

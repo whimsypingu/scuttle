@@ -49,49 +49,68 @@ export async function onAudioEnded() {
             await playLoadedTrack();
             return;
         }
+    } catch (err) {
+        logDebug("[onAudioEnded] Loop one failed:", err);
+    }
 
+    //instantaneously update everything, and then send the update to the backend
+    //1. make changes to local, which will trigger queue ui update
+    const poppedTrackId = QueueStore.pop();
+    logDebug("POPPED TRACK:", poppedTrackId);
+    
+    if (isLoopAll()) {
+        QueueStore.push(poppedTrackId);
+    }
 
-        //instantaneously update everything, and then send the update to the backend
-        //1. make changes to local , which will trigger queue ui update
-        const poppedTrackId = QueueStore.pop();
-        logDebug("POPPED TRACK:", poppedTrackId);
-        if (isLoopAll()) {
-            QueueStore.push(poppedTrackId);
-        }
+    const track = QueueStore.peekTrack();
+    logDebug("Next track:", track);
 
-        const track = QueueStore.peekTrack();
-        logDebug("Next track:", track);
-
-        //2. clean
-        await cleanupCurrentAudio();
-
-        //3. handle empty track
-        if (!track) {
-            logDebug("No track found in queue");
-            resetUI();
-            updatePlayPauseButtonDisplay(false);
-            return;
-        }
-
-        //4. load new track
-        await loadTrack(track.id);
-
-        //5. make optimistic ui changes
-        updateMediaSession(track, true);
-        renderQueue();
+    //2. handle empty track
+    if (!track) {
+        logDebug("No track found in queue");
+        setAudioTime(0);
         resetUI();
-        updatePlayPauseButtonDisplay(true);
-        
-        //6. play audio
-        await playLoadedTrack();
+        updatePlayPauseButtonDisplay(false);
+        return;
+    }
 
-        //7. send changes to server (returns websocket message to sync ui)
+    //3. clean
+    try {
+    } catch (err) {
+        logDebug("[onAudioEnded] cleanup failed:", err);
+    }
+
+    //4. load new track
+    try {
+        await loadTrack(track.id);
+    } catch (err) {
+        logDebug("[onAudioEnded] loadTrack failed:", err);
+        resetUI();
+        updatePlayPauseButtonDisplay(false);
+        return;
+    }
+
+    //5. make optimistic ui changes
+    updateMediaSession(track, true);
+    renderQueue();
+    resetUI();
+    updatePlayPauseButtonDisplay(true);
+        
+    //6. play audio
+    try {
+        await playLoadedTrack();
+    } catch (err) {
+        logDebug("[onAudioEnded] Failed to playLoadedTrack:", err);
+    }
+
+    //7. send changes to server (returns websocket message to sync ui)
+    try {
         if (isLoopAll()) {
             await queuePushTrack(poppedTrackId); //backend
         }
         await queuePopTrack();
     } catch (err) {
-        logDebug("[onAudioEnded] Failed to play audio:", err);
+        logDebug("[onAudioEnded] Failed to update backend queue:", err);
     }
 }
 
@@ -99,42 +118,57 @@ export async function onAudioEnded() {
 export async function onNextButtonClick() {
     console.error(trackState());
 
-    try {
-        //instantaneously update everything, and then send the update to the backend
-        //1. make changes to local, which will trigger queue ui update
-        //logDebug("CURRENT STATE:", QueueStore.getTracks());
-        QueueStore.pop();
-        //logDebug("CURRENT STATE POST POP:", QueueStore.getTracks());
-        const track = QueueStore.peekTrack();
-        logDebug("Next track:", track);
+    //instantaneously update everything, and then send the update to the backend
+    //1. make changes to local, which will trigger queue ui update
+    //logDebug("CURRENT STATE:", QueueStore.getTracks());
+    QueueStore.pop();
+    //logDebug("CURRENT STATE POST POP:", QueueStore.getTracks());
+    const track = QueueStore.peekTrack();
+    logDebug("Next track:", track);
 
-        //2. clean
-        await cleanupCurrentAudio();
-
-        //3. handle empty track
-        if (!track) {
-            logDebug("No track found in queue");
-            resetUI();
-            updatePlayPauseButtonDisplay(false);
-            return;
-        }
-
-        //4. load new track
-        await loadTrack(track.id);
-
-        //5. make optimistic ui changes
-        renderQueue();
+    //2. handle empty track
+    if (!track) {
+        logDebug("No track found in queue");
+        setAudioTime(0);
         resetUI();
-        updatePlayPauseButtonDisplay(true);
-        
-        //6. play audio
-        await playLoadedTrack();
-        updateMediaSession(track, true);
+        updatePlayPauseButtonDisplay(false);
+        return;
+    }
 
-        //7. send changes to server (returns websocket message to sync ui)
+    //3. clean
+    try {
+        await cleanupCurrentAudio();
+    } catch (err) {
+        logDebug("[onNextButtonClick] cleanup failed:", err);
+    }
+
+    //4. load new track
+    try {
+        await loadTrack(track.id);
+    } catch (err) {
+        logDebug("[onNextButtonClick] loadTrack failed:", err);
+        resetUI();
+        updatePlayPauseButtonDisplay(false);
+    }
+
+    //5. make optimistic ui changes
+    updateMediaSession(track, true);
+    renderQueue();
+    resetUI();
+    updatePlayPauseButtonDisplay(true);
+        
+    //6. play audio
+    try {
+        await playLoadedTrack();
+    } catch (err) {
+        logDebug("[onNextButtonClick] Failed to playLoadedTrack:", err);
+    }
+
+    //7. send changes to server (returns websocket message to sync ui)
+    try {
         await queuePopTrack();
     } catch (err) {
-        logDebug("[onNextButtonClick] Failed to play audio:", err);
+        logDebug("[onNextButtonClick] Failed to update backend queue:", err);
     }
 }
 
@@ -150,11 +184,11 @@ export async function onPlayPauseButtonClick() {
     if (trackState()) {
         try {
             await loadTrack(track.id);
-            await playLoadedTrack();            
+            await playLoadedTrack();   
             updatePlayPauseButtonDisplay(true);
-        } catch {
+        } catch (err) {
             updatePlayPauseButtonDisplay(false);
-            logDebug("Play failed");
+            logDebug("Play failed:", err);
         }
     } else {
         pauseLoadedTrack();

@@ -37,6 +37,9 @@ export const QueueStore = (() => {
         push(id) {
             store.push(id);
         },
+        pushFront(id) {
+            store.insert(id, 1);
+        },
         pop() {
             return store.pop();
         },
@@ -49,6 +52,6 @@ export const QueueStore = (() => {
         setFirst(id) {
             store.pop();
             store.insert(id, 0);
-        }
+        },
     };
 })();

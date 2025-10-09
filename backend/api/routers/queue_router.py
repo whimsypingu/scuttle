@@ -123,6 +123,45 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+@router.post("/push-front")
+async def queue_push_front(body: QueuePushTrackRequest, req: Request) -> Response:
+    """
+    Add a new track to the front of the play queue.
+
+    The track is prepended to the play queue. If it is not downloaded, it is also added to the download queue if not already present.
+
+    Args:
+        body (QueuePushTrackRequest): Request body containing the Track to push.
+        req (Request): FastAPI request object to access app state.
+
+    Returns:
+        JSONResponse: The updated play queue serialized as JSON.
+
+    Raises:
+        HTTPException: Returns 500 if any unexpected error occurs during processing.
+    """
+    queue_manager = req.app.state.queue_manager
+    play_queue = queue_manager.get(G.PLAY_QUEUE_NAME)
+    download_queue = queue_manager.get(G.DOWNLOAD_QUEUE_NAME)
+
+    id = body.id
+    job = DownloadJob(id=id)
+
+    try:
+        #push to front
+        await play_queue.insert_next(id)
+
+        if not is_downloaded(track_or_id=id):
+            if not download_queue.contains(job):
+                await download_queue.push(job)
+        return Response(status_code=204)
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 
 @router.post("/pop")

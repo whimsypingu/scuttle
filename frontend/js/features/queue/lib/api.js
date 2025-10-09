@@ -43,6 +43,18 @@ export async function queuePushTrack(id) {
 }
 
 
+export async function queuePushFrontTrack(id) {
+    //1. inform backend of changes in frontend
+    const response = await postRequest(`/queue/push-front`, { id });
+    console.log("queuePushFrontTrack status:", response.status);
+
+    //2. fire and forget for caching purposes
+    fetch(`/audio/stream/${id}`).catch((err) => {
+        logDebug("queuePushFrontTrack prefetch failed:", err);
+    });
+}
+
+
 
 export async function queuePopTrack() {
     const response = await postRequest(`/queue/pop`, { });

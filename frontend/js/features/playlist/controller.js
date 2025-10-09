@@ -1,6 +1,6 @@
 //static/js/features/library/controller.js
 
-import { parseTrackFromDataset } from "../../utils/index.js"
+import { logDebug } from "../../utils/debug.js";
 
 import { 
     loadTrack, 
@@ -10,12 +10,12 @@ import {
     updatePlayPauseButtonDisplay,
 
     resetUI,
-    updateMediaSession,
-    getAudioStream
+    updateMediaSession
 } from "../audio/index.js";
 
 import { 
     queuePushTrack,
+    queuePushFrontTrack,
     queueSetAllTracks,
     queueSetFirstTrack,
     renderQueue
@@ -23,7 +23,6 @@ import {
 
 import { toggleLike } from "./lib/api.js";
 
-import { logDebug } from "../../utils/debug.js";
 import { renderPlaylist } from "./lib/ui.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
@@ -153,6 +152,8 @@ async function onClickShufflePlaylistButton(dataset) {
 
 //helpers
 async function onClickPlayButton(dataset) {
+    const start = performance.now();
+
     //0. parse data
     const trackId = dataset.trackId;
 
@@ -161,40 +162,43 @@ async function onClickPlayButton(dataset) {
         return;
     }
 
-    const response = await getAudioStream(trackId);
-    if (!response.ok) {
-        logDebug("Track is downloading, please wait :)");
-        return;
+    //1. make changes to local queue
+    QueueStore.setFirst(trackId);
+
+    //2. attempt loading after cleanup
+    try {
+        await cleanupCurrentAudio();
+        await loadTrack(trackId);
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to clean or load audio:", err);
+    }
+
+    //3. make optimistic ui changes
+    const track = TrackStore.get(trackId);
+    logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+
+    updateMediaSession(track, true);
+    renderQueue();
+    resetUI();
+    updatePlayPauseButtonDisplay(true);
+
+    //4. send changes to server (returns websocket message to sync ui)
+    try {
+        await queueSetFirstTrack(trackId);
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to set first track in backend:", err);
     }
 
     try {
-        //1. make changes to local queue
-        //console.log("QueueStore check 1:", QueueStore.getTracks());
-        QueueStore.setFirst(trackId);
-        //console.log("QueueStore check 2:", QueueStore.getTracks());
-
-        //2. load in the audio
-        await cleanupCurrentAudio();
-        await loadTrack(trackId);
-
-        //3. make optimistic ui changes
-        const track = TrackStore.get(trackId);
-        logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
-
-        updateMediaSession(track, true);
-        renderQueue();
-        resetUI();
-        updatePlayPauseButtonDisplay(true);
-        
-        //4. play audio
+        //5. play audio
         await playLoadedTrack();
-
-        //5. send changes to server (returns websocket message to sync ui)
-        await queueSetFirstTrack(track.id);
-
     } catch (err) {
         logDebug("[onClickPlayButton] Failed to play audio:", err);
     }
+
+    const end = performance.now();
+    const elapsed = (end - start).toFixed(1);
+    logDebug(`[onClickPlayButton] Total elapsed: ${elapsed} ms`);
 }
 
 async function onClickQueueButton(dataset) {
@@ -212,15 +216,47 @@ async function onClickQueueButton(dataset) {
         return;
     }
 
-    //1. update queue (local and backend)
+    //1. optimistic ui update
+    QueueStore.push(trackId);
+    renderQueue();
+
+    //2. update queue (local and backend)
     try {
-        QueueStore.push(track.id);
-        renderQueue();
         showToast(`Queued`);
 
-        await queuePushTrack(track.id);
+        await queuePushTrack(trackId);
     } catch (err) {
         logDebug("Failed to queue audio:", err);
+    }
+}
+
+
+async function onClickQueueFrontButton(dataset) {
+    //0. parse data
+    const trackId = dataset.trackId;
+
+    if (!trackId) {
+        logDebug("Missing track data attributes in dataset");
+        return;
+    }
+
+    const track = TrackStore.get(trackId);
+    if (!track) {
+        logDebug("Missing track in TrackStore");
+        return;
+    }
+
+    //1. optimistic ui update
+    QueueStore.pushFront(trackId);
+    renderQueue();
+
+    //2. update queue (local and backend)
+    try {
+        showToast(`Queued`);
+
+        await queuePushFrontTrack(trackId);
+    } catch (err) {
+        logDebug("Failed to front queue audio:", err);
     }
 }
 
@@ -246,43 +282,58 @@ export async function onSwipe(trackId, actionName) {
     }
 
     //1. handle action type
-    if (actionName === "queue") {
-        try {
+    logDebug("[onSwipe] actionName:", actionName);
+
+    switch (actionName) {
+        case "queue":
             QueueStore.push(track.id);
             renderQueue();
+            
             showToast(`Queued`); //optionally include track.title but should probably prevent js injection
 
-            await queuePushTrack(track.id); //backend
+            try {
+                await queuePushTrack(track.id); //backend
+            } catch (err) {
+                logDebug("Queue failed", err);
+            }
+            break;
 
-            logDebug("Queue swiped");
-        } catch (err) {
-            logDebug("Queue failed", err);
-        }
-    } else if (actionName === "like") {
-        try {
+        case "queueFirst":
+            QueueStore.pushFront(track.id);
+            renderQueue();
+
+            showToast(`Next`);
+
+            try {
+                await queuePushFrontTrack(track.id);
+            } catch (err) {
+                logDebug("Queue failed", err);
+            }
+            break;
+
+        case "like":
             const liked = LikeStore.toggle(track.id);
             renderPlaylist(likedListEl, LikeStore.getTracks());
+
             showToast(liked ? "Liked" : "Unliked");
 
-            //test
-            logDebug("TEST: LIKE:", LikeStore.getTracks());
+            try {
+                await toggleLike(track.id); //backend
+            } catch (err) {
+                logDebug("Like failed", err);
+            }
+            break;
 
-            await toggleLike(track.id); //backend
-            
-            logDebug("Like swiped");
-        } catch (err) {
-            logDebug("Like failed", err);
-        }
-    } else if (actionName === "more") {
+        case "more":
+            try {
+                showEditTrackPopup(track.id);
+            } catch (err) {
+                logDebug("More failed", err);
+            }
+            break;
         
-        try {
-            showEditTrackPopup(track.id);
-            logDebug("more //BUILD ME", track);
-        } catch (err) {
-            logDebug("More failed", err);
-        }
-
-    } else {
-        logDebug("unknown swipe actionName, how did we get here?");
+        default:
+            logDebug("[onSwipe] unknown swipe actionName, how did we get here??");
+            break;
     }
 }
