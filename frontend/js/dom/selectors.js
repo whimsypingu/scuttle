@@ -117,6 +117,7 @@ export const SELECTORS = {
 		ids: {
 			NAME: "queue-name",
 			LIST: "queue-list",
+			CLEAR: "clear-queue-button",
 		},
 		classes: {
 			//?
@@ -168,6 +169,15 @@ export const domEls = {
 	libraryListEl: $(SELECTORS.library.ids.LIST),
 	likedListEl: $(SELECTORS.liked.ids.LIST),
 };
+
+
+export const queueDomEls = {
+	//queue
+	queueListEl: $(SELECTORS.queue.ids.LIST),
+
+	//clear button
+	queueClearButtonEl: $(SELECTORS.queue.ids.CLEAR),
+}
 
 
 export const searchDomEls = {
