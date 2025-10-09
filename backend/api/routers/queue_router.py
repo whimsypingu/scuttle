@@ -223,6 +223,35 @@ async def queue_remove_track(body: QueueRemoveTrackRequest, req: Request) -> Res
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+@router.post("/clear")
+async def queue_clear_tracks(req: Request) -> Response:
+    """
+    Remove all tracks after the first if there is any.
+
+    Args:
+        req (Request): FastAPI request object to access app state.
+
+    Returns:
+        JSONResponse: The updated play queue serialized as JSON after clearing tracks besides the first.
+
+    Raises:
+        HTTPException: Returns 500 if any unexpected error occurs during processing.
+    """
+    queue_manager = req.app.state.queue_manager
+    
+    play_queue = queue_manager.get(G.PLAY_QUEUE_NAME)
+
+    try:
+        await play_queue.clear()
+        return Response(status_code=204)
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 
 @router.get("/content")

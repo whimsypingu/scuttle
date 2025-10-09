@@ -8,6 +8,7 @@ export {
     queuePushFrontTrack,
     queuePopTrack,
     queueRemoveTrack,
+    queueClear,
     getQueueContent
 } from "./lib/api.js";
 

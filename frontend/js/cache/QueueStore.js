@@ -58,10 +58,16 @@ export const QueueStore = (() => {
         },
 
         /**
-         * Clear the entire queue.
+         * Clear the entire queue, except the first if there is one.
+         * @returns {string|None} id - Currently playing id
          */
         clear() {
+            const id = store.pop();
             store.clear();
+            if (id) {
+                store.insert(id);
+            }
+            return id;
         },
 
         // operations

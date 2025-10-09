@@ -45,6 +45,7 @@
     gap: var(--space-xxl);
     overflow-y: auto;
     height: auto;
+    width: 100%;
 }
 
 .popup-content .scrollable-popup-content {

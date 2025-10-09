@@ -17,14 +17,35 @@ import {
 import { 
     queuePushTrack,
     queueSetFirstTrack,
-    renderQueue,
+    queueClear,
 
-    //queueClear
+    renderQueue,
 } from "./index.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
 
 import { fisherYatesShuffle } from "../playlist/index.js";
+import { showAreYouSurePopup } from "../popup/controller.js";
+
+
+
+export async function onClickClearQueue() {
+    const confirmed = await showAreYouSurePopup();
+
+    if (confirmed) {
+        //1. make changes to local queue
+        QueueStore.clear();
+
+        //2. optimistic ui
+        renderQueue();
+
+        try {
+            await queueClear();
+        } catch (err) {
+            logDebug("[onClickClearQueue] Failed to clear backend queue:", err);
+        }
+    }
+}
 
 
 
@@ -48,7 +69,6 @@ export async function onClickQueueList(e) {
         logDebug("Play clicked");
         await onClickPlayButton(dataset);
     }
-
 }
 
 

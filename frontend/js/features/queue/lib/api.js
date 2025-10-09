@@ -68,6 +68,13 @@ export async function queueRemoveTrack(id, index) {
 }
 
 
+export async function queueClear() {
+    const response = await postRequest(`/queue/clear`, { });
+    console.log("queueClear status:", response.status);
+}
+
+
+
 export async function getQueueContent() {
     const response = await getResponse(`/queue/content`);
     console.log("getQueueContent status:", response.status);

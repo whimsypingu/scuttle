@@ -1,4 +1,4 @@
-import { buildCreatePlaylistPopup, buildEditTrackPopup } from "../../dom/builder.js";
+import { buildCreatePlaylistPopup, buildEditTrackPopup, buildAreYouSurePopup } from "../../dom/builders/popups.js";
 import { popupDomEls } from "../../dom/selectors.js";
 import { hidePopup, showPopup } from "./index.js";
 
@@ -18,21 +18,75 @@ import { TrackStore } from "../../cache/TrackStore.js";
 const { popupOverlayEl, popupEl, customPlaylistEl } = popupDomEls;
 
 
-
-export function hidePopupOnClick(e) {
-    if (e.target === popupOverlayEl) hidePopup(popupOverlayEl);
+/**
+ * Hides the popup overlay when clicking outside the popup content.
+ * Intended to be used as an event listener for click events on the overlay.
+ *
+ * @param {MouseEvent} e - The click event.
+ * @returns {Promise<void>}
+ *
+ * Usage:
+ * popupOverlayEl.addEventListener('click', hidePopupOnClick);
+ */
+export async function hidePopupOnClick(e) {
+    if (e.target === popupOverlayEl) await hidePopup();
 }
 
 
 
-//popup to edit which playlists a track is in
+
+/**
+ * Shows a "Are you sure?" confirmation popup.
+ * Returns a Promise that resolves to true if user confirms, false if canceled.
+ * see frontend/js/dom/builders/popups.js for options
+ * 
+ * @param {Object} options - Optional configuration for the popup.
+ * @param {string} options.message - The message to display in the popup.
+ * @param {string} options.saveText - Text for the save/confirm button.
+ * @param {string} options.cancelText - Text for the cancel button.
+ * @returns {Promise<boolean>} - Resolves to true if user confirms, false otherwise.
+ *
+ * Usage: 
+ * const confirmed = await showAreYouSurePopup({ message: "Delete track?" });
+ */
+export function showAreYouSurePopup(options = {}) {
+    return new Promise((resolve) => {
+        const newPopupEl = buildAreYouSurePopup(options);
+        popupEl.append(newPopupEl);
+
+        //bind listeners
+        const cancelButton = newPopupEl.querySelector(".js-cancel");
+        cancelButton.addEventListener("click", async () => {
+            await hidePopup();
+            resolve(false);
+        });
+
+        const saveButtonEl = newPopupEl.querySelector(".js-save");
+        saveButtonEl.addEventListener("click", async () => {
+            await hidePopup();
+            resolve(true);
+        });
+
+        //show
+        showPopup(popupOverlayEl);
+    });
+}
+
+
+
+/**
+ * Shows a popup to edit which playlists a track belongs to.
+ * Includes functionality for editing metadata, toggling playlists, and deleting the track.
+ *
+ * @param {string} trackId - The ID of the track to edit.
+ *
+ * Usage:
+ * showEditTrackPopup(track.id);
+ */
 export function showEditTrackPopup(trackId) {
 
     //logic for getting initial checked state
-    const playlists = PlaylistStore.getPlaylistsWithCheck(trackId);
-
-    //clear old popup and set to a new fresh one
-    popupEl.innerHTML = "";
+    const playlists = PlaylistStore.getPlaylistsWithCheck(trackId);    
 
     const track = TrackStore.get(trackId);
     const newPopupEl = buildEditTrackPopup(playlists, track);
@@ -40,8 +94,8 @@ export function showEditTrackPopup(trackId) {
 
     //bind listeners
     const cancelButton = newPopupEl.querySelector(".js-cancel");
-    cancelButton.addEventListener("click", () => {
-        hidePopup(popupOverlayEl);
+    cancelButton.addEventListener("click", async () => {
+        await hidePopup();
     });
 
     //playlist selection
@@ -54,7 +108,7 @@ export function showEditTrackPopup(trackId) {
 
 
     const saveButtonEl = newPopupEl.querySelector(".js-save");
-    saveButtonEl.addEventListener("click", () => {
+    saveButtonEl.addEventListener("click", async () => {
         logDebug("save triggered"); //more logic here required
 
         const optionEls = newPopupEl.querySelectorAll(".playlist-option");
@@ -63,25 +117,42 @@ export function showEditTrackPopup(trackId) {
         const trackTitleEl = newPopupEl.querySelector(".js-track-title");
         const trackArtistEl = newPopupEl.querySelector(".js-track-artist");
 
-        onSaveTrackEdits(trackId, optionEls, trackTitleEl, trackArtistEl);
+        await hidePopup();
 
-        hidePopup(popupOverlayEl);
-    })
+        onSaveTrackEdits(trackId, optionEls, trackTitleEl, trackArtistEl);
+    });
 
     //delete track entirely
     const deleteButtonEl = newPopupEl.querySelector(".js-delete");
-    deleteButtonEl.addEventListener("click", () => {
+    deleteButtonEl.addEventListener("click", async () => {
         logDebug("delete triggered");
 
-        onDeleteTrack(trackId);
-
-        hidePopup(popupOverlayEl);
+        await hidePopup();
+        
+        const options = {
+            saveText: "Yes",
+        }
+        const confirmed = await showAreYouSurePopup(options);
+        if (confirmed) {
+            onDeleteTrack(trackId);
+            await hidePopup();
+        }
     })
 
     //show
     showPopup(popupOverlayEl);
 }
 
+
+/**
+ * Handles saving changes to track playlists and metadata.
+ * Updates local cache optimistically, renders UI updates, and calls backend API.
+ *
+ * @param {string} trackId - The ID of the track to update.
+ * @param {NodeList} optionEls - NodeList of playlist option elements with 'checked' state.
+ * @param {HTMLInputElement} titleEl - Input element for track title.
+ * @param {HTMLInputElement} artistEl - Input element for track artist.
+ */
 async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
     const selections = getSelectedPlaylists(optionEls);
 
@@ -111,6 +182,12 @@ async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
     await editTrack(trackId, trackTitle, trackArtist, selections);
 }
 
+
+/**
+ * Deletes a track via backend API.
+ *
+ * @param {string} trackId - The ID of the track to delete.
+ */
 async function onDeleteTrack(trackId) {
     await deleteTrack(trackId);
 }
@@ -118,21 +195,21 @@ async function onDeleteTrack(trackId) {
 
 
 
-//popup for when a new playlist is created
+/**
+ * Shows a popup to create a new playlist.
+ * Handles playlist creation, import URL, and UI updates.
+ */
 export function showCreatePlaylistPopup() {
 
     const playlists = PlaylistStore.getAll();
-
-    //clear old popup and set to a new fresh one
-    popupEl.innerHTML = "";
 
     const newPopupEl = buildCreatePlaylistPopup(playlists);
     popupEl.append(newPopupEl);
 
     //bind listeners
     const cancelButton = newPopupEl.querySelector(".js-cancel");
-    cancelButton.addEventListener("click", () => {
-        hidePopup(popupOverlayEl);
+    cancelButton.addEventListener("click", async () => {
+        await hidePopup();
     });
 
     const saveButtonEl = newPopupEl.querySelector(".js-save");
@@ -140,7 +217,8 @@ export function showCreatePlaylistPopup() {
         const createPlaylistInputEl = newPopupEl.querySelector(".js-create-playlist-input");
         const importPlaylistInputEl = newPopupEl.querySelector(".js-import-playlist-input");
 
-        hidePopup(popupOverlayEl);
+        await hidePopup();
+
         await onCreatePlaylist(customPlaylistEl, createPlaylistInputEl, importPlaylistInputEl); //no await?
     })
 
@@ -148,6 +226,13 @@ export function showCreatePlaylistPopup() {
     showPopup(popupOverlayEl);
 }
 
+/**
+ * Handles creating a new playlist: updates local cache, renders UI, and calls backend.
+ *
+ * @param {HTMLElement} customPlaylistEl - Container element for custom playlists.
+ * @param {HTMLInputElement} createPlaylistInputEl - Input element for new playlist name.
+ * @param {HTMLInputElement} importPlaylistInputEl - Input element for import URL (optional).
+ */
 async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl, importPlaylistInputEl) {
     //if length of input > 0 then 
     // 1) update local playlists, 2) update visuals via playlistUI, 3) send rest call via playlistAPI.
@@ -169,42 +254,3 @@ async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl, importP
     }
 }
 
-
-
-
-// export function showEditPlaylistPopup(domEls) {
-//     const { popupOverlayEl, popupEl, customPlaylistEl } = domEls;
-
-//     const playlists = PlaylistStore.getAll();
-
-//     //clear old popup and set to a new fresh one
-//     popupEl.innerHTML = "";
-
-//     const newPopupEl = buildEditTrackPopup(playlists);
-//     popupEl.append(newPopupEl);
-
-//     //bind listeners
-//     const cancelButton = newPopupEl.querySelector(".js-cancel");
-//     cancelButton.addEventListener("click", () => {
-//         hidePopup(popupOverlayEl);
-//     });
-
-//     const selectionMenuEl = newPopupEl.querySelector(".playlist-selection-menu");
-//     selectionMenuEl.addEventListener("click", (e) => {
-//         const optionEl = e.target.closest(".playlist-option");
-//         if (!optionEl) return;
-//         optionEl.classList.toggle("checked");
-//     });
-
-//     const saveButtonEl = newPopupEl.querySelector(".js-save");
-
-//     createPlaylistButton.addEventListener("click", () => {
-//         logDebug("create playlist triggered"); //more logic here required
-
-//         onSavePlaylist(customPlaylistEl, createPlaylistInputEl); //no await?
-//         hidePopup(popupOverlayEl);
-//     })
-
-//     //show
-//     showPopup(popupOverlayEl);
-// }}
