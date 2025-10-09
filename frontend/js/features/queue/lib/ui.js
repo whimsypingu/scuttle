@@ -1,6 +1,11 @@
 //static/js/features/queue/ui.js
 
-import { buildTrackListItem, buildTrackListEmptyItem } from "../../../dom/index.js";
+import { 
+    buildTrackListItem, 
+    buildTrackListEmptyItem, 
+
+    QUEUE_ACTIONS
+} from "../../../dom/index.js";
 
 
 //renders the top element of the queue here
@@ -28,7 +33,11 @@ export function renderQueueList(queueListEl, tracks) {
 
     //build rows
     tracks.forEach((track, index) => {
-        const item = buildTrackListItem(track, index);
+        const options = {
+            index: index,
+            actions: QUEUE_ACTIONS
+        };
+        const item = buildTrackListItem(track, options);
         queueListEl.appendChild(item);
     });
 }

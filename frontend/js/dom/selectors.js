@@ -9,13 +9,16 @@ export function $(id) {
 export const SELECTORS = {
 	search: {
 		ids: {
-			BODY: "title-search",
+			TITLE_SEARCH_BODY: "title-search",
+
+			SEARCH_BODY: "search",
 
 			INPUT: "search-input",
 			SEARCH_GET_RESULTS_BUTTON: "search-get-results-button",
 			SEARCH_AND_DOWNLOAD_BUTTON: "search-and-download-button",
 
-			DROPDOWN: "search-dropdown"
+			DROPDOWN: "search-dropdown",
+			LIST: "search-list"
 		},
 		classes: {
 			SEARCH_BUTTON: "search-button",
@@ -168,14 +171,17 @@ export const domEls = {
 
 
 export const searchDomEls = {
-	titleSearchEl: $(SELECTORS.search.ids.BODY),
+	titleSearchEl: $(SELECTORS.search.ids.TITLE_SEARCH_BODY),
+
+	searchEl: $(SELECTORS.search.ids.SEARCH_BODY),
 	
 	searchInputEl: $(SELECTORS.search.ids.INPUT),
 
 	deepSearchButtonEl: $(SELECTORS.search.ids.SEARCH_GET_RESULTS_BUTTON),
 	downloadSearchButtonEl: $(SELECTORS.search.ids.SEARCH_AND_DOWNLOAD_BUTTON),
 
-	searchDropdownEl: $(SELECTORS.search.ids.DROPDOWN)
+	searchDropdownEl: $(SELECTORS.search.ids.DROPDOWN),
+	searchListEl: $(SELECTORS.search.ids.LIST)
 };
 
 export const popupDomEls = {

@@ -18,12 +18,13 @@ html, body {
 #background-layer {
     position: fixed;
     inset: 0;
-    background: linear-gradient(
+    /* background: linear-gradient(
         to bottom,
         var(--bg-2),
         var(--bg-1)
-    );
-    background-color: white;
+    ); */
+    background: var(--bg-2);
+    /* background-color: white; */
     z-index: -9999;
 }
 

@@ -51,7 +51,7 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-right: var(--space-xs);
+    margin-right: var(--space-xl);
 }
 .list-track-item .foreground .position .position-value {
     text-align: right;
@@ -63,7 +63,7 @@
     flex: 1 1 auto;
     justify-content: flex-start;
     min-width: 0;
-    margin-inline: var(--space-l);
+    margin-right: var(--space-xl);
 }
 
 .list-track-item .foreground .info .title {
@@ -217,31 +217,31 @@ body.mobile .list-track-item .swipe-action {
     color: var(--text-1);
 } 
 
-body.mobile .list-track-item .swipe-action.left {
+body.mobile .list-track-item .swipe-action.right {
     left: 0;
     border-top-left-radius: var(--radius-s);
     border-bottom-left-radius: var(--radius-s);
 }
 
-body.mobile .list-track-item .swipe-action.right {
+body.mobile .list-track-item .swipe-action.left {
     right: 0;
     border-top-right-radius: var(--radius-s);
     border-bottom-right-radius: var(--radius-s);
 }
 
-body.mobile .list-track-item .swipe-action[data-swipe-theme="tan1"] {
+body.mobile .list-track-item .swipe-action[data-swipe-theme="theme-queue-first"] {
     background-color: #d2b48c;
     color: black;
 }
-body.mobile .list-track-item .swipe-action[data-swipe-theme="green1"] {
+body.mobile .list-track-item .swipe-action[data-swipe-theme="theme-queue"] {
     background-color: #1db954;
     color: black;
 }
-body.mobile .list-track-item .swipe-action[data-swipe-theme="red1"] {
+body.mobile .list-track-item .swipe-action[data-swipe-theme="theme-more"] {
     background-color: #e74c3c;
     color: black;
 }
-body.mobile .list-track-item .swipe-action[data-swipe-theme="purple1"] {
+body.mobile .list-track-item .swipe-action[data-swipe-theme="theme-like"] {
     background-color: #8e44ad;
     color: black;
 }

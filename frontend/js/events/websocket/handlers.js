@@ -3,7 +3,7 @@
 import { LikeStore } from "../../cache/LikeStore.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { TrackStore } from "../../cache/TrackStore.js";
-import { $, SELECTORS } from "../../dom/index.js";
+import { $, SELECTORS, SEARCH_ACTIONS } from "../../dom/index.js";
 import { renderLibrary, renderLiked, renderNewCustomPlaylist, renderPlaylist, renderPlaylistById, updateAllListTrackItems } from "../../features/playlist/index.js";
 import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 import { showToast } from "../../features/toast/index.js";
@@ -82,7 +82,7 @@ function handlePQRE(payload) {
 
 
 const libraryListEl = $(SELECTORS.library.ids.LIST);
-const searchDropdownEl = $(SELECTORS.search.ids.DROPDOWN);
+const searchListEl = $(SELECTORS.search.ids.LIST);
 
 function handleADSM(payload) {
     console.log("SET_METADATA RECEIVED:", payload.content);
@@ -159,7 +159,7 @@ function handleADDT(payload) {
 
 function handleADSE(payload) {
     //do something with RecentStore.js here
-    renderPlaylist(searchDropdownEl, payload.content);
+    renderPlaylist(searchListEl, payload.content, false, SEARCH_ACTIONS);
 }
 
 function handleADDO(payload) {
@@ -174,7 +174,7 @@ function handleYTSE(payload) {
     }
 
     console.log("TRACKSTORE:", TrackStore.getTracks());
-    renderPlaylist(searchDropdownEl, payload.content);
+    renderPlaylist(searchListEl, payload.content, false, SEARCH_ACTIONS);
 }
 
 //actual download message

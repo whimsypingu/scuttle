@@ -231,11 +231,9 @@ async function onClickQueueButton(dataset) {
 import { domEls } from "../../dom/selectors.js";
 const { likedListEl } = domEls;
 
-export async function onSwipe(dataset, action) {
+export async function onSwipe(trackId, actionName) {
 
     //0. parse data
-    const trackId = dataset.trackId;
-
     if (!trackId) {
         logDebug("Missing track data attributes in dataset");
         return;
@@ -248,7 +246,7 @@ export async function onSwipe(dataset, action) {
     }
 
     //1. handle action type
-    if (action === "queue") {
+    if (actionName === "queue") {
         try {
             QueueStore.push(track.id);
             renderQueue();
@@ -260,7 +258,7 @@ export async function onSwipe(dataset, action) {
         } catch (err) {
             logDebug("Queue failed", err);
         }
-    } else if (action === "like") {
+    } else if (actionName === "like") {
         try {
             const liked = LikeStore.toggle(track.id);
             renderPlaylist(likedListEl, LikeStore.getTracks());
@@ -275,7 +273,7 @@ export async function onSwipe(dataset, action) {
         } catch (err) {
             logDebug("Like failed", err);
         }
-    } else if (action === "more") {
+    } else if (actionName === "more") {
         
         try {
             showEditTrackPopup(track.id);
@@ -285,6 +283,6 @@ export async function onSwipe(dataset, action) {
         }
 
     } else {
-        logDebug("unknown swipe action, how did we get here?");
+        logDebug("unknown swipe actionName, how did we get here?");
     }
 }
