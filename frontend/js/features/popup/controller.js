@@ -18,13 +18,37 @@ import { TrackStore } from "../../cache/TrackStore.js";
 const { popupOverlayEl, popupEl, customPlaylistEl } = popupDomEls;
 
 
-
+/**
+ * Hides the popup overlay when clicking outside the popup content.
+ * Intended to be used as an event listener for click events on the overlay.
+ *
+ * @param {MouseEvent} e - The click event.
+ * @returns {Promise<void>}
+ *
+ * Usage:
+ * popupOverlayEl.addEventListener('click', hidePopupOnClick);
+ */
 export async function hidePopupOnClick(e) {
     if (e.target === popupOverlayEl) await hidePopup();
 }
 
 
 
+
+/**
+ * Shows a "Are you sure?" confirmation popup.
+ * Returns a Promise that resolves to true if user confirms, false if canceled.
+ * see frontend/js/dom/builders/popups.js for options
+ * 
+ * @param {Object} options - Optional configuration for the popup.
+ * @param {string} options.message - The message to display in the popup.
+ * @param {string} options.saveText - Text for the save/confirm button.
+ * @param {string} options.cancelText - Text for the cancel button.
+ * @returns {Promise<boolean>} - Resolves to true if user confirms, false otherwise.
+ *
+ * Usage: 
+ * const confirmed = await showAreYouSurePopup({ message: "Delete track?" });
+ */
 export function showAreYouSurePopup(options = {}) {
     return new Promise((resolve) => {
         const newPopupEl = buildAreYouSurePopup(options);
@@ -49,7 +73,16 @@ export function showAreYouSurePopup(options = {}) {
 }
 
 
-//popup to edit which playlists a track is in
+
+/**
+ * Shows a popup to edit which playlists a track belongs to.
+ * Includes functionality for editing metadata, toggling playlists, and deleting the track.
+ *
+ * @param {string} trackId - The ID of the track to edit.
+ *
+ * Usage:
+ * showEditTrackPopup(track.id);
+ */
 export function showEditTrackPopup(trackId) {
 
     //logic for getting initial checked state
@@ -110,6 +143,16 @@ export function showEditTrackPopup(trackId) {
     showPopup(popupOverlayEl);
 }
 
+
+/**
+ * Handles saving changes to track playlists and metadata.
+ * Updates local cache optimistically, renders UI updates, and calls backend API.
+ *
+ * @param {string} trackId - The ID of the track to update.
+ * @param {NodeList} optionEls - NodeList of playlist option elements with 'checked' state.
+ * @param {HTMLInputElement} titleEl - Input element for track title.
+ * @param {HTMLInputElement} artistEl - Input element for track artist.
+ */
 async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
     const selections = getSelectedPlaylists(optionEls);
 
@@ -139,6 +182,12 @@ async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
     await editTrack(trackId, trackTitle, trackArtist, selections);
 }
 
+
+/**
+ * Deletes a track via backend API.
+ *
+ * @param {string} trackId - The ID of the track to delete.
+ */
 async function onDeleteTrack(trackId) {
     await deleteTrack(trackId);
 }
@@ -146,7 +195,10 @@ async function onDeleteTrack(trackId) {
 
 
 
-//popup for when a new playlist is created
+/**
+ * Shows a popup to create a new playlist.
+ * Handles playlist creation, import URL, and UI updates.
+ */
 export function showCreatePlaylistPopup() {
 
     const playlists = PlaylistStore.getAll();
@@ -174,6 +226,13 @@ export function showCreatePlaylistPopup() {
     showPopup(popupOverlayEl);
 }
 
+/**
+ * Handles creating a new playlist: updates local cache, renders UI, and calls backend.
+ *
+ * @param {HTMLElement} customPlaylistEl - Container element for custom playlists.
+ * @param {HTMLInputElement} createPlaylistInputEl - Input element for new playlist name.
+ * @param {HTMLInputElement} importPlaylistInputEl - Input element for import URL (optional).
+ */
 async function onCreatePlaylist(customPlaylistEl, createPlaylistInputEl, importPlaylistInputEl) {
     //if length of input > 0 then 
     // 1) update local playlists, 2) update visuals via playlistUI, 3) send rest call via playlistAPI.
