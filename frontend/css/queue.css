@@ -20,12 +20,39 @@
     opacity: 1;
 }
 
-#queue h3 {
+
+/* "Queue" text and clear button */
+#queue #queue-name-clear-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#queue-name-clear-container h3 {
+    flex: 1;
+
     text-align: left;
     font: var(--p2);
     color: var(--text-2);
     padding: var(--space-s);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+
+#queue-name-clear-container #clear-queue-button {
+    background: transparent;
+    border: none;
+
+    align-self: stretch; /*grow vertically to fill*/
+
+    font: var(--p2);
+    color: var(--text-4);
+    padding-inline: var(--space-l);
+    cursor: pointer;
+}
+
 
 #queue-list {
     margin: 0;
