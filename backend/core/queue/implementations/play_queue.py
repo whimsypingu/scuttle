@@ -50,11 +50,14 @@ class PlayQueue(ObservableQueue[str]):
 
             print(f"[DEBUG]: contents of play queue: {self.to_json()}")
 
-    async def remove_at(self, index: int):
+    async def remove_at(self, id: str, index: int):
         #remove track
         async with self._lock:
-            id = self._remove_at(index)
-            await self._emit_event(action=PQA.REMOVE, payload={"id": id, "content": self.to_json()})
+            check_id = self.peek_at(index)
+
+            if id == check_id:
+                id = self._remove_at(index)
+                await self._emit_event(action=PQA.REMOVE, payload={"id": id, "content": self.to_json()})
 
             print(f"[DEBUG]: contents of play queue: {self.to_json()}")
 

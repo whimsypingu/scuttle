@@ -31,10 +31,13 @@ export function renderQueueList(queueListEl, tracks) {
         return;
     }
 
-    //build rows
+    //build rows, set their data with their true index values (based on QueueStore), then offset by 0
     tracks.forEach((track, index) => {
+        const trueQueueIndex = index + 1;
         const options = {
-            index: index,
+            showIndex: true,
+            index: trueQueueIndex,
+            indexOffset: 0,
             actions: QUEUE_ACTIONS
         };
         const item = buildTrackListItem(track, options);

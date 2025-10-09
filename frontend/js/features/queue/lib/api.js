@@ -62,8 +62,8 @@ export async function queuePopTrack() {
 }
 
 
-export async function queueRemoveTrack(index) {
-    const response = await postRequest(`/queue/remove-at`, { index });
+export async function queueRemoveTrack(id, index) {
+    const response = await postRequest(`/queue/remove-at`, { id, index });
     console.log("queueRemoveTrack status:", response.status);
 }
 

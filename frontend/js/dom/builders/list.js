@@ -91,15 +91,18 @@ export const QUEUE_ACTIONS = Object.freeze({
  */
 export function buildTrackListItem(track, options = {}) {
     const {
-        index = null,
+        showIndex = false,
+        index = -1,
+        indexOffset = 1, //offset the shown text value
         actions = DEFAULT_ACTIONS,
     } = options;
 
     const li = document.createElement("li");
     li.classList.add("list-track-item");
 
-    //store track id
+    //store track id and index if available
     li.dataset.trackId = track.id;
+    li.dataset.index = index;
 
     //store action names in dataset (if present)
     for (const pos of ["right", "rightDeep", "left", "leftDeep"]) {
@@ -121,10 +124,10 @@ export function buildTrackListItem(track, options = {}) {
     ` : "";
 
     //build the index if needed
-    const positionArea = index != null ? `
+    const positionArea = showIndex ? `
         <div class="position">
             <a class="no-link" href="#">
-                <p class="position-value">${(index) + 1}</p>
+                <p class="position-value">${index + indexOffset}</p>
             </a>
         </div>
     ` : "";
