@@ -3,7 +3,7 @@
 import { LikeStore } from "../../cache/LikeStore.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { TrackStore } from "../../cache/TrackStore.js";
-import { $, SELECTORS } from "../../dom/index.js";
+import { $, SELECTORS, SEARCH_ACTIONS } from "../../dom/index.js";
 import { renderLibrary, renderLiked, renderNewCustomPlaylist, renderPlaylist, renderPlaylistById, updateAllListTrackItems } from "../../features/playlist/index.js";
 import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 import { showToast } from "../../features/toast/index.js";
@@ -159,7 +159,7 @@ function handleADDT(payload) {
 
 function handleADSE(payload) {
     //do something with RecentStore.js here
-    renderPlaylist(searchListEl, payload.content);
+    renderPlaylist(searchListEl, payload.content, false, SEARCH_ACTIONS);
 }
 
 function handleADDO(payload) {
@@ -174,7 +174,7 @@ function handleYTSE(payload) {
     }
 
     console.log("TRACKSTORE:", TrackStore.getTracks());
-    renderPlaylist(searchListEl, payload.content);
+    renderPlaylist(searchListEl, payload.content, false, SEARCH_ACTIONS);
 }
 
 //actual download message

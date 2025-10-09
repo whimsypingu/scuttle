@@ -39,7 +39,7 @@ export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = nul
 
 
 //renders a list of tracks in a playlist
-export function renderPlaylist(listEl, tracks) { //rename to renderList
+export function renderPlaylist(listEl, tracks, showIndex = true, actions = DEFAULT_ACTIONS) { //rename to renderList
     listEl.innerHTML = "";
 
     if (!tracks?.length) {
@@ -48,15 +48,26 @@ export function renderPlaylist(listEl, tracks) { //rename to renderList
         return;
     }
     
-    //build rows
-    tracks.forEach((track, index) => {
-        const options = {
-            index: index,
-            actions: DEFAULT_ACTIONS,
-        };
-        const item = buildTrackListItem(track, options);
-        listEl.appendChild(item);
-    });
+    //handle index check once
+    if (showIndex) {
+        //build rows
+        tracks.forEach((track, index) => {
+            const options = {
+                index: index,
+                actions: actions,
+            };
+            const item = buildTrackListItem(track, options);
+            listEl.appendChild(item);
+        });
+    } else {
+        tracks.forEach((track) => {
+            const options = {
+                actions: actions,
+            };
+            const item = buildTrackListItem(track, options);
+            listEl.appendChild(item);
+        });
+    }
 }
 
 
@@ -91,13 +102,13 @@ export function updateAllListTrackItems(trackId, title, artist) {
 
 
 //renders a custom playlist by id (just a simple refresh) based on current status in playlistStore
-export function renderPlaylistById(id) {
+export function renderPlaylistById(id, showIndex = true, actions = DEFAULT_ACTIONS) {
     const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
     const listEl = playlistEl ? playlistEl.querySelector(".list-track") : null;
 
     const tracks = PlaylistStore.getTracks(id);
 
-    renderPlaylist(listEl, tracks);
+    renderPlaylist(listEl, tracks, showIndex, actions);
 }
 
 

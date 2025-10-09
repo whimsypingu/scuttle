@@ -24,7 +24,7 @@ export const DEFAULT_ACTIONS = Object.freeze({
 });
 
 
-export const MINIMAL_ACTIONS = Object.freeze({
+export const SEARCH_ACTIONS = Object.freeze({
     right: {
         name: "queue",
         icon: "fa fa-plus-square"
@@ -92,7 +92,7 @@ export const QUEUE_ACTIONS = Object.freeze({
 export function buildTrackListItem(track, options = {}) {
     const {
         index = null,
-        actions = queueActions,
+        actions = DEFAULT_ACTIONS,
     } = options;
 
     const li = document.createElement("li");
