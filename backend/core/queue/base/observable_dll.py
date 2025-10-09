@@ -48,11 +48,8 @@ class ObservableQueue(Generic[T], ABC):
         self._dll.insert_at(index, item)
 
     def _remove_at(self, index: int) -> Optional[T]:
-        # you would need to implement remove_at in DoublyLinkedList too
-        raise NotImplementedError("Implement remove_at in DoublyLinkedList")
-        # item = self._dll.remove_at(index)
-        # await self._emit_event("remove", {"index": index, "item": item, "size": self.size()})
-        # return item
+        item = self._dll.remove_at(index)
+        return item
 
     # ===== Public Read-only APIs =====
     def __iter__(self):

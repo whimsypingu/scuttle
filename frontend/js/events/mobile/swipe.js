@@ -375,9 +375,7 @@ export function setupSwipeEventListeners() {
         if (actionName) {
 
             //execute swipe action handler: see frontend/js/features/playlist/controller.js
-            onSwipe(activeEl.dataset.trackId, actionName);
-
-            logDebug("actionName:", actionName);
+            onSwipe(activeEl.dataset, actionName);
         }
 
         //reset swipe state and visuals

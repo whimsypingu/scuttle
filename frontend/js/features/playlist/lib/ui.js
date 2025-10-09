@@ -53,6 +53,7 @@ export function renderPlaylist(listEl, tracks, showIndex = true, actions = DEFAU
         //build rows
         tracks.forEach((track, index) => {
             const options = {
+                showIndex: showIndex,
                 index: index,
                 actions: actions,
             };
@@ -62,6 +63,7 @@ export function renderPlaylist(listEl, tracks, showIndex = true, actions = DEFAU
     } else {
         tracks.forEach((track) => {
             const options = {
+                showIndex: showIndex,
                 actions: actions,
             };
             const item = buildTrackListItem(track, options);

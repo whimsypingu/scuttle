@@ -18,7 +18,8 @@ import {
     queuePushFrontTrack,
     queueSetAllTracks,
     queueSetFirstTrack,
-    renderQueue
+    renderQueue,
+    queueRemoveTrack
 } from "../queue/index.js";
 
 import { toggleLike } from "./lib/api.js";
@@ -267,7 +268,8 @@ async function onClickQueueFrontButton(dataset) {
 import { domEls } from "../../dom/selectors.js";
 const { likedListEl } = domEls;
 
-export async function onSwipe(trackId, actionName) {
+export async function onSwipe(dataset, actionName) {
+    const trackId = dataset.trackId;
 
     //0. parse data
     if (!trackId) {
@@ -286,39 +288,39 @@ export async function onSwipe(trackId, actionName) {
 
     switch (actionName) {
         case "queue":
-            QueueStore.push(track.id);
+            QueueStore.push(trackId);
             renderQueue();
             
             showToast(`Queued`); //optionally include track.title but should probably prevent js injection
 
             try {
-                await queuePushTrack(track.id); //backend
+                await queuePushTrack(trackId); //backend
             } catch (err) {
                 logDebug("Queue failed", err);
             }
             break;
 
         case "queueFirst":
-            QueueStore.pushFront(track.id);
+            QueueStore.pushFront(trackId);
             renderQueue();
 
             showToast(`Next`);
 
             try {
-                await queuePushFrontTrack(track.id);
+                await queuePushFrontTrack(trackId);
             } catch (err) {
                 logDebug("Queue failed", err);
             }
             break;
 
         case "like":
-            const liked = LikeStore.toggle(track.id);
+            const liked = LikeStore.toggle(trackId);
             renderPlaylist(likedListEl, LikeStore.getTracks());
 
             showToast(liked ? "Liked" : "Unliked");
 
             try {
-                await toggleLike(track.id); //backend
+                await toggleLike(trackId); //backend
             } catch (err) {
                 logDebug("Like failed", err);
             }
@@ -326,9 +328,31 @@ export async function onSwipe(trackId, actionName) {
 
         case "more":
             try {
-                showEditTrackPopup(track.id);
+                showEditTrackPopup(trackId);
             } catch (err) {
                 logDebug("More failed", err);
+            }
+            break;
+
+        case "remove": 
+            //either way, all infrastructure should be able to safely handle invalid (-1) indices
+            //-1 => untracked, 0 => currently playing, 1+ => in queue (renderQueue should handle this correctly)
+            //this is for removing from queue only, see frontend/js/dom/builders/list.js
+            const index = dataset.index;
+            const removedId = QueueStore.removeAt(trackId, index);
+
+            logDebug(`[remove] track name: ${track.title}, index: ${index}, trackId: ${trackId}, removedId: ${removedId}`);
+
+            if (removedId) {
+                renderQueue();
+
+                showToast(`Removed`);
+
+                try {
+                    await queueRemoveTrack(trackId, index);
+                } catch (err) {
+                    logDebug("Remove failed", err);
+                }
             }
             break;
         

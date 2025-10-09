@@ -196,7 +196,7 @@ async def queue_remove_track(body: QueueRemoveTrackRequest, req: Request) -> Res
     Remove a track at the specified index from the play queue.
 
     Args:
-        body (QueueRemoveTrackRequest): Request body containing the index of the track to remove.
+        body (QueueRemoveTrackRequest): Request body containing the id and index of the track to remove.
         req (Request): FastAPI request object to access app state.
 
     Returns:
@@ -206,6 +206,7 @@ async def queue_remove_track(body: QueueRemoveTrackRequest, req: Request) -> Res
         HTTPException: Returns 400 if the index is invalid (out of range).
         HTTPException: Returns 500 if any unexpected error occurs during processing.
     """
+    id = body.id
     index = int(body.index) #guaranteed by schema and by js default param
 
     queue_manager = req.app.state.queue_manager
@@ -216,7 +217,8 @@ async def queue_remove_track(body: QueueRemoveTrackRequest, req: Request) -> Res
         raise HTTPException(status_code=400, detail="Invalid index")
 
     try:
-        await play_queue.remove_at(index)
+        #include id just to make sure the right item is removed, this executes nothing if id doesn't match at index.
+        await play_queue.remove_at(id, index)
         return Response(status_code=204)
     except Exception as e:
         traceback.print_exc()

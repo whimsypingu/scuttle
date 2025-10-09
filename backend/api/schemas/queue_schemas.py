@@ -15,6 +15,7 @@ class QueuePushTrackRequest(BaseModel):
 #QueuePopTrackRequest no need to implement
 
 class QueueRemoveTrackRequest(BaseModel):
+    id: str
     index: int = 0
 
 #QueueContentRequest no need to implement

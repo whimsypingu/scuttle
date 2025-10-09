@@ -43,6 +43,13 @@ export function createIdStore() {
         remove(id) {
             idList = idList.filter(x => x !== id);
         },
+        removeAt(index) {
+            if (index < 0 || index >= idList.length) {
+                return null;
+            }
+            const [removed] = idList.splice(index, 1);
+            return removed || null;
+        },
         
         //setters
         clear() {
