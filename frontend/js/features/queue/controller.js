@@ -25,20 +25,25 @@ import {
 import { QueueStore } from "../../cache/QueueStore.js";
 
 import { fisherYatesShuffle } from "../playlist/index.js";
+import { showAreYouSurePopup } from "../popup/controller.js";
 
 
 
 export async function onClickClearQueue() {
-    //1. make changes to local queue
-    QueueStore.clear();
+    const confirmed = await showAreYouSurePopup();
 
-    //2. optimistic ui
-    renderQueue();
+    if (confirmed) {
+        //1. make changes to local queue
+        QueueStore.clear();
 
-    try {
-        await queueClear();
-    } catch (err) {
-        logDebug("[onClickClearQueue] Failed to clear backend queue:", err);
+        //2. optimistic ui
+        renderQueue();
+
+        try {
+            await queueClear();
+        } catch (err) {
+            logDebug("[onClickClearQueue] Failed to clear backend queue:", err);
+        }
     }
 }
 
