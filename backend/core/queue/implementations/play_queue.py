@@ -61,6 +61,19 @@ class PlayQueue(ObservableQueue[str]):
 
             print(f"[DEBUG]: contents of play queue: {self.to_json()}")
 
+    
+    async def clear(self):
+        #clear all tracks except the first
+        async with self._lock:
+            id = self._pop()
+            self._clear()
+            if id:
+                self._push(id)
+            
+            await self._emit_event(action=PQA.CLEAR, payload={"id": id, "content": self.to_json()})
+
+            print(f"[DEBUG]: contents of play queue: {self.to_json()}")
+
     async def send_content(self):
         async with self._lock:
             await self._emit_event(action=PQA.SEND_CONTENT, payload={"content": self.to_json()})
