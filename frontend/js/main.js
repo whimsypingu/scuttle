@@ -6,7 +6,7 @@ import { logDebug, setDebugEnabled } from "./utils/debug.js";
 window.addEventListener("DOMContentLoaded", async () => {
 
     //enable: true, disable: false
-    setDebugEnabled(false);
+    setDebugEnabled(true);
 
     logDebug("HELLO WORLD");
     initEvents();
