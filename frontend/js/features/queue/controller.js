@@ -1,7 +1,5 @@
 //static/js/features/queue/controller.js
 
-import { parseTrackFromDataset } from "../../utils/index.js"
-
 import { logDebug } from "../../utils/debug.js";
 
 import { 
@@ -12,18 +10,21 @@ import {
     updatePlayPauseButtonDisplay,
 
     resetUI,
-    updateMediaSession
+    updateMediaSession,
+    getAudioStream
 } from "../audio/index.js";
 
 import { 
     queuePushTrack,
     queueSetFirstTrack,
-    renderQueue
+    renderQueue,
+
+    //queueClear
 } from "./index.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
 
-
+import { fisherYatesShuffle } from "../playlist/index.js";
 
 
 

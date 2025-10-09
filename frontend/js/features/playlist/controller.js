@@ -1,6 +1,6 @@
 //static/js/features/library/controller.js
 
-import { parseTrackFromDataset } from "../../utils/index.js"
+import { logDebug } from "../../utils/debug.js";
 
 import { 
     loadTrack, 
@@ -23,7 +23,6 @@ import {
 
 import { toggleLike } from "./lib/api.js";
 
-import { logDebug } from "../../utils/debug.js";
 import { renderPlaylist } from "./lib/ui.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
@@ -153,6 +152,8 @@ async function onClickShufflePlaylistButton(dataset) {
 
 //helpers
 async function onClickPlayButton(dataset) {
+    const start = performance.now();
+
     //0. parse data
     const trackId = dataset.trackId;
 
@@ -161,40 +162,44 @@ async function onClickPlayButton(dataset) {
         return;
     }
 
-    const response = await getAudioStream(trackId);
-    if (!response.ok) {
-        logDebug("Track is downloading, please wait :)");
-        return;
+    //1. make changes to local queue
+    //console.log("QueueStore check 1:", QueueStore.getTracks());
+    QueueStore.setFirst(trackId);
+    //console.log("QueueStore check 2:", QueueStore.getTracks());
+
+    //2. attempt parallelized loading after cleanup
+    await cleanupCurrentAudio();
+    const loadPromise = loadTrack(trackId);
+
+    //3. make optimistic ui changes
+    const track = TrackStore.get(trackId);
+    logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+
+    updateMediaSession(track, true);
+    renderQueue();
+    resetUI();
+    updatePlayPauseButtonDisplay(true);
+
+    //4. send changes to server (returns websocket message to sync ui)
+    try {
+        await queueSetFirstTrack(track.id);
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to set first track in backend:", err);
     }
 
     try {
-        //1. make changes to local queue
-        //console.log("QueueStore check 1:", QueueStore.getTracks());
-        QueueStore.setFirst(trackId);
-        //console.log("QueueStore check 2:", QueueStore.getTracks());
-
-        //2. load in the audio
-        await cleanupCurrentAudio();
-        await loadTrack(trackId);
-
-        //3. make optimistic ui changes
-        const track = TrackStore.get(trackId);
-        logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
-
-        updateMediaSession(track, true);
-        renderQueue();
-        resetUI();
-        updatePlayPauseButtonDisplay(true);
+        //5. load in the audio
+        await loadPromise;
         
-        //4. play audio
+        //6. play audio
         await playLoadedTrack();
-
-        //5. send changes to server (returns websocket message to sync ui)
-        await queueSetFirstTrack(track.id);
-
     } catch (err) {
         logDebug("[onClickPlayButton] Failed to play audio:", err);
     }
+
+    const end = performance.now();
+    const elapsed = (end - start).toFixed(1);
+    logDebug(`[onClickPlayButton] Total elapsed: ${elapsed} ms`);
 }
 
 async function onClickQueueButton(dataset) {
