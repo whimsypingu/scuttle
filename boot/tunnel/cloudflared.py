@@ -107,13 +107,13 @@ def download_cloudflared(target_path=None, verbose=False):
 
 
 
-def start_cloudflared(bin_path=None, url="http://localhost:8000", verbose=False):
+def start_cloudflared(bin_path=None, url="localhost:8000", verbose=False):
     """
     Start cloudflared as a subprocess.
     
     Args:
         bin_path (str, optional): path to cloudflared binary; if None, tries .env file for "TUNNEL_BIN_PATH"
-        url (str, optional): --url value forwarded to origin. Defaults to "http://localhost:8000"
+        url (str, optional): --url value forwarded to origin. Defaults to "localhost:8000"
         verbose (bool): logs. Defaults to false.
     
     Returns:
