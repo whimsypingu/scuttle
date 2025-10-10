@@ -11,7 +11,7 @@ export const QueueStore = (() => {
          * @returns {number}
          */
         length() {
-            return store.length;
+            return store.length();
         },
 
         /**

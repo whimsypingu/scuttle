@@ -172,6 +172,9 @@ export const domEls = {
 
 
 export const queueDomEls = {
+	//shuffle button (which is in the audio section but it only affects the queue)
+	queueShuffleButtonEl: $(SELECTORS.audio.ids.SHUFFLE_BUTTON),
+
 	//queue
 	queueListEl: $(SELECTORS.queue.ids.LIST),
 
