@@ -157,7 +157,7 @@ async function onClickShufflePlaylistButton(dataset) {
 
 //edit the playlist
 async function onClickEditPlaylistButton(dataset) {
-    const playlistId = getPlaylistData(dataset);
+    const { playlistId } = getPlaylistData(dataset);
     
     try {
         showEditPlaylistPopup(playlistId);

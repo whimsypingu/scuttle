@@ -443,18 +443,18 @@ class AudioDatabase:
                 "id": track_id,
                 "updates": playlist_updates
             }
-            await self._emit_event(ADA.EDIT_PLAYLIST, payload={"content": content})
+            await self._emit_event(ADA.UPDATE_PLAYLISTS, payload={"content": content})
 
 
 
     # Edit a playlist's name
-    async def edit_playlist(self, playlist_id: int, new_name: str):
+    async def edit_playlist(self, playlist_id: int, name: str):
         """
         Update the name of an existing playlist.
 
         Args:
             playlist_id (int): The ID of the playlist to rename.
-            new_name (str): The new name for the playlist.
+            name (str): The new name for the playlist.
 
         Returns:
             dict: The updated playlist info.
@@ -464,11 +464,11 @@ class AudioDatabase:
                 UPDATE {self.PLAYLISTS_TABLE}
                 SET name = ?
                 WHERE id = ?;
-            ''', (new_name, playlist_id))
+            ''', (name, playlist_id))
 
             content = {
                 "id": playlist_id,
-                "name": new_name
+                "name": name
             }
             await self._emit_event(action=ADA.EDIT_PLAYLIST, payload={"content": content})
 

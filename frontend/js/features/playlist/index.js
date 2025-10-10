@@ -14,6 +14,7 @@ export {
     renderPlaylist,
     renderNewCustomPlaylist,
     renderPlaylistById,
+    deleteRenderPlaylistById,
     updateAllListTrackItems
 } from "./lib/ui.js";
 

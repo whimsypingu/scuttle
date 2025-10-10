@@ -73,6 +73,7 @@ export const PlaylistStore = (() => {
          * @returns {boolean} True if the update was successful, false if the playlist was not found.
          */
         editName(playlistId, newName) {
+            console.log("[editName] called,", playlistId, newName);
             const pl = playlists[playlistId];
             if (!pl) return false;
 

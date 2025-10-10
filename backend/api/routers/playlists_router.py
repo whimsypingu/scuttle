@@ -136,7 +136,7 @@ async def edit_playlist(body: EditPlaylistRequest, req: Request) -> Response:
 
     try:
         #edit database name
-        await db.edit_playlist(id=id, name=name)
+        await db.edit_playlist(id, name)
 
         return JSONResponse(content={"status": "created"}, status_code=200)
     

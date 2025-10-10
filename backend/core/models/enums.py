@@ -38,6 +38,7 @@ class PlayQueueAction(str, Enum):
 class AudioDatabaseAction(str, Enum):
     SET_METADATA = "set_metadata"
 
+    UPDATE_PLAYLISTS = "update_playlists"
     DELETE_TRACK = "delete_track"
 
     EDIT_PLAYLIST = "edit_playlist"

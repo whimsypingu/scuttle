@@ -4,7 +4,7 @@ import { LikeStore } from "../../cache/LikeStore.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 import { $, SELECTORS, SEARCH_ACTIONS } from "../../dom/index.js";
-import { renderLibrary, renderLiked, renderNewCustomPlaylist, renderPlaylist, renderPlaylistById, updateAllListTrackItems } from "../../features/playlist/index.js";
+import { deleteRenderPlaylistById, renderLibrary, renderLiked, renderNewCustomPlaylist, renderPlaylist, renderPlaylistById, updateAllListTrackItems } from "../../features/playlist/index.js";
 import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 import { showToast } from "../../features/toast/index.js";
 
@@ -23,7 +23,11 @@ export const handlers = {
     },
     audio_database: {
         set_metadata: handleADSM,
+
         edit_playlist: handleADEP,
+        delete_playlist: handleADDP,
+
+        update_playlists: handleADUP,
         delete_track: handleADDT,
 
         search: handleADSE,
@@ -104,12 +108,12 @@ function handleADSM(payload) {
     showToast("Saved");
 }
 
-function handleADEP(payload) {
+function handleADUP(payload) {
     //see backend/core/database/audio_database.py
     const trackId = payload.content.id;
     const updates = payload.content.updates;
 
-    console.log("UPDATES:", updates);
+    console.log("[handleADUP] updates:", updates);
 
     for (const { id, checked } of updates) {
         const inPlaylist = PlaylistStore.hasTrack(id, trackId);
@@ -132,8 +136,30 @@ function handleADEP(payload) {
     //ignore notif because frontend handles optimistically
 }
 
+function handleADEP(payload) {
+    //see backend/core/database/audio_database.py
+    console.log("[handleADEP] payload:", payload);
+    const playlistId = payload.content.id;
+    const name = payload.content.name;
+
+    //console.log("[handleADEP] edits:", playlistId, name);
+    PlaylistStore.editName(playlistId, name);
+
+    renderPlaylistById(playlistId);
+}
+
+function handleADDP(payload) {
+    const playlistId = payload.content.id;
+
+    console.log("[handleADDP] deleted");
+    PlaylistStore.removePlaylist(playlistId);
+
+    deleteRenderPlaylistById(playlistId);
+}
+
+
 function handleADDT(payload) {
-    console.log("DELETE_TRACK RECEIVED:", payload.content);
+    console.log("[handleADDT] payload content:", payload.content);
 
     //update local stores
     const trackId = payload.content.id;
@@ -205,8 +231,8 @@ function handleADFL(payload) {
 const customPlaylistEl = $(SELECTORS.playlists.ids.CUSTOM);
 
 function handleADCP(payload) {
-    const tempId = payload.content.temp_id;
-    const newId = payload.content.id;
+    const tempId = String(payload.content.temp_id);
+    const newId = String(payload.content.id);
     const name = payload.content.name;
 
     console.log("DEBUGGING:", tempId, newId);

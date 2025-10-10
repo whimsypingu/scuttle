@@ -106,11 +106,39 @@ export function updateAllListTrackItems(trackId, title, artist) {
 //renders a custom playlist by id (just a simple refresh) based on current status in playlistStore
 export function renderPlaylistById(id, showIndex = true, actions = DEFAULT_ACTIONS) {
     const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
-    const listEl = playlistEl ? playlistEl.querySelector(".list-track") : null;
 
+    console.log("[renderPlaylistById]:", playlistEl);
+    if (!playlistEl) return;
+
+    //update playlist title
+    const titleEl = playlistEl.querySelector(".list-title");
+    const playlist = PlaylistStore.getPlaylistById(id);
+
+    if (titleEl && playlist) {
+        titleEl.textContent = playlist.name;
+    }
+
+    //update playlist tracks
+    const listEl = playlistEl.querySelector(".list-track");
     const tracks = PlaylistStore.getTracks(id);
 
     renderPlaylist(listEl, tracks, showIndex, actions);
 }
 
+export function deleteRenderPlaylistById(id) {
+    const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
+    if (!playlistEl) return;
 
+    //remove expanded class
+    playlistEl.classList.remove("expanded");
+
+    // //wait for expanded transition to finish
+    // const handleExpandedEnd = (event) => {
+    //     if (event.propertyName !== "maxHeight") return;
+    //     playlistEl.removeEventListener("transitionend", handleExpandedEnd);
+
+    //     playlistEl.remove();
+    // }
+
+    // playlistEl.addEventListener("transitionend", handleExpandedEnd);
+}
