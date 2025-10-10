@@ -22,7 +22,7 @@ export function registerMediaSessionHandlers() {
             artist: artist,
             artwork: [
                 { 
-                    src: "/frontend/assets/logo.png", 
+                    src: "/frontend/assets/color_drawing_black_background.png", 
                     sizes: "512x512", 
                     type: "image/png" 
                 }
