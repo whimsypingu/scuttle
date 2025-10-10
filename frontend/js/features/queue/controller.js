@@ -20,6 +20,7 @@ import {
     queueClear,
 
     renderQueue,
+    queueSetAllTracks,
 } from "./index.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
@@ -27,6 +28,30 @@ import { QueueStore } from "../../cache/QueueStore.js";
 import { fisherYatesShuffle } from "../playlist/index.js";
 import { showAreYouSurePopup } from "../popup/controller.js";
 
+
+
+
+export async function onClickShuffleQueue() {
+    if (QueueStore.length() <= 1) return; //dont bother with shuffling
+
+    //perform shuffle on everything except the first, then recombine
+    const queueIds = QueueStore.getIds();
+
+    const [currentTrack, ...queuedTracks] = queueIds;
+    const shuffledTracks = fisherYatesShuffle(queuedTracks);
+
+    const newOrder = [currentTrack, ...shuffledTracks];
+
+    //optimistic ui
+    QueueStore.setAll(newOrder);
+    renderQueue();
+
+    try {
+        queueSetAllTracks(newOrder);
+    } catch (err) {
+        logDebug("[onClickShuffleQueue] Failed to shuffle backend queue:", err);
+    }
+}
 
 
 export async function onClickClearQueue() {
