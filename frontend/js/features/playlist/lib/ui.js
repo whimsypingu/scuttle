@@ -6,8 +6,13 @@ import {
     buildTrackListItem, 
     buildTrackListEmptyItem, 
 
-    DEFAULT_ACTIONS
+    DEFAULT_ACTIONS,
+    collapsedHeight
 } from "../../../dom/index.js";
+
+
+
+
 
 
 
@@ -130,7 +135,9 @@ export function deleteRenderPlaylistById(id) {
     if (!playlistEl) return;
 
     //remove expanded class
-    playlistEl.classList.remove("expanded");
+    //playlistEl.classList.remove("expanded");
+
+    playlistEl.remove();
 
     // //wait for expanded transition to finish
     // const handleExpandedEnd = (event) => {
@@ -142,3 +149,149 @@ export function deleteRenderPlaylistById(id) {
 
     // playlistEl.addEventListener("transitionend", handleExpandedEnd);
 }
+
+
+let cachedAvailableHeight = null;
+let playlistExpanded = false;
+
+export function expandPlaylist(titleSearchEl, parentEl, playlistEl) {
+    const isExpanded = playlistEl.classList.contains("expanded");
+    
+    if (isExpanded || (!isExpanded && playlistExpanded)) return false; //do nothing if already expanded or other one is expanded
+
+    playlistExpanded = true;
+    playlistEl.classList.add("expanded");
+
+    titleSearchEl.classList.add("collapsed"); //minimize title and search bar
+
+    //extract elements (may be redundant if caller knows them but it's negligible performance damage)
+    const headerEl = playlistEl.querySelector(".list-header");
+    const listTrackEl = playlistEl.querySelector(".list-track");
+
+    const parentRect = parentEl.getBoundingClientRect();
+    const playlistRect = playlistEl.getBoundingClientRect();
+
+    //move to top and style parent
+    const translateY = parentRect.top - playlistRect.top;
+
+    playlistEl.style.transform = `translateY(${translateY}px)`;
+
+    parentEl.style.overflow = "hidden";
+    parentEl.style.touchAction = "none"; //prevent touch scrolling on mobile
+
+    //list track height
+    if (cachedAvailableHeight == null) {
+        const style = getComputedStyle(playlistEl);
+        const marginBottom = parseFloat(style.marginBottom);
+
+        cachedAvailableHeight = parentRect.bottom - headerEl.offsetHeight - collapsedHeight + marginBottom;
+    }
+
+    listTrackEl.style.height = `${cachedAvailableHeight}px`;
+
+    return true;
+}
+
+
+export function collapsePlaylist(titleSearchEl, parentEl, playlistEl) {
+    const isExpanded = playlistEl.classList.contains("expanded");
+
+    if (!isExpanded) return false; //do nothing if not expanded
+
+    playlistExpanded = false;
+    playlistEl.classList.remove("expanded");
+
+    titleSearchEl.classList.remove("collapsed"); //re-expand title and search bar
+
+    //extract elements
+    const listTrackEl = playlistEl.querySelector(".list-track");
+
+    playlistEl.style.transform = "";
+
+    parentEl.style.overflow = "auto";
+    parentEl.style.touchAction = "";  // optional, enables touch scrolling on mobile
+
+    //list track height
+    listTrackEl.style.height = "0px";
+
+    return true
+}
+
+
+
+
+
+/*
+//old events/dom/playlists.js code
+export function setupPlaylistEventListeners() {
+    domEls.playlistsEl.addEventListener("click", (e) => {
+        const headerEl = e.target.closest(".list-header");
+
+        //playlist content is manipulated
+        if (!headerEl) {
+            onClickPlaylist(e);
+            return;
+        };
+
+        //playlist is toggled
+        const playlistEl = headerEl.closest(".playlist");
+        const isExpanded = playlistEl.classList.contains("expanded");
+
+        //expand heights of playlist option buttons and tracklist
+        const listTrackEl = playlistEl.querySelector(".list-track");
+
+        const parentEl = document.getElementById("playlists");
+
+        playlistEl.classList.toggle("expanded");
+        if (!isExpanded) {
+
+            //shrink title search bar
+            searchDomEls.titleSearchEl.classList.add("collapsed");
+
+            const parentRect = parentEl.getBoundingClientRect();
+            const playlistRect = playlistEl.getBoundingClientRect();
+
+            //move to top and style parent
+            const translateY = parentRect.top - playlistRect.top;
+
+            playlistEl.style.transform = `translateY(${translateY}px)`;
+
+            parentEl.style.overflow = "hidden";
+            parentEl.style.touchAction = "none";  // optional, prevents touch scrolling on mobile
+
+            //list options height
+            const optionHeight = playlistOptionsEl.scrollHeight;
+            //playlistOptionsEl.style.height = `${optionHeight}px`;
+
+            //list track height
+            if (cachedAvailableHeight == null) {
+                const style = getComputedStyle(playlistEl); //slight nudging to make it look nice
+                const marginBottom = parseFloat(style.marginBottom);
+                //console.log("MARGINBOTTOM:", marginBottom);
+                cachedAvailableHeight = parentRect.bottom - headerEl.offsetHeight - collapsedHeight + marginBottom;
+            }
+
+            // console.log("PARENTRECT.BOTTOM:", parentRect.bottom);
+            // console.log("PLAYLISTOPTIONSEL.HEIGHT:", playlistOptionsEl.offsetHeight);
+            // console.log("HEADEREL.HEIGHT:", headerEl.offsetHeight);
+            // console.log("AVAILABLE HEIGHT:", cachedAvailableHeight);
+            listTrackEl.style.height = `${cachedAvailableHeight}px`;
+
+        } else {
+            //re-expand title search bar
+            searchDomEls.titleSearchEl.classList.remove("collapsed");
+
+            playlistEl.style.transform = "";
+
+            parentEl.style.overflow = "auto";
+            parentEl.style.touchAction = "";  // optional, enables touch scrolling on mobile
+
+            //list options height
+            // playlistOptionsEl.style.height = "0px";
+
+            //list track height
+            listTrackEl.style.height = "0px";
+        }
+
+    });
+}*/

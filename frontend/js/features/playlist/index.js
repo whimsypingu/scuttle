@@ -28,17 +28,24 @@ export {
 
 
 //render specific libraries
-import { renderPlaylist } from "./lib/ui.js";
+import * as playlistUI from "./lib/ui.js"; 
 
-const libraryListEl = $(SELECTORS.library.ids.LIST);
-const likedListEl = $(SELECTORS.liked.ids.LIST);
+import { playlistDomEls } from "../../dom/selectors.js";
+const { libraryListEl, likedListEl, titleSearchEl, playlistsEl } = playlistDomEls;
 
 export function renderLibrary() {
     const tracks = TrackStore.getTracks();
-    renderPlaylist(libraryListEl, tracks);
+    playlistUI.renderPlaylist(libraryListEl, tracks);
 }
 
 export function renderLiked() {
     const tracks = LikeStore.getTracks();
-    renderPlaylist(likedListEl, tracks);
+    playlistUI.renderPlaylist(likedListEl, tracks);
 }
+
+//careful with playlistsEl and playlistEl, one is the container
+export function expandPlaylist(playlistEl) { return playlistUI.expandPlaylist(titleSearchEl, playlistsEl, playlistEl); }
+
+export function collapsePlaylist(playlistEl) { return playlistUI.collapsePlaylist(titleSearchEl, playlistsEl, playlistEl); }
+
+export function togglePlaylist(playlistEl) { return expandPlaylist(playlistEl) || collapsePlaylist(playlistEl); }
