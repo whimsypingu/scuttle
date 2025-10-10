@@ -12,6 +12,15 @@ class PlaylistSelection(BaseModel):
     id: str             #technically should be an int, but sqlite will handle conversion.
     checked: bool
 
+
+class EditPlaylistRequest(BaseModel):
+    id: str
+    name: str
+
+class DeletePlaylistRequest(BaseModel):
+    id: str
+
+
 class EditTrackRequest(BaseModel):
     id: str
     title: Optional[str]
