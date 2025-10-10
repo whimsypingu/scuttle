@@ -11,6 +11,11 @@
  * await hidePopup(popupEl, popupOverlayEl);
  */
 export function hidePopup(popupEl, popupOverlayEl) {
+    //prevent stacking hidePopup calls and killing good popups
+    if (!popupEl || !popupEl.innerHTML) {
+        return Promise.resolve();
+    }
+
     return new Promise((resolve) => {
         function onTransitionEnd(e) {
             if (e.target === popupOverlayEl && e.propertyName === "opacity") {
@@ -25,8 +30,6 @@ export function hidePopup(popupEl, popupOverlayEl) {
         popupOverlayEl.addEventListener("transitionend", onTransitionEnd);
         popupOverlayEl.classList.remove("active");
     });
-    
-    //popupOverlayEl.classList.remove("active");
 }
 
 
@@ -40,5 +43,6 @@ export function hidePopup(popupEl, popupOverlayEl) {
  * showPopup(popupOverlayEl);
  */
 export function showPopup(popupOverlayEl) {
+    popupOverlayEl.offsetHeight; //reflow
     popupOverlayEl.classList.add("active");
 }

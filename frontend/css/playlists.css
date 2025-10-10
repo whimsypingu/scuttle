@@ -43,6 +43,7 @@
     /* padding: var(--space-xl); */
     padding: 0;
 
+    opacity: 1;
     height: auto;
     max-height: 30vh;
 
@@ -50,8 +51,13 @@
 }
 .playlist.expanded {
     border-radius: var(--radius-m);
+    opacity: 1;
     max-height: 100vh;
 } 
+.playlist.hidden {
+    opacity: 0;
+    max-height: 0vh;
+}
 
 
 /* preview header part */

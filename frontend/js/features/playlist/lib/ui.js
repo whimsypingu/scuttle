@@ -36,7 +36,14 @@ export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = nul
     //neither the expected nor the temp id version exists yet
     const idToUse = id ? id : tempId;
     const playlistEl = buildNewPlaylist(name, idToUse);
+
+    //set initial styles for animation
+    playlistEl.classList.add("hidden");
+
     customPlaylistEl.appendChild(playlistEl);
+    
+    playlistEl.offsetHeight; //trigger reflow
+    playlistEl.classList.remove("hidden");
 
     const listEl = playlistEl.querySelector(".list-track");
     return listEl;
@@ -242,6 +249,7 @@ export function deleteRenderPlaylistById(id, titleSearchEl, parentEl) {
     //remove after shrink/fade finishes
     const handleShrinkEnd = (e) => {
         if (e.propertyName !== "opacity") return;
+        playlistEl.removeEventListener("transitionend", handleShrinkEnd);
         playlistEl.remove();
     }
 
@@ -252,8 +260,8 @@ export function deleteRenderPlaylistById(id, titleSearchEl, parentEl) {
             playlistEl.removeEventListener("transitionend", handleCollapseEnd);
 
             //start shrink and fade
-            playlistEl.style.opacity = "0";
-            playlistEl.style.maxHeight = "0px";
+            playlistEl.offsetHeight; //trigger reflow
+            playlistEl.classList.add("hidden");
 
             playlistEl.addEventListener("transitionend", handleShrinkEnd);
         };
@@ -261,8 +269,8 @@ export function deleteRenderPlaylistById(id, titleSearchEl, parentEl) {
         playlistEl.addEventListener("transitionend", handleCollapseEnd);
     } else {
         //already collapsed, just shrink and fade immediately, but this shouldnt really be possible
-        playlistEl.style.opacity = "0";
-        playlistEl.style.maxHeight = "0px";
+        playlistEl.offsetHeight; //trigger reflow
+        playlistEl.classList.add("hidden");
 
         playlistEl.addEventListener("transitionend", handleShrinkEnd);
     }
