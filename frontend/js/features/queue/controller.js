@@ -28,6 +28,7 @@ import { QueueStore } from "../../cache/QueueStore.js";
 
 import { fisherYatesShuffle } from "../playlist/index.js";
 import { showAreYouSurePopup } from "../popup/controller.js";
+import { TrackStore } from "../../cache/TrackStore.js";
 
 
 
@@ -106,6 +107,8 @@ async function onClickPlayButton(dataset) {
 
     //0. parse data
     const trackId = dataset.trackId;
+    //logDebug("[onClickPlayButton] dataset:", dataset);
+    logDebug("[onClickPlayButton] track:", TrackStore.get(trackId));
 
     if (!trackId) {
         logDebug("Missing track data attributes in dataset");

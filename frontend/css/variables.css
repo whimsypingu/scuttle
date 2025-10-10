@@ -99,6 +99,12 @@
 
         --mobile-button-font-m-downscaled: 0.7rem/1.3em var(--ff); /* downscaled to accommodate fa button sizing */
         --mobile-button-font-m: bold 1.4rem/1.3em var(--ff);
+
+        --swipe-queue-front: oklch(0.78 0.04 80);
+        --swipe-queue: oklch(0.50 0.12 155);
+
+        --swipe-like: oklch(0.68 0.10 85);
+        --swipe-more: oklch(0.45 0.12 24.5);
     }
 }
 
