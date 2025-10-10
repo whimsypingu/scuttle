@@ -14,7 +14,6 @@ export {
     renderPlaylist,
     renderNewCustomPlaylist,
     renderPlaylistById,
-    deleteRenderPlaylistById,
     updateAllListTrackItems
 } from "./lib/ui.js";
 
@@ -49,3 +48,5 @@ export function expandPlaylist(playlistEl) { return playlistUI.expandPlaylist(ti
 export function collapsePlaylist(playlistEl) { return playlistUI.collapsePlaylist(titleSearchEl, playlistsEl, playlistEl); }
 
 export function togglePlaylist(playlistEl) { return expandPlaylist(playlistEl) || collapsePlaylist(playlistEl); }
+
+export function deleteRenderPlaylistById(playlistId) { return playlistUI.deleteRenderPlaylistById(playlistId, titleSearchEl, playlistsEl); }

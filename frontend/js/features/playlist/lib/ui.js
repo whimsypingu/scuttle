@@ -130,30 +130,27 @@ export function renderPlaylistById(id, showIndex = true, actions = DEFAULT_ACTIO
     renderPlaylist(listEl, tracks, showIndex, actions);
 }
 
-export function deleteRenderPlaylistById(id) {
-    const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
-    if (!playlistEl) return;
-
-    //remove expanded class
-    //playlistEl.classList.remove("expanded");
-
-    playlistEl.remove();
-
-    // //wait for expanded transition to finish
-    // const handleExpandedEnd = (event) => {
-    //     if (event.propertyName !== "maxHeight") return;
-    //     playlistEl.removeEventListener("transitionend", handleExpandedEnd);
-
-    //     playlistEl.remove();
-    // }
-
-    // playlistEl.addEventListener("transitionend", handleExpandedEnd);
-}
 
 
+//state variables for expanding and collapsing
 let cachedAvailableHeight = null;
 let playlistExpanded = false;
 
+/**
+ * Expands a playlist element into a "full view" mode.
+ *
+ * This function:
+ * - Checks that no other playlist is currently expanded.
+ * - Marks the playlist as expanded and applies relevant CSS classes.
+ * - Calculates the translation needed to move the playlist to the top of its container.
+ * - Locks parent scrolling and touch actions to keep the expanded playlist fixed.
+ * - Dynamically sets the `.list-track` container height to fill the available space.
+ *
+ * @param {HTMLElement} titleSearchEl - The title/search bar element to collapse visually.
+ * @param {HTMLElement} parentEl - The scrollable parent container of all playlists.
+ * @param {HTMLElement} playlistEl - The specific playlist element to expand.
+ * @returns {boolean} `true` if expansion succeeded, `false` otherwise.
+ */
 export function expandPlaylist(titleSearchEl, parentEl, playlistEl) {
     const isExpanded = playlistEl.classList.contains("expanded");
     
@@ -176,10 +173,11 @@ export function expandPlaylist(titleSearchEl, parentEl, playlistEl) {
 
     playlistEl.style.transform = `translateY(${translateY}px)`;
 
+    //lock parent scrolling in the background
     parentEl.style.overflow = "hidden";
     parentEl.style.touchAction = "none"; //prevent touch scrolling on mobile
 
-    //list track height
+    //list track height (only calculated once for performance, consider moving this to bootstrap)
     if (cachedAvailableHeight == null) {
         const style = getComputedStyle(playlistEl);
         const marginBottom = parseFloat(style.marginBottom);
@@ -193,6 +191,19 @@ export function expandPlaylist(titleSearchEl, parentEl, playlistEl) {
 }
 
 
+/**
+ * Collapses an expanded playlist back into its normal position.
+ *
+ * This function:
+ * - Checks if the playlist is currently expanded.
+ * - Removes expansion classes and restores default scrolling/touch behavior.
+ * - Resets transforms and list heights to their initial collapsed states.
+ *
+ * @param {HTMLElement} titleSearchEl - The title/search bar element to re-expand visually.
+ * @param {HTMLElement} parentEl - The scrollable parent container of all playlists.
+ * @param {HTMLElement} playlistEl - The specific playlist element to collapse.
+ * @returns {boolean} `true` if collapse succeeded, `false` otherwise.
+ */
 export function collapsePlaylist(titleSearchEl, parentEl, playlistEl) {
     const isExpanded = playlistEl.classList.contains("expanded");
 
@@ -206,10 +217,11 @@ export function collapsePlaylist(titleSearchEl, parentEl, playlistEl) {
     //extract elements
     const listTrackEl = playlistEl.querySelector(".list-track");
 
+    //reset transforms and container styles to allow scrolling
     playlistEl.style.transform = "";
 
     parentEl.style.overflow = "auto";
-    parentEl.style.touchAction = "";  // optional, enables touch scrolling on mobile
+    parentEl.style.touchAction = "";
 
     //list track height
     listTrackEl.style.height = "0px";
@@ -218,6 +230,43 @@ export function collapsePlaylist(titleSearchEl, parentEl, playlistEl) {
 }
 
 
+
+
+
+export function deleteRenderPlaylistById(id, titleSearchEl, parentEl) {
+    const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
+    if (!playlistEl) return;
+
+    const didCollapse = collapsePlaylist(titleSearchEl, parentEl, playlistEl);
+
+    //remove after shrink/fade finishes
+    const handleShrinkEnd = (e) => {
+        if (e.propertyName !== "opacity") return;
+        playlistEl.remove();
+    }
+
+    if (didCollapse) {
+        //wait for collapse animation
+        const handleCollapseEnd = (event) => {
+            if (event.propertyName !== "transform") return; //only act on the transform property
+            playlistEl.removeEventListener("transitionend", handleCollapseEnd);
+
+            //start shrink and fade
+            playlistEl.style.opacity = "0";
+            playlistEl.style.maxHeight = "0px";
+
+            playlistEl.addEventListener("transitionend", handleShrinkEnd);
+        };
+
+        playlistEl.addEventListener("transitionend", handleCollapseEnd);
+    } else {
+        //already collapsed, just shrink and fade immediately, but this shouldnt really be possible
+        playlistEl.style.opacity = "0";
+        playlistEl.style.maxHeight = "0px";
+
+        playlistEl.addEventListener("transitionend", handleShrinkEnd);
+    }
+}
 
 
 
