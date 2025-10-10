@@ -1,6 +1,7 @@
 //static/js/features/audio/controller.js
 
 import { 
+    prefetchNextTrack,
     queuePopTrack,
     queuePushTrack
 } from "../queue/index.js";
@@ -112,6 +113,16 @@ export async function onAudioEnded() {
     } catch (err) {
         logDebug("[onAudioEnded] Failed to update backend queue:", err);
     }
+
+    //8. prefetch next track
+    try {
+        const nextTrack = QueueStore.peekId(1);
+        if (nextTrack) {
+            await prefetchNextTrack(nextTrack);
+        }
+    } catch (err) {
+        logDebug("[onAudioEnded] Failed to prefetch next track:", err);
+    }
 }
 
 //next
@@ -169,6 +180,16 @@ export async function onNextButtonClick() {
         await queuePopTrack();
     } catch (err) {
         logDebug("[onNextButtonClick] Failed to update backend queue:", err);
+    }
+
+    //8. prefetch next track
+    try {
+        const nextTrack = QueueStore.peekId(1);
+        if (nextTrack) {
+            await prefetchNextTrack(nextTrack);
+        }
+    } catch (err) {
+        logDebug("[onNextButtonClick] Failed to prefetch next track:", err);
     }
 }
 

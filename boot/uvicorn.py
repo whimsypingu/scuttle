@@ -37,7 +37,7 @@ def start_uvicorn(host="0.0.0.0", port=8000, verbose=False):
     vprint(f"[uvicorn] Started with PID {proc.pid}", verbose)
 
     #start background reader thread to drain output
-    stdout_queue = drain_output(proc)
+    stdout_queue = drain_output(proc, verbose=verbose)
     
     #return proc and queue so caller can read lines non-blocking by attaching it as a property
     return proc, stdout_queue

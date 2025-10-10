@@ -43,15 +43,19 @@ def terminate_process(proc, name="", verbose=False):
             print(f"[terminate_process] Subprocess {name}cleanup complete. Exit code: {proc.returncode}")
 
 
-def _enqueue_stream(stream, queue: Queue):
+def _enqueue_stream(stream, queue: Queue, verbose=False):
     """Read lines from stream and push into queue, to be eaten by another thread."""
     #blocking until new data from the stream (PIPE)
     for raw in iter(stream.readline, ""):
-        queue.put(raw.rstrip("\n"))
+        line = raw.rstrip("\n")
+        queue.put(line)
+
+        if verbose:
+            print(line)
     queue.put(None)
 
-def drain_output(proc):
+def drain_output(proc, verbose=False):
     stdout_queue = Queue()
-    thread = Thread(target=_enqueue_stream, args=(proc.stdout, stdout_queue), daemon=True)
+    thread = Thread(target=_enqueue_stream, args=(proc.stdout, stdout_queue), kwargs={"verbose": verbose}, daemon=True)
     thread.start()
     return stdout_queue

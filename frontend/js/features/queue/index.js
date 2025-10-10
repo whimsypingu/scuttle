@@ -2,6 +2,7 @@ import { QueueStore } from "../../cache/QueueStore.js";
 import { domEls } from "../../dom/selectors.js";
 
 export { 
+    prefetchNextTrack,
     queueSetAllTracks,
     queueSetFirstTrack, 
     queuePushTrack,
