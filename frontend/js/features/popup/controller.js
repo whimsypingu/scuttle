@@ -1,4 +1,4 @@
-import { buildCreatePlaylistPopup, buildEditTrackPopup, buildAreYouSurePopup } from "../../dom/builders/popups.js";
+import { buildCreatePlaylistPopup, buildEditTrackPopup, buildAreYouSurePopup, buildEditPlaylistPopup } from "../../dom/builders/popups.js";
 import { popupDomEls } from "../../dom/selectors.js";
 import { hidePopup, showPopup } from "./index.js";
 
@@ -9,7 +9,7 @@ import { createPlaylist } from "../playlist/lib/api.js";
 
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { getInputValue, getSelectedPlaylists } from "./lib/utils.js";
-import { deleteTrack, editTrack } from "./lib/api.js";
+import { editPlaylist, deletePlaylist, editTrack, deleteTrack } from "./lib/api.js";
 import { showToast } from "../toast/index.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 
@@ -74,6 +74,96 @@ export function showAreYouSurePopup(options = {}) {
 
 
 
+
+/**
+ * Shows a popup for editing a playlist.
+ *
+ * The popup allows the user to:
+ *  - Edit the playlist's name
+ *  - Delete the playlist (with confirmation)
+ *  - Save or cancel changes
+ *
+ * Event listeners are bound to handle the respective actions.
+ *
+ * @param {string} playlistId - The ID of the playlist to edit.
+ *
+ * @example
+ * showEditPlaylistPopup("123");
+ */
+export function showEditPlaylistPopup(playlistId) {
+    const playlist = PlaylistStore.getPlaylistById(playlistId);
+
+    const newPopupEl = buildEditPlaylistPopup(playlist);
+    popupEl.append(newPopupEl);
+    
+    //bind listeners
+    const cancelButton = newPopupEl.querySelector(".js-cancel");
+    cancelButton.addEventListener("click", async () => {
+        await hidePopup();
+    });
+
+    const saveButtonEl = newPopupEl.querySelector(".js-save");
+    saveButtonEl.addEventListener("click", async () => {
+        logDebug("save triggered"); //more logic here required
+
+        //playlist metadata
+        const playlistNameEl = newPopupEl.querySelector(".js-playlist-name");
+
+        await hidePopup();
+
+        onSavePlaylistEdits(playlistId, playlistNameEl);
+    });
+
+    //delete track entirely
+    const deleteButtonEl = newPopupEl.querySelector(".js-delete");
+    deleteButtonEl.addEventListener("click", async () => {
+        logDebug("delete triggered");
+
+        await hidePopup();
+        
+        const options = {
+            saveText: "Yes",
+        }
+        const confirmed = await showAreYouSurePopup(options);
+        if (confirmed) {
+            await deletePlaylist(playlistId);
+            await hidePopup();
+        }
+    })
+
+    //show
+    showPopup(popupOverlayEl);
+}
+
+
+/**
+ * Handles saving edits to a playlist.
+ *
+ * Extracts the updated playlist name from the input element
+ * and sends it to the backend via `editPlaylist`.
+ *
+ * Note: Does **not** update the local `PlaylistStore` optimistically; 
+ *       the store is updated after backend confirmation.
+ *
+ * @param {string} playlistId - The ID of the playlist to update.
+ * @param {HTMLInputElement} playlistNameEl - The input element containing the new playlist name.
+ *
+ * @returns {Promise<void>}
+ */
+async function onSavePlaylistEdits(playlistId, playlistNameEl) {
+
+    //playlist info
+    const playlistName = getInputValue(playlistNameEl);
+
+    // doesn't update playlist metadata optimistically because 
+    // backend needs to check if empty and use original string if necessary
+    await editPlaylist(playlistId, playlistName);
+}
+
+
+
+
+
 /**
  * Shows a popup to edit which playlists a track belongs to.
  * Includes functionality for editing metadata, toggling playlists, and deleting the track.
@@ -134,7 +224,7 @@ export function showEditTrackPopup(trackId) {
         }
         const confirmed = await showAreYouSurePopup(options);
         if (confirmed) {
-            onDeleteTrack(trackId);
+            await deleteTrack(trackId);
             await hidePopup();
         }
     })
@@ -182,15 +272,6 @@ async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
     await editTrack(trackId, trackTitle, trackArtist, selections);
 }
 
-
-/**
- * Deletes a track via backend API.
- *
- * @param {string} trackId - The ID of the track to delete.
- */
-async function onDeleteTrack(trackId) {
-    await deleteTrack(trackId);
-}
 
 
 

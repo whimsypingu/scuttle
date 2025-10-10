@@ -19,7 +19,8 @@ export {
 
 
 export {
-    getPlaylistIds,
+    getPlaylistData,
+    getPlaylistTrackIds,
     fisherYatesShuffle,
 } from "./lib/utils.js";
 

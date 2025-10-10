@@ -171,3 +171,40 @@ export function buildTrackListEmptyItem() {
     `;
     return li;
 }
+
+
+
+
+
+export function buildNewPlaylist(name, id) {
+    const playlist = document.createElement("div");
+    playlist.classList.add("playlist");
+
+    playlist.dataset.name = name;
+    playlist.dataset.id = id;
+
+    playlist.innerHTML = `
+        <div class="list-header">
+            <h3 class="list-title">${name}</h3>
+        </div>
+
+        <div class="playlist-options">
+            <button class="playlist-option-button edit-playlist-button">
+                <i class="fa fa-ellipsis-h"></i>
+            </button>
+
+            <button class="playlist-option-button shuffle-playlist-button">
+                <i class="fa fa-random"></i>
+            </button>
+
+            <button class="playlist-option-button play-playlist-button">
+                <i class="fa fa-play"></i>
+            </button>
+        </div>
+
+        <ul class="list-track">
+        </ul>
+    `;
+
+    return playlist;
+}

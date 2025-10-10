@@ -1,7 +1,7 @@
 //static/js/features/playlist/lib/ui.js
 
 import { PlaylistStore } from "../../../cache/PlaylistStore.js";
-import { buildNewPlaylist } from "../../../dom/builder.js";
+import { buildNewPlaylist } from "../../../dom/builders/list.js";
 import { 
     buildTrackListItem, 
     buildTrackListEmptyItem, 

@@ -4,7 +4,49 @@ import { LikeStore } from "../../../cache/LikeStore.js";
 import { PlaylistStore } from "../../../cache/PlaylistStore.js";
 import { TrackStore } from "../../../cache/TrackStore.js";
 
-export function getPlaylistIds(playlistDataset) {
+
+/**
+ * Extracts the numeric playlist ID from a playlist dataset.
+ * 
+ * Converts the `id` property of the given playlist dataset to an integer.
+ * If the `id` cannot be parsed as a number, `NaN` will be returned.
+ * 
+ * @param {Object} playlistDataset - The dataset object representing a playlist.
+ * @param {string|number} playlistDataset.id - The playlist ID, either a string or number.
+ * @returns {number} The numeric playlist ID, or `NaN` if parsing fails.
+ * 
+ * @example
+ * getPlaylistData({ id: "5" });   // returns 5
+ * getPlaylistData({ id: 12 });    // returns 12
+ * getPlaylistData({ id: "library" }); // returns NaN
+ */
+export function getPlaylistData(playlistDataset) {
+    const playlistIdRaw = playlistDataset.id;
+    const playlistId = parseInt(playlistIdRaw, 10);
+
+    return playlistId;
+}
+
+
+
+
+
+/**
+ * Get an array of track IDs from a playlist dataset.
+ * 
+ * Supports both system playlists (like "library" or "liked") and user playlists.
+ * 
+ * @param {Object} playlistDataset - The dataset object representing a playlist.
+ * @param {string|number} playlistDataset.id - The ID of the playlist. 
+ *        Can be a number (user playlist) or a string (system playlist: "library", "liked").
+ * @returns {Array<number>} Array of track IDs in the playlist.
+ * @throws Will log a warning for unknown system playlists.
+ * 
+ * @example
+ * getPlaylistTrackIds({ id: "library" }); // returns all track IDs from TrackStore
+ * getPlaylistTrackIds({ id: 5 });        // returns track IDs from user playlist 5
+ */
+export function getPlaylistTrackIds(playlistDataset) {
     const playlistIdRaw = playlistDataset.id;
     const playlistId = parseInt(playlistIdRaw, 10);
 
@@ -26,6 +68,20 @@ export function getPlaylistIds(playlistDataset) {
     }
 }
 
+
+
+/**
+ * Shuffle an array using the Fisher–Yates (aka Knuth) shuffle algorithm.
+ * 
+ * Produces a new array with the elements randomly reordered.
+ * 
+ * @param {Array} arr - The array to shuffle.
+ * @returns {Array} A new shuffled array; the original array is not mutated.
+ * 
+ * @example
+ * fisherYatesShuffle([1, 2, 3, 4]);
+ * // might return [3, 1, 4, 2]
+ */
 export function fisherYatesShuffle(arr) {
     const shuffled = [...arr];
 
