@@ -30,6 +30,8 @@ import { showAreYouSurePopup } from "../popup/controller.js";
 
 
 export async function onClickClearQueue() {
+    if (QueueStore.length() <= 1) return; //dont bother with popup when queue is already blank
+
     const confirmed = await showAreYouSurePopup();
 
     if (confirmed) {
