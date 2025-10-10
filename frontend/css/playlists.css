@@ -72,8 +72,8 @@
     border-radius: var(--radius-m);
     background: linear-gradient(
         160deg, 
-        #8B0000, /* dark red */
-        #FF6347  /* tomato */
+        var(--pirate-maroon), /* dark red */
+        var(--pirate-maroon-3)  /* tomato */
     );
 
     transition: all 0.3s ease;
