@@ -16,7 +16,31 @@ import {
 
 
 
-//adds a new empty playlist element inside the custom playlists section
+/**
+ * Adds a new custom playlist element to the DOM with an optional entrance animation.
+ *
+ * This function handles:
+ * - Checking if a playlist with the given `id` already exists (skips if so).
+ * - Updating a temporary playlist ID (`tempId`) with the final backend ID if necessary.
+ * - Creating a new playlist element using `buildNewPlaylist` if no existing element is found.
+ * - Appending the new playlist to the `customPlaylistEl` container.
+ * - Applying a simple CSS "fade/slide in" animation by toggling the `hidden` class.
+ *
+ * @param {HTMLElement} customPlaylistEl - The container element for custom playlists.
+ * @param {string} name - The display name of the new playlist.
+ * @param {string|number} id - The final ID of the playlist (from backend).
+ * @param {string|number|null} [tempId=null] - Optional temporary ID used while waiting for backend confirmation.
+ * 
+ * @returns {HTMLElement|null} The `.list-track` element inside the new playlist, or `null` if the playlist already exists.
+ *
+ * @example
+ * // Create a new playlist with backend ID
+ * const listEl = renderNewCustomPlaylist(customContainerEl, "My Playlist", 42);
+ *
+ * @example
+ * // Create a temporary playlist while awaiting backend ID
+ * const listEl = renderNewCustomPlaylist(customContainerEl, "New Playlist", null, "temp-123");
+ */
 export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = null) {
     //check if it's already there, then dont do anything
     let existingEl = customPlaylistEl.querySelector(`[data-id="${id}]`);
@@ -239,7 +263,28 @@ export function collapsePlaylist(titleSearchEl, parentEl, playlistEl) {
 
 
 
-
+/**
+ * Removes a playlist element from the DOM with animations.
+ *
+ * This function first collapses the playlist if it is expanded,
+ * waits for the collapse animation to finish, then animates
+ * the playlist shrinking and fading out before finally removing
+ * it from the DOM. If the playlist is already collapsed, it
+ * immediately triggers the shrink/fade animation.
+ *
+ * @param {string|number} id - The ID of the playlist to remove. Must match the `data-id` attribute.
+ * @param {HTMLElement} titleSearchEl - The element containing the search bar/title that may need to expand/collapse.
+ * @param {HTMLElement} parentEl - The parent container of the playlist, used for layout adjustments during collapse.
+ *
+ * @example
+ * deleteRenderPlaylistById("5", titleSearchEl, playlistsContainerEl);
+ *
+ * @remarks
+ * - Relies on `collapsePlaylist` to handle the initial collapse animation.
+ * - Uses `transitionend` events to sequence animations properly.
+ * - Adds a `hidden` class to trigger CSS shrink/fade animation.
+ * - Calls `offsetHeight` to force a reflow before starting the shrink/fade.
+ */
 export function deleteRenderPlaylistById(id, titleSearchEl, parentEl) {
     const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
     if (!playlistEl) return;

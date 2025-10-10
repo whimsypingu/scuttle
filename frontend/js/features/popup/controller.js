@@ -281,7 +281,6 @@ async function onSaveTrackEdits(trackId, optionEls, titleEl, artistEl) {
  * Handles playlist creation, import URL, and UI updates.
  */
 export function showCreatePlaylistPopup() {
-    console.log("[showCreatePlaylistPopup] triggered");
     const playlists = PlaylistStore.getAll();
 
     const newPopupEl = buildCreatePlaylistPopup(playlists);
@@ -292,13 +291,11 @@ export function showCreatePlaylistPopup() {
     //bind listeners
     const cancelButton = newPopupEl.querySelector(".js-cancel");
     cancelButton.addEventListener("click", async () => {
-        console.log("[showCreatePlaylistPopup] canceled");
         await hidePopup();
     });
 
     const saveButtonEl = newPopupEl.querySelector(".js-save");
     saveButtonEl.addEventListener("click", async () => {
-        console.log("[showCreatePlaylistPopup] saved");
         const createPlaylistInputEl = newPopupEl.querySelector(".js-create-playlist-input");
         const importPlaylistInputEl = newPopupEl.querySelector(".js-import-playlist-input");
 
@@ -309,9 +306,6 @@ export function showCreatePlaylistPopup() {
 
     //show
     showPopup(popupOverlayEl);
-
-    console.log("[showCreatePlaylistPopup] content:", popupEl);
-
 }
 
 /**
