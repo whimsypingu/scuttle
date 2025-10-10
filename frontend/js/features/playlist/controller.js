@@ -19,7 +19,8 @@ import {
     queueSetAllTracks,
     queueSetFirstTrack,
     renderQueue,
-    queueRemoveTrack
+    queueRemoveTrack,
+    conditionalPrefetch
 } from "../queue/index.js";
 
 import { toggleLike } from "./lib/api.js";
@@ -246,6 +247,7 @@ async function onClickQueueButton(dataset) {
         showToast(`Queued`);
 
         await queuePushTrack(trackId);
+        await conditionalPrefetch();
     } catch (err) {
         logDebug("Failed to queue audio:", err);
     }
@@ -328,6 +330,7 @@ export async function onSwipe(dataset, actionName) {
 
             try {
                 await queuePushTrack(trackId); //backend
+                await conditionalPrefetch();
             } catch (err) {
                 logDebug("Queue failed", err);
             }

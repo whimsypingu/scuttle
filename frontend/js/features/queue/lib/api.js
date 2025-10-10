@@ -41,10 +41,7 @@ export async function queuePushTrack(id) {
     const response = await postRequest(`/queue/push`, { id });
     console.log("queuePushTrack status:", response.status);
 
-    //2. fire and forget for caching purposes
-    fetch(`/audio/stream/${id}`).catch((err) => {
-        logDebug("queuePushFrontTrack prefetch failed:", err);
-    });
+    //always pair this with conditionalPrefetch() from /index.js somewhere
 }
 
 

@@ -1,7 +1,7 @@
 //static/js/features/audio/controller.js
 
 import { 
-    prefetchNextTrack,
+    conditionalPrefetch,
     queuePopTrack,
     queuePushTrack
 } from "../queue/index.js";
@@ -116,10 +116,7 @@ export async function onAudioEnded() {
 
     //8. prefetch next track
     try {
-        const nextTrack = QueueStore.peekId(1);
-        if (nextTrack) {
-            await prefetchNextTrack(nextTrack);
-        }
+        await conditionalPrefetch();
     } catch (err) {
         logDebug("[onAudioEnded] Failed to prefetch next track:", err);
     }
@@ -184,10 +181,7 @@ export async function onNextButtonClick() {
 
     //8. prefetch next track
     try {
-        const nextTrack = QueueStore.peekId(1);
-        if (nextTrack) {
-            await prefetchNextTrack(nextTrack);
-        }
+        await conditionalPrefetch();
     } catch (err) {
         logDebug("[onNextButtonClick] Failed to prefetch next track:", err);
     }
