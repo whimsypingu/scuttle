@@ -67,7 +67,7 @@ def main():
         while True:
             #------------------------------- Start server -------------------------------#
             log("🚀 Starting Uvicorn server...")
-            server_proc, server_queue = start_uvicorn(verbose=verbose)
+            server_proc, server_queue = start_uvicorn(verbose=True)
             wait_for_uvicorn(verbose=verbose)
 
 

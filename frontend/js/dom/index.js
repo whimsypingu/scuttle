@@ -1,5 +1,5 @@
-export { $, SELECTORS, domEls, queueDomEls, searchDomEls, popupDomEls } from "./selectors.js";
-export { createElem } from "./builder.js";
+export { $, SELECTORS, domEls, queueDomEls, playlistDomEls, searchDomEls, popupDomEls } from "./selectors.js";
+export { createElem } from "./builders/deprecated.js";
 export { 
     buildTrackListItem, 
     buildTrackListEmptyItem,

@@ -21,6 +21,7 @@ import {
 
     renderQueue,
     queueSetAllTracks,
+    conditionalPrefetch,
 } from "./index.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
@@ -175,6 +176,7 @@ async function onClickQueueButton(dataset) {
         showToast(`Queued`);
 
         await queuePushTrack(trackId);
+        await conditionalPrefetch();
     } catch (err) {
         logDebug("Failed to queue audio:", err);
     }

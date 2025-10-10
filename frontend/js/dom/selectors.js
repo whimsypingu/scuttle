@@ -208,7 +208,15 @@ export const popupDomEls = {
 
 
 export const playlistDomEls = {
+	titleSearchEl: $(SELECTORS.search.ids.TITLE_SEARCH_BODY), //for expanding/collapsing playlist
+
+	playlistsEl: $(SELECTORS.playlists.ids.BODY), //container
+
 	customPlaylistEl: $(SELECTORS.playlists.ids.CUSTOM),
 
+	//specific listEls
+	queueListEl: $(SELECTORS.queue.ids.LIST),
 
+	libraryListEl: $(SELECTORS.library.ids.LIST),
+	likedListEl: $(SELECTORS.liked.ids.LIST),
 }

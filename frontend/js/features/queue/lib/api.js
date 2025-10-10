@@ -6,13 +6,18 @@ import { postRequest, getResponse } from "../../../utils/index.js";
 import { logDebug } from "../../../utils/debug.js";
 
 
+export async function prefetchNextTrack(id) {
+    fetch(`/audio/stream/${id}`).catch(err => logDebug(err));
+}
+
 export async function queueSetAllTracks(ids) {
     //1. inform backend
     const response = await postRequest(`/queue/set-all`, { ids });
     console.log("queueSetAllTracks status:", response.status);
 
     //2. fire and forget caching, non blocking (not await-ed) and kind of half ass batched
-    ids.forEach((id, index) => {
+    const PREFETCH_LIMIT = 3;
+    ids.slice(0, PREFETCH_LIMIT).forEach((id, index) => {
         setTimeout(() => {
             fetch(`/audio/stream/${id}`).catch(err => {
                 logDebug(`queueSetAllTracks prefetch failed for ${id}:`, err);
@@ -36,10 +41,7 @@ export async function queuePushTrack(id) {
     const response = await postRequest(`/queue/push`, { id });
     console.log("queuePushTrack status:", response.status);
 
-    //2. fire and forget for caching purposes (service worker will eat this uppp)
-    fetch(`/audio/stream/${id}`).catch((err) => {
-        logDebug("queuePushTrack prefetch failed:", err);
-    });
+    //always pair this with conditionalPrefetch() from /index.js somewhere
 }
 
 

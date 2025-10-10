@@ -19,7 +19,8 @@ import {
     queueSetAllTracks,
     queueSetFirstTrack,
     renderQueue,
-    queueRemoveTrack
+    queueRemoveTrack,
+    conditionalPrefetch
 } from "../queue/index.js";
 
 import { toggleLike } from "./lib/api.js";
@@ -28,12 +29,13 @@ import { renderPlaylist } from "./lib/ui.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
 import { LikeStore } from "../../cache/LikeStore.js";
-import { showEditTrackPopup } from "../popup/controller.js";
+
+import { showEditPlaylistPopup, showEditTrackPopup } from "../popup/controller.js";
+
 import { TrackStore } from "../../cache/TrackStore.js";
 import { showToast } from "../toast/index.js";
 
-import { fisherYatesShuffle, getPlaylistIds } from "./lib/utils.js";
-
+import { fisherYatesShuffle, getPlaylistData, getPlaylistTrackIds } from "./lib/utils.js";
 
 
 //clicking the playlist will check for this
@@ -60,7 +62,12 @@ export async function onClickPlaylist(e) {
         } else if (buttonEl.classList.contains("shuffle-playlist-button")) {
             logDebug("Shuffle playlist clicked");
             await onClickShufflePlaylistButton(playlistDataset);
-        } 
+        
+        } else if (buttonEl.classList.contains("edit-playlist-button")) {
+            //edit or delete playlist
+            logDebug("Edit playlist clicked");
+            await onClickEditPlaylistButton(playlistDataset);
+        }
         
         //individual buttons clicked (desktop)?
         else if (buttonEl.classList.contains("queue-button")) {
@@ -80,7 +87,7 @@ export async function onClickPlaylist(e) {
 
 //play an entire playlist
 async function onClickPlayPlaylistButton(dataset) {
-    const queueIds = getPlaylistIds(dataset);
+    const queueIds = getPlaylistTrackIds(dataset);
 
     try {
         //1. set queue locally
@@ -115,7 +122,7 @@ async function onClickPlayPlaylistButton(dataset) {
 
 //shuffle an entire playlist
 async function onClickShufflePlaylistButton(dataset) {
-    const queueIds = getPlaylistIds(dataset);
+    const queueIds = getPlaylistTrackIds(dataset);
     const shuffledIds = fisherYatesShuffle(queueIds);
 
     try {
@@ -146,6 +153,20 @@ async function onClickShufflePlaylistButton(dataset) {
         logDebug("Failed to shuffle/play playlist:", err);
     }
 }
+
+
+
+//edit the playlist
+async function onClickEditPlaylistButton(dataset) {
+    const { playlistId } = getPlaylistData(dataset);
+    
+    try {
+        showEditPlaylistPopup(playlistId);
+    } catch (err) {
+        logDebug("[onClickEditPlaylistButton] popup failed");
+    }
+}
+
 
 
 
@@ -226,6 +247,7 @@ async function onClickQueueButton(dataset) {
         showToast(`Queued`);
 
         await queuePushTrack(trackId);
+        await conditionalPrefetch();
     } catch (err) {
         logDebug("Failed to queue audio:", err);
     }
@@ -308,6 +330,7 @@ export async function onSwipe(dataset, actionName) {
 
             try {
                 await queuePushTrack(trackId); //backend
+                await conditionalPrefetch();
             } catch (err) {
                 logDebug("Queue failed", err);
             }

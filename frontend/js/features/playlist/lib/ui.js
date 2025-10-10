@@ -1,17 +1,46 @@
 //static/js/features/playlist/lib/ui.js
 
 import { PlaylistStore } from "../../../cache/PlaylistStore.js";
-import { buildNewPlaylist } from "../../../dom/builder.js";
+import { buildNewPlaylist } from "../../../dom/builders/list.js";
 import { 
     buildTrackListItem, 
     buildTrackListEmptyItem, 
 
-    DEFAULT_ACTIONS
+    DEFAULT_ACTIONS,
+    collapsedHeight
 } from "../../../dom/index.js";
 
 
 
-//adds a new empty playlist element inside the custom playlists section
+
+
+
+
+/**
+ * Adds a new custom playlist element to the DOM with an optional entrance animation.
+ *
+ * This function handles:
+ * - Checking if a playlist with the given `id` already exists (skips if so).
+ * - Updating a temporary playlist ID (`tempId`) with the final backend ID if necessary.
+ * - Creating a new playlist element using `buildNewPlaylist` if no existing element is found.
+ * - Appending the new playlist to the `customPlaylistEl` container.
+ * - Applying a simple CSS "fade/slide in" animation by toggling the `hidden` class.
+ *
+ * @param {HTMLElement} customPlaylistEl - The container element for custom playlists.
+ * @param {string} name - The display name of the new playlist.
+ * @param {string|number} id - The final ID of the playlist (from backend).
+ * @param {string|number|null} [tempId=null] - Optional temporary ID used while waiting for backend confirmation.
+ * 
+ * @returns {HTMLElement|null} The `.list-track` element inside the new playlist, or `null` if the playlist already exists.
+ *
+ * @example
+ * // Create a new playlist with backend ID
+ * const listEl = renderNewCustomPlaylist(customContainerEl, "My Playlist", 42);
+ *
+ * @example
+ * // Create a temporary playlist while awaiting backend ID
+ * const listEl = renderNewCustomPlaylist(customContainerEl, "New Playlist", null, "temp-123");
+ */
 export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = null) {
     //check if it's already there, then dont do anything
     let existingEl = customPlaylistEl.querySelector(`[data-id="${id}]`);
@@ -31,7 +60,14 @@ export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = nul
     //neither the expected nor the temp id version exists yet
     const idToUse = id ? id : tempId;
     const playlistEl = buildNewPlaylist(name, idToUse);
+
+    //set initial styles for animation
+    playlistEl.classList.add("hidden");
+
     customPlaylistEl.appendChild(playlistEl);
+    
+    playlistEl.offsetHeight; //trigger reflow
+    playlistEl.classList.remove("hidden");
 
     const listEl = playlistEl.querySelector(".list-track");
     return listEl;
@@ -106,11 +142,258 @@ export function updateAllListTrackItems(trackId, title, artist) {
 //renders a custom playlist by id (just a simple refresh) based on current status in playlistStore
 export function renderPlaylistById(id, showIndex = true, actions = DEFAULT_ACTIONS) {
     const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
-    const listEl = playlistEl ? playlistEl.querySelector(".list-track") : null;
 
+    console.log("[renderPlaylistById]:", playlistEl);
+    if (!playlistEl) return;
+
+    //update playlist title
+    const titleEl = playlistEl.querySelector(".list-title");
+    const playlist = PlaylistStore.getPlaylistById(id);
+
+    if (titleEl && playlist) {
+        titleEl.textContent = playlist.name;
+    }
+
+    //update playlist tracks
+    const listEl = playlistEl.querySelector(".list-track");
     const tracks = PlaylistStore.getTracks(id);
 
     renderPlaylist(listEl, tracks, showIndex, actions);
 }
 
 
+
+//state variables for expanding and collapsing
+let cachedAvailableHeight = null;
+let playlistExpanded = false;
+
+/**
+ * Expands a playlist element into a "full view" mode.
+ *
+ * This function:
+ * - Checks that no other playlist is currently expanded.
+ * - Marks the playlist as expanded and applies relevant CSS classes.
+ * - Calculates the translation needed to move the playlist to the top of its container.
+ * - Locks parent scrolling and touch actions to keep the expanded playlist fixed.
+ * - Dynamically sets the `.list-track` container height to fill the available space.
+ *
+ * @param {HTMLElement} titleSearchEl - The title/search bar element to collapse visually.
+ * @param {HTMLElement} parentEl - The scrollable parent container of all playlists.
+ * @param {HTMLElement} playlistEl - The specific playlist element to expand.
+ * @returns {boolean} `true` if expansion succeeded, `false` otherwise.
+ */
+export function expandPlaylist(titleSearchEl, parentEl, playlistEl) {
+    const isExpanded = playlistEl.classList.contains("expanded");
+    
+    if (isExpanded || (!isExpanded && playlistExpanded)) return false; //do nothing if already expanded or other one is expanded
+
+    playlistExpanded = true;
+    playlistEl.classList.add("expanded");
+
+    titleSearchEl.classList.add("collapsed"); //minimize title and search bar
+
+    //extract elements (may be redundant if caller knows them but it's negligible performance damage)
+    const headerEl = playlistEl.querySelector(".list-header");
+    const listTrackEl = playlistEl.querySelector(".list-track");
+
+    const parentRect = parentEl.getBoundingClientRect();
+    const playlistRect = playlistEl.getBoundingClientRect();
+
+    //move to top and style parent
+    const translateY = parentRect.top - playlistRect.top;
+
+    playlistEl.style.transform = `translateY(${translateY}px)`;
+
+    //lock parent scrolling in the background
+    parentEl.style.overflow = "hidden";
+    parentEl.style.touchAction = "none"; //prevent touch scrolling on mobile
+
+    //list track height (only calculated once for performance, consider moving this to bootstrap)
+    if (cachedAvailableHeight == null) {
+        const style = getComputedStyle(playlistEl);
+        const marginBottom = parseFloat(style.marginBottom);
+
+        cachedAvailableHeight = parentRect.bottom - headerEl.offsetHeight - collapsedHeight + marginBottom;
+    }
+
+    listTrackEl.style.height = `${cachedAvailableHeight}px`;
+
+    return true;
+}
+
+
+/**
+ * Collapses an expanded playlist back into its normal position.
+ *
+ * This function:
+ * - Checks if the playlist is currently expanded.
+ * - Removes expansion classes and restores default scrolling/touch behavior.
+ * - Resets transforms and list heights to their initial collapsed states.
+ *
+ * @param {HTMLElement} titleSearchEl - The title/search bar element to re-expand visually.
+ * @param {HTMLElement} parentEl - The scrollable parent container of all playlists.
+ * @param {HTMLElement} playlistEl - The specific playlist element to collapse.
+ * @returns {boolean} `true` if collapse succeeded, `false` otherwise.
+ */
+export function collapsePlaylist(titleSearchEl, parentEl, playlistEl) {
+    const isExpanded = playlistEl.classList.contains("expanded");
+
+    if (!isExpanded) return false; //do nothing if not expanded
+
+    playlistExpanded = false;
+    playlistEl.classList.remove("expanded");
+
+    titleSearchEl.classList.remove("collapsed"); //re-expand title and search bar
+
+    //extract elements
+    const listTrackEl = playlistEl.querySelector(".list-track");
+
+    //reset transforms and container styles to allow scrolling
+    playlistEl.style.transform = "";
+
+    parentEl.style.overflow = "auto";
+    parentEl.style.touchAction = "";
+
+    //list track height
+    listTrackEl.style.height = "0px";
+
+    return true
+}
+
+
+
+
+/**
+ * Removes a playlist element from the DOM with animations.
+ *
+ * This function first collapses the playlist if it is expanded,
+ * waits for the collapse animation to finish, then animates
+ * the playlist shrinking and fading out before finally removing
+ * it from the DOM. If the playlist is already collapsed, it
+ * immediately triggers the shrink/fade animation.
+ *
+ * @param {string|number} id - The ID of the playlist to remove. Must match the `data-id` attribute.
+ * @param {HTMLElement} titleSearchEl - The element containing the search bar/title that may need to expand/collapse.
+ * @param {HTMLElement} parentEl - The parent container of the playlist, used for layout adjustments during collapse.
+ *
+ * @example
+ * deleteRenderPlaylistById("5", titleSearchEl, playlistsContainerEl);
+ *
+ * @remarks
+ * - Relies on `collapsePlaylist` to handle the initial collapse animation.
+ * - Uses `transitionend` events to sequence animations properly.
+ * - Adds a `hidden` class to trigger CSS shrink/fade animation.
+ * - Calls `offsetHeight` to force a reflow before starting the shrink/fade.
+ */
+export function deleteRenderPlaylistById(id, titleSearchEl, parentEl) {
+    const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
+    if (!playlistEl) return;
+
+    const didCollapse = collapsePlaylist(titleSearchEl, parentEl, playlistEl);
+
+    //remove after shrink/fade finishes
+    const handleShrinkEnd = (e) => {
+        if (e.propertyName !== "opacity") return;
+        playlistEl.removeEventListener("transitionend", handleShrinkEnd);
+        playlistEl.remove();
+    }
+
+    if (didCollapse) {
+        //wait for collapse animation
+        const handleCollapseEnd = (event) => {
+            if (event.propertyName !== "transform") return; //only act on the transform property
+            playlistEl.removeEventListener("transitionend", handleCollapseEnd);
+
+            //start shrink and fade
+            playlistEl.offsetHeight; //trigger reflow
+            playlistEl.classList.add("hidden");
+
+            playlistEl.addEventListener("transitionend", handleShrinkEnd);
+        };
+
+        playlistEl.addEventListener("transitionend", handleCollapseEnd);
+    } else {
+        //already collapsed, just shrink and fade immediately, but this shouldnt really be possible
+        playlistEl.offsetHeight; //trigger reflow
+        playlistEl.classList.add("hidden");
+
+        playlistEl.addEventListener("transitionend", handleShrinkEnd);
+    }
+}
+
+
+
+/*
+//old events/dom/playlists.js code
+export function setupPlaylistEventListeners() {
+    domEls.playlistsEl.addEventListener("click", (e) => {
+        const headerEl = e.target.closest(".list-header");
+
+        //playlist content is manipulated
+        if (!headerEl) {
+            onClickPlaylist(e);
+            return;
+        };
+
+        //playlist is toggled
+        const playlistEl = headerEl.closest(".playlist");
+        const isExpanded = playlistEl.classList.contains("expanded");
+
+        //expand heights of playlist option buttons and tracklist
+        const listTrackEl = playlistEl.querySelector(".list-track");
+
+        const parentEl = document.getElementById("playlists");
+
+        playlistEl.classList.toggle("expanded");
+        if (!isExpanded) {
+
+            //shrink title search bar
+            searchDomEls.titleSearchEl.classList.add("collapsed");
+
+            const parentRect = parentEl.getBoundingClientRect();
+            const playlistRect = playlistEl.getBoundingClientRect();
+
+            //move to top and style parent
+            const translateY = parentRect.top - playlistRect.top;
+
+            playlistEl.style.transform = `translateY(${translateY}px)`;
+
+            parentEl.style.overflow = "hidden";
+            parentEl.style.touchAction = "none";  // optional, prevents touch scrolling on mobile
+
+            //list options height
+            const optionHeight = playlistOptionsEl.scrollHeight;
+            //playlistOptionsEl.style.height = `${optionHeight}px`;
+
+            //list track height
+            if (cachedAvailableHeight == null) {
+                const style = getComputedStyle(playlistEl); //slight nudging to make it look nice
+                const marginBottom = parseFloat(style.marginBottom);
+                //console.log("MARGINBOTTOM:", marginBottom);
+                cachedAvailableHeight = parentRect.bottom - headerEl.offsetHeight - collapsedHeight + marginBottom;
+            }
+
+            // console.log("PARENTRECT.BOTTOM:", parentRect.bottom);
+            // console.log("PLAYLISTOPTIONSEL.HEIGHT:", playlistOptionsEl.offsetHeight);
+            // console.log("HEADEREL.HEIGHT:", headerEl.offsetHeight);
+            // console.log("AVAILABLE HEIGHT:", cachedAvailableHeight);
+            listTrackEl.style.height = `${cachedAvailableHeight}px`;
+
+        } else {
+            //re-expand title search bar
+            searchDomEls.titleSearchEl.classList.remove("collapsed");
+
+            playlistEl.style.transform = "";
+
+            parentEl.style.overflow = "auto";
+            parentEl.style.touchAction = "";  // optional, enables touch scrolling on mobile
+
+            //list options height
+            // playlistOptionsEl.style.height = "0px";
+
+            //list track height
+            listTrackEl.style.height = "0px";
+        }
+
+    });
+}*/

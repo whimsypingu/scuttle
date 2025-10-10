@@ -67,6 +67,21 @@ export const PlaylistStore = (() => {
         },
 
         /**
+         * Update the name of an existing playlist.
+         * @param {string} playlistId - The ID of the playlist to rename.
+         * @param {string} newName - The new name for the playlist.
+         * @returns {boolean} True if the update was successful, false if the playlist was not found.
+         */
+        editName(playlistId, newName) {
+            console.log("[editName] called,", playlistId, newName);
+            const pl = playlists[playlistId];
+            if (!pl) return false;
+
+            pl.name = newName;
+            return true;
+        },
+
+        /**
          * Remove a playlist from the store.
          * @param {string} id - The ID of the playlist to remove.
          */

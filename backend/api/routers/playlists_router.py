@@ -4,7 +4,7 @@ from fastapi import APIRouter, Query, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 
 
-from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, DeleteTrackRequest, EditTrackRequest
+from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, DeletePlaylistRequest, DeleteTrackRequest, EditPlaylistRequest, EditTrackRequest
 from backend.core.database.audio_database import AudioDatabase
 from backend.core.models.download_job import DownloadJob
 from backend.core.playlists.manager import PlaylistExtractorManager
@@ -108,6 +108,64 @@ async def create_playlist(body: CreatePlaylistRequest, req: Request) -> Response
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     
+
+
+@router.post("/edit-playlist")
+async def edit_playlist(body: EditPlaylistRequest, req: Request) -> Response:
+    """
+    Edits a playlist in the database.
+
+    Args:
+        body (CreatePlaylistRequest): Request body containing id and new name.
+        req (Request): FastAPI request object to access app state.
+
+    Returns:
+        JSONResponse: Status creation
+
+    Raises:
+        HTTPException: Returns 400 if name is blank.
+        HTTPException: 500 for unexpected errors.
+    """
+    id = body.id
+    name = body.name.strip() if body.name else ""
+
+    if not name:
+        raise HTTPException(status_code=400, detail="Playlist name cannot be empty")
+
+    db: AudioDatabase = req.app.state.db
+
+    try:
+        #edit database name
+        await db.edit_playlist(id, name)
+
+        return JSONResponse(content={"status": "created"}, status_code=200)
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.post("/delete-playlist")
+async def delete_playlist(body: DeletePlaylistRequest, req: Request) -> Response:
+    """
+    Deletes track in the database
+
+    Args:
+        body (DeletePlaylistRequest): Request body containing playlist id to delete
+        req (Request): FastAPI request object to access app state.
+
+    Returns:
+        status
+    """
+    id = body.id
+
+    db: AudioDatabase = req.app.state.db
+
+    await db.delete_playlist(id)
+
+    return JSONResponse(content={"status": "deleted"}, status_code=200)
+
 
 
 

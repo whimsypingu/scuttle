@@ -443,4 +443,65 @@ class AudioDatabase:
                 "id": track_id,
                 "updates": playlist_updates
             }
-            await self._emit_event(ADA.EDIT_PLAYLIST, payload={"content": content})
+            await self._emit_event(ADA.UPDATE_PLAYLISTS, payload={"content": content})
+
+
+
+    # Edit a playlist's name
+    async def edit_playlist(self, playlist_id: int, name: str):
+        """
+        Update the name of an existing playlist.
+
+        Args:
+            playlist_id (int): The ID of the playlist to rename.
+            name (str): The new name for the playlist.
+
+        Returns:
+            dict: The updated playlist info.
+        """
+        async with self._lock:
+            await self._execute(f'''
+                UPDATE {self.PLAYLISTS_TABLE}
+                SET name = ?
+                WHERE id = ?;
+            ''', (name, playlist_id))
+
+            content = {
+                "id": playlist_id,
+                "name": name
+            }
+            await self._emit_event(action=ADA.EDIT_PLAYLIST, payload={"content": content})
+
+            return content
+
+
+    # Delete a playlist and optionally remove its tracks
+    async def delete_playlist(self, playlist_id: int):
+        """
+        Delete a playlist and remove its track associations.
+
+        Args:
+            playlist_id (int): The ID of the playlist to delete.
+
+        Returns:
+            dict: Info about the deleted playlist.
+        """
+        async with self._lock:
+            # Delete associated tracks
+            await self._execute(f'''
+                DELETE FROM {self.PLAYLIST_TRACKS_TABLE}
+                WHERE playlist_id = ?;
+            ''', (playlist_id,))
+
+            # Delete the playlist itself
+            await self._execute(f'''
+                DELETE FROM {self.PLAYLISTS_TABLE}
+                WHERE id = ?;
+            ''', (playlist_id,))
+
+            content = {
+                "id": playlist_id
+            }
+            await self._emit_event(action=ADA.DELETE_PLAYLIST, payload={"content": content})
+
+            return content

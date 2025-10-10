@@ -16,18 +16,20 @@ export const QueueStore = (() => {
 
         /**
          * Peek at the ID at the front of the queue without removing it.
+         * @param {number} index - The position in the queue (0 = first track).
          * @returns {string|null} The track ID, or null if empty.
          */
-        peekId() {
+        peekId(index = 0) {
             const ids = store.getIds();
-            return ids[0] || null;
+            return ids[index] || null;
         },
 
          /**
          * Peek at the full track object at the front of the queue.
+         * @param {number} index - The position in the queue (0 = first track).
          * @returns {object|null} The track object, or null if empty.
          */
-        peekTrack() {
+        peekTrack(index = 0) {
             const id = this.peekId();
             return id ? TrackStore.get(id) : null;
         },

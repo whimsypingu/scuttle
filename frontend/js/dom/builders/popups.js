@@ -39,6 +39,62 @@ export function buildCreatePlaylistPopup() {
 
 
 /**
+ * Builds a popup DOM element for editing a playlist.
+ *
+ * This popup allows the user to:
+ *  - Edit the playlist's name
+ *  - Delete the playlist
+ *  - Save or cancel changes
+ *
+ * @param {Object} playlist - The playlist object to edit.
+ * @param {string} playlist.id - The unique ID of the playlist.
+ * @param {string} playlist.name - The current name of the playlist.
+ *
+ * @returns {HTMLDivElement} The constructed "Edit Playlist" popup element.
+ *
+ * @example
+ * const playlist = { id: "123", name: "My Playlist" };
+ * const popup = buildEditPlaylistPopup(playlist);
+ * document.body.appendChild(popup);
+ */
+export function buildEditPlaylistPopup(playlist) {
+    const popup = document.createElement("div");
+    popup.classList.add("popup-content");
+    
+    popup.innerHTML = `
+        <div class="scrollable-popup-content">
+
+            <h3 class="popup-message">Edit Playlist</h3>
+
+            <div class="multi-input-menu">
+                <input class="menu-input js-playlist-name" type="text" value="${playlist.name}" placeholder="${playlist.name}">
+            </div>
+
+            <div class="spacing-block">
+            </div>
+
+            <h3 class="popup-message">Delete</h3>
+            <div class="delete-track-menu">
+                <button class="menu-button red js-delete">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="popup-actions">
+            <button class="menu-button green js-save">Save</button>
+            <button class="menu-button js-cancel">Cancel</button>
+        </div>
+    `;
+
+    return popup;
+}
+
+
+
+
+
+/**
  * Builds a popup DOM element for editing a track's playlist membership and metadata.
  *
  * The popup contains:
