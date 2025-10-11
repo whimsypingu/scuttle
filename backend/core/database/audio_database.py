@@ -125,7 +125,7 @@ class AudioDatabase:
                 CREATE TABLE IF NOT EXISTS {self.LIKES_TABLE} (
                     id TEXT PRIMARY KEY,
                     liked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (id) REFERENCES {self.TRACKS_TABLE}(id) ON DELETE CASCADE
+                    FOREIGN KEY (id) REFERENCES {self.DOWNLOADS_TABLE}(id) ON DELETE CASCADE
                 );
             ''')
 
@@ -143,7 +143,7 @@ class AudioDatabase:
                     track_id TEXT NOT NULL,
                     added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (playlist_id) REFERENCES {self.PLAYLISTS_TABLE}(id) ON DELETE CASCADE,
-                    FOREIGN KEY (track_id) REFERENCES {self.TRACKS_TABLE}(id) ON DELETE CASCADE,
+                    FOREIGN KEY (track_id) REFERENCES {self.DOWNLOADS_TABLE}(id) ON DELETE CASCADE,
                     PRIMARY KEY (playlist_id, track_id)
                 );
             ''')
@@ -185,6 +185,32 @@ class AudioDatabase:
 
 
     async def log_track(self, track: Track):
+        """
+        Log (insert or update) a track's metadata into the TRACKS table.
+
+        This method ensures that the database always has up-to-date metadata for
+        a given track. If the track already exists, its metadata is replaced;
+        otherwise, a new row is inserted. The `downloads` and `playlist_tracks`
+        tables are not affected by this call — it only manages the metadata
+        layer.
+
+        After the database operation completes, an ADA.LOG_TRACK event is emitted
+        to notify any connected clients or event listeners of the new or updated
+        track.
+
+        Args:
+            track (Track): A Track object containing at least:
+                - id (str): Unique track ID (primary key).
+                - title (str): Track title.
+                - artist (str|None): Track artist.
+                - duration (int|None): Track duration in seconds.
+
+        Emits:
+            ADA.LOG_TRACK — with payload containing the track's metadata.
+
+        Example:
+            >>> await db.log_track(Track(id="abc123", title="Song", artist="Artist", duration=200))
+        """
         async with self._lock:
             await self._execute(f'''
                 INSERT OR REPLACE INTO {self.TRACKS_TABLE}
@@ -197,8 +223,42 @@ class AudioDatabase:
                 track.duration,
             ))
 
+            content = {
+                "id": track.id,
+                "title": track.title,
+                "artist": track.artist,
+                "duration": track.duration
+            }
+            await self._emit_event(action=ADA.LOG_TRACK, payload={"content": content})
 
-    async def delete_track(self, id: str):
+
+
+    async def unlog_track(self, id: str):
+        """
+        Completely remove a track's metadata and all associated references
+        from the database.
+
+        This method deletes the track from the TRACKS table by its unique ID.
+        Because of the ON DELETE CASCADE constraints, this operation will
+        automatically propagate and remove any related entries in the
+        DOWNLOADS, LIKES, and PLAYLIST_TRACKS tables.
+
+        After the database operation completes, an ADA.UNLOG_TRACK event is
+        emitted to notify any connected clients or listeners that the track has
+        been fully removed from the system.
+
+        Args:
+            id (str): The unique track ID to remove.
+
+        Side Effects:
+            - Removes the track from TRACKS.
+            - Cascades deletions to DOWNLOADS, LIKES, and PLAYLIST_TRACKS.
+            - Emits an ADA.UNLOG_TRACK event.
+
+        Example:
+            >>> await db.unlog_track("abc123")
+            # Removes the track metadata and all related entries
+        """
         #deletes via ON DELETE CASCADE foreign keys automatically cleaning up tables
         async with self._lock:
             await self._execute(f'''
@@ -209,15 +269,216 @@ class AudioDatabase:
             content = {
                 "id": id
             }
-            await self._emit_event(action=ADA.DELETE_TRACK, payload={"content": content})
+            await self._emit_event(action=ADA.UNLOG_TRACK, payload={"content": content})
 
 
-    async def log_download(self, id: str):
+
+    async def is_logged(self, track_id: str) -> bool:
+        """
+        Check if a track exists in the TRACKS table (i.e., is logged).
+
+        Args:
+            track_id (str): The unique track ID to check.
+
+        Returns:
+            bool: True if the track exists in TRACKS, False otherwise.
+        """
         async with self._lock:
+            row = await self._fetchone(f'''
+                SELECT 1 FROM {self.TRACKS_TABLE} WHERE id = ? LIMIT 1;
+            ''', (track_id,))
+            return row is not None
+
+
+
+    async def log_download(self, id: str) -> dict:
+        """
+        Log a new download event for an existing track and return its full metadata.
+
+        This method inserts a new entry into the DOWNLOADS table for the given
+        track ID, recording the current timestamp. If the track has already
+        been logged as downloaded, the INSERT OR IGNORE clause prevents
+        duplicate entries.
+
+        After insertion, the method fetches the track's full metadata from
+        TRACKS_TABLE (id, title, artist, duration), emits an ADA.LOG_DOWNLOAD
+        event, and returns the track object.
+
+        Args:
+            id (str): The unique track ID to log as downloaded.
+
+        Returns:
+            dict: A dictionary containing the track's metadata:
+                {
+                    "id": str,
+                    "title": str,
+                    "artist": str,
+                    "duration": int
+                }
+
+        Side Effects:
+            - Adds a row to DOWNLOADS if it doesn't exist already.
+            - Emits an ADA.LOG_DOWNLOAD event.
+
+        Example:
+            >>> track = await db.log_download("abc123")
+            {"id": "abc123", "title": "Song A", "artist": "Artist X", "duration": 210}
+        """
+        async with self._lock:
+            # Insert into downloads table
             await self._execute(f'''
                 INSERT OR IGNORE INTO {self.DOWNLOADS_TABLE} (id, downloaded_at)
                 VALUES (?, CURRENT_TIMESTAMP);
             ''', (id,))
+
+            # Fetch full track metadata from tracks table
+            row = await self._fetchone(f'''
+                SELECT t.id,
+                       COALESCE(t.custom_title, t.title) AS title,
+                       COALESCE(t.custom_artist, t.artist) AS artist,
+                       t.duration
+                FROM {self.TRACKS_TABLE} t
+                WHERE t.id = ?;
+            ''', (id,))
+
+            if row is None:
+                raise ValueError(f"Track with id {id} does not exist in TRACKS_TABLE")
+
+            track = {
+                "id": row["id"],
+                "title": row["title"],
+                "artist": row["artist"],
+                "duration": row["duration"]
+            }
+
+            # Emit event with full track object
+            await self._emit_event(action=ADA.LOG_DOWNLOAD, payload={"content": track})
+
+            return track
+
+
+
+    async def unlog_download(self, id: str):
+        """
+        Remove a download entry for a track without deleting its metadata.
+
+        This method deletes the specified track's entry from the DOWNLOADS table
+        while leaving its metadata intact in the TRACKS table. Because the
+        PLAYLIST_TRACKS table references the DOWNLOADS table (via foreign keys),
+        this deletion will automatically cascade to remove any playlist
+        associations tied to the download.
+
+        After the database operation completes, an ADA.DELETE_DOWNLOAD event is
+        emitted to notify connected clients or listeners that the download entry
+        has been removed.
+
+        Args:
+            id (str): The unique track ID whose download entry should be removed.
+
+        Side Effects:
+            - Removes the entry from DOWNLOADS.
+            - Cascades deletions to PLAYLIST_TRACKS (playlist associations).
+            - Leaves TRACKS metadata intact.
+            - Emits an ADA.DELETE_DOWNLOAD event.
+
+        Example:
+            >>> await db.unlog_download("abc123")
+            # Removes the download entry but preserves the track metadata
+        """
+        async with self._lock:
+            await self._execute(f'''
+                DELETE FROM {self.DOWNLOADS_TABLE}
+                WHERE id = ?;
+            ''', (id,))
+
+            content = {
+                "id": id
+            }
+            await self._emit_event(action=ADA.UNLOG_DOWNLOAD, payload={"content": content})
+
+
+
+    async def is_downloaded(self, track_id: str) -> bool:
+        """
+        Check if a track exists in the DOWNLOADS table (i.e., is downloaded).
+
+        Args:
+            track_id (str): The unique track ID to check.
+
+        Returns:
+            bool: True if the track is downloaded, False otherwise.
+        """
+        async with self._lock:
+            row = await self._fetchone(f'''
+                SELECT 1 FROM {self.DOWNLOADS_TABLE} WHERE id = ? LIMIT 1;
+            ''', (track_id,))
+            return row is not None
+
+
+
+    async def get_downloads_content(self):
+        """
+        Retrieve full metadata for all downloaded tracks, ordered by download time.
+
+        This method joins the DOWNLOADS and TRACKS tables to fetch detailed
+        information (id, title, artist, duration) for each downloaded track.
+        Custom title and artist fields are preferred if available.
+
+        The results are returned in reverse chronological order of download time,
+        with the most recently downloaded tracks first.
+
+        After fetching, an ADA.GET_DOWNLOADS_CONTENT event is emitted to notify
+        connected clients or listeners.
+
+        Returns:
+            list[dict]: A list of track objects in the following shape:
+                [
+                    {
+                        "id": str,
+                        "title": str,
+                        "artist": str,
+                        "duration": int
+                    },
+                    ...
+                ]
+
+        Example:
+            >>> await db.get_downloads_content()
+            [
+                {"id": "abc123", "title": "Song A", "artist": "Artist X", "duration": 210},
+                {"id": "xyz456", "title": "Song B", "artist": "Artist Y", "duration": 185},
+            ]
+        """
+        async with self._lock:
+            query = f"""
+                SELECT t.id,
+                       COALESCE(t.custom_title, t.title) AS title,
+                       COALESCE(t.custom_artist, t.artist) AS artist,
+                       t.duration
+                FROM {self.TRACKS_TABLE} t
+                INNER JOIN {self.DOWNLOADS_TABLE} d ON t.id = d.id
+                ORDER BY d.downloaded_at DESC;
+            """
+            rows = await self._fetchall(query)
+
+            content = [
+                {
+                    "id": row["id"],
+                    "title": row["title"],
+                    "artist": row["artist"],
+                    "duration": row["duration"]
+                }
+                for row in rows
+            ]
+
+            await self._emit_event(
+                action=ADA.GET_DOWNLOADS_CONTENT,
+                payload={"content": content}
+            )
+
+            return content
+
+
 
     
     async def set_custom_metadata(self, id: str, custom_title: Optional[str] = None, custom_artist: Optional[str] = None):
@@ -254,6 +515,15 @@ class AudioDatabase:
 
 
     async def search(self, q: str) -> List[Track]:
+        """
+        Search for tracks by title or artist, matching both original and custom values.
+
+        Args:
+            q (str): The search query string. If empty, returns all tracks.
+
+        Returns:
+            list[dict]: List of track objects with id, title, artist, duration.
+        """
         async with self._lock:
             if not q:
                 #no filtering, return all entries from downloads
@@ -276,12 +546,13 @@ class AudioDatabase:
                     COALESCE(t.custom_artist, t.artist) AS artist,
                     t.duration
                 FROM {self.TRACKS_TABLE} t
-                LEFT JOIN {self.DOWNLOADS_TABLE} d ON t.id = d.id
-                WHERE COALESCE(t.custom_title, t.title) LIKE ? COLLATE NOCASE 
+                WHERE t.title LIKE ? COLLATE NOCASE
+                    OR t.artist LIKE ? COLLATE NOCASE
+                    OR COALESCE(t.custom_title, t.title) LIKE ? COLLATE NOCASE 
                     OR COALESCE(t.custom_artist, t.artist) LIKE ? COLLATE NOCASE
-                ORDER BY d.downloaded_at DESC, t.title COLLATE NOCASE;
+                ORDER BY t.title COLLATE NOCASE;
                 """
-                params = (pattern, pattern)
+                params = (pattern, pattern, pattern, pattern)
 
             rows = await self._fetchall(query, params)
             content = [

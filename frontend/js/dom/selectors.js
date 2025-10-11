@@ -215,6 +215,8 @@ export const playlistDomEls = {
 	customPlaylistEl: $(SELECTORS.playlists.ids.CUSTOM),
 
 	//specific listEls
+	searchListEl: $(SELECTORS.search.ids.LIST),
+
 	queueListEl: $(SELECTORS.queue.ids.LIST),
 
 	libraryListEl: $(SELECTORS.library.ids.LIST),

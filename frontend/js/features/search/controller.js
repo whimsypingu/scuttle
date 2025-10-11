@@ -160,6 +160,9 @@ export async function onDocumentSearchClick(e) {
 
     if (isInSearchInput) {
         //handle search input focus
+        const data = await search("");
+        console.log("data:", data);
+
         onSearchFocus();
     } else if (isInDropdown) {
         //handle dropdown touch, scroll handled in separate touchmove

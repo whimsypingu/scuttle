@@ -29,23 +29,24 @@ export const handlers = {
         remove: handlePQRE
     },
     audio_database: {
-        set_metadata: handleADSM,
+        set_metadata: handleADSetMetadata,
 
-        edit_playlist: handleADEP,
-        delete_playlist: handleADDP,
+        create_playlist: handleADCreatePlaylist,
+        update_playlists: handleADUpdatePlaylists,
+        edit_playlist: handleADEditPlaylist,
+        delete_playlist: handleADDeletePlaylist,
 
-        update_playlists: handleADUP,
-        delete_track: handleADDT,
+        //log_track: handleADLogTrack,
+        //unlog_track: handleADUnlogTrack,
+        log_download: handleADLogDownload,
+        unlog_download: handleADUnlogDownload,
 
-        search: handleADSE,
-        create_playlist: handleADCP,
-        fetch_likes: handleADFL,
-
-        download: handleADDO
+        search: handleADSearch,
+        fetch_likes: handleADFetchLikes,
     },
     youtube_client: {
-        search: handleYTSE,
-        download: handleYTDO,
+        //search: handleYTSE,
+        //download: handleYTDO,
 
         task_start: handleTaskStart,
         task_finish: handleTaskFinish,
@@ -92,11 +93,22 @@ function handlePQRE(payload) {
 
 
 
-const libraryListEl = $(SELECTORS.library.ids.LIST);
 const searchListEl = $(SELECTORS.search.ids.LIST);
+const customPlaylistEl = $(SELECTORS.playlists.ids.CUSTOM);
 
-function handleADSM(payload) {
-    console.log("SET_METADATA RECEIVED:", payload.content);
+function handleADCreatePlaylist(payload) {
+    const tempId = String(payload.content.temp_id);
+    const newId = String(payload.content.id);
+    const name = payload.content.name;
+
+    console.log("DEBUGGING:", tempId, newId);
+
+    PlaylistStore.updateId(tempId, newId);
+    renderNewCustomPlaylist(customPlaylistEl, name, newId, tempId);
+}
+
+function handleADSetMetadata(payload) {
+    console.log("[handleADSetMetadata]:", payload.content);
 
     const trackId = payload.content.id;
     const customTitle = payload.content.title;
@@ -115,12 +127,12 @@ function handleADSM(payload) {
     showToast("Saved");
 }
 
-function handleADUP(payload) {
+function handleADUpdatePlaylists(payload) {
     //see backend/core/database/audio_database.py
     const trackId = payload.content.id;
     const updates = payload.content.updates;
 
-    console.log("[handleADUP] updates:", updates);
+    console.log("[handleADUpdatePlaylists] updates:", updates);
 
     for (const { id, checked } of updates) {
         const inPlaylist = PlaylistStore.hasTrack(id, trackId);
@@ -143,30 +155,41 @@ function handleADUP(payload) {
     //ignore notif because frontend handles optimistically
 }
 
-function handleADEP(payload) {
+function handleADEditPlaylist(payload) {
     //see backend/core/database/audio_database.py
-    console.log("[handleADEP] payload:", payload);
+    console.log("[handleADEditPlaylist] payload:", payload);
     const playlistId = payload.content.id;
     const name = payload.content.name;
 
-    //console.log("[handleADEP] edits:", playlistId, name);
+    //console.log("[handleADEditPlaylist] edits:", playlistId, name);
     PlaylistStore.editName(playlistId, name);
 
     renderPlaylistById(playlistId);
 }
 
-function handleADDP(payload) {
+function handleADDeletePlaylist(payload) {
     const playlistId = payload.content.id;
 
-    console.log("[handleADDP] deleted");
+    console.log("[handleADDeletePlaylist] deleted");
     PlaylistStore.removePlaylist(playlistId);
 
     deleteRenderPlaylistById(playlistId);
 }
 
 
-function handleADDT(payload) {
-    console.log("[handleADDT] payload content:", payload.content);
+function handleADLogDownload(payload) {
+    console.log("[handleADLogDownload] payload content:", payload.content);
+
+    const track = payload.content;
+
+    showToast(`Downloaded ${track.title}`);
+
+    TrackStore.insert(track);
+    renderLibrary();
+}
+
+function handleADUnlogDownload(payload) {
+    console.log("[handleADUnlogDownload] payload content:", payload.content);
 
     //update local stores
     const trackId = payload.content.id;
@@ -176,7 +199,7 @@ function handleADDT(payload) {
     
     LikeStore.remove(trackId);
     renderLiked();
-
+  
     const allPlaylists = PlaylistStore.getAll();
     Object.keys(allPlaylists).forEach(playlistId => {
         PlaylistStore.removeTrack(playlistId, trackId);
@@ -190,60 +213,17 @@ function handleADDT(payload) {
 
 
 
-function handleADSE(payload) {
+function handleADSearch(payload) {
     //do something with RecentStore.js here
     renderPlaylist(searchListEl, payload.content, false, SEARCH_ACTIONS);
 }
 
-function handleADDO(payload) {
-    //renderPlaylist(libraryListEl, payload.content);
-}
 
-function handleYTSE(payload) {
-
-    const tracks = payload.content || [];
-    for (const track of tracks) {
-        TrackStore.insert(track)
-    }
-
-    console.log("TRACKSTORE:", TrackStore.getTracks());
-    renderPlaylist(searchListEl, payload.content, false, SEARCH_ACTIONS);
-}
-
-//actual download message
-function handleYTDO(payload) {
-    const track = payload.content;
-
-    const tracks = TrackStore.getTracks();
-    tracks.unshift(track);
-
-    TrackStore.insert(track);
-
-    console.log("TRACKS:", tracks);
-    renderPlaylist(libraryListEl, tracks);
-
-    showToast(`Downloaded ${track.title}`);
+function handleADFetchLikes(payload) {
+    LikeStore.setAll(payload.content);
+    renderLiked();
 }
 
 
 
-//whenever liked list gets updated in the backend sync up
-const likedListEl = $(SELECTORS.liked.ids.LIST)
 
-function handleADFL(payload) {
-    renderPlaylist(likedListEl, payload.content);
-}
-
-
-const customPlaylistEl = $(SELECTORS.playlists.ids.CUSTOM);
-
-function handleADCP(payload) {
-    const tempId = String(payload.content.temp_id);
-    const newId = String(payload.content.id);
-    const name = payload.content.name;
-
-    console.log("DEBUGGING:", tempId, newId);
-
-    PlaylistStore.updateId(tempId, newId);
-    renderNewCustomPlaylist(customPlaylistEl, name, newId, tempId);
-}

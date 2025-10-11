@@ -5,7 +5,7 @@ import { postRequest, getResponse } from "../../../utils/index.js";
 
 
 export async function getLibraryContent() {
-    const response = await getResponse(`/search/?q=`);
+    const response = await getResponse(`/playlists/downloads`);
     
     const data = await response.json();
     return data;

@@ -1,6 +1,6 @@
+import { RecentStore } from "../../cache/RecentStore.js";
 import { LikeStore } from "../../cache/LikeStore.js";
 import { TrackStore } from "../../cache/TrackStore.js";
-import { $, SELECTORS } from "../../dom/selectors.js";
 
 export {
     getLibraryContent,
@@ -30,7 +30,11 @@ export {
 import * as playlistUI from "./lib/ui.js"; 
 
 import { playlistDomEls } from "../../dom/selectors.js";
-const { libraryListEl, likedListEl, titleSearchEl, playlistsEl } = playlistDomEls;
+const { searchListEl, libraryListEl, likedListEl, titleSearchEl, playlistsEl } = playlistDomEls;
+
+export function renderSearch(tracks) {
+    playlistUI.renderPlaylist(searchListEl, tracks);
+}
 
 export function renderLibrary() {
     const tracks = TrackStore.getTracks();
