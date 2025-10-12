@@ -132,7 +132,6 @@
 
 #search-dropdown.hidden {
     max-height: 0px;
-    pointer-events: none;
 }
 
 

@@ -118,6 +118,7 @@ export function buildTrackListItem(track, options = {}) {
     //store track id and index if available
     li.dataset.trackId = track.id;
     li.dataset.index = index;
+    li.dataset.isDownloaded = isDownloaded;
 
     //store action names in dataset (if present)
     for (const pos of ["right", "rightDeep", "left", "leftDeep"]) {

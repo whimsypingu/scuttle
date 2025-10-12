@@ -9,10 +9,15 @@ import {
     onDocumentSearchClick,
     onSearchInputBlur,
     blurInputButKeepDropdown,
+
+    onClickSearchList,
+    onSearchFocus,
 } from "../../features/search/controller.js";
 
 
 export function setupSearchEventListeners() {
+    //searchDomEls.searchInputEl.addEventListener("click", () => onSearchFocus());
+
     searchDomEls.searchInputEl.addEventListener("input", debounce((e) => onSearchInput(e), 300));
     searchDomEls.searchInputEl.addEventListener("keydown", (e) => onSearchEnter(e));
 
@@ -21,4 +26,6 @@ export function setupSearchEventListeners() {
     document.addEventListener("click", (e) => onDocumentSearchClick(e)); //consolidated handling of all touching events
 
     searchDomEls.searchDropdownEl.addEventListener("touchmove", () => blurInputButKeepDropdown());
+
+    //searchDomEls.searchListEl.addEventListener("click", (e) => onClickSearchList(e));
 }
