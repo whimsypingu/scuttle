@@ -3,7 +3,7 @@
 import { LikeStore } from "../../cache/LikeStore.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { TrackStore } from "../../cache/TrackStore.js";
-import { $, SELECTORS, SEARCH_ACTIONS } from "../../dom/index.js";
+import { $, SELECTORS } from "../../dom/index.js";
 import { 
     deleteRenderPlaylistById, 
     renderLibrary, 
@@ -11,8 +11,9 @@ import {
     renderNewCustomPlaylist, 
     renderPlaylist, 
     renderPlaylistById, 
-    renderSearch, 
     updateAllListTrackItems } from "../../features/playlist/index.js";
+
+import { renderSearch } from "../../features/search/index.js";
 import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 import { showToast } from "../../features/toast/index.js";
 

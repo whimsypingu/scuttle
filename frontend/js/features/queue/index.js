@@ -2,6 +2,7 @@ import { QueueStore } from "../../cache/QueueStore.js";
 import { domEls } from "../../dom/selectors.js";
 
 export { 
+    prefetchTrack,
     queueSetAllTracks,
     queueSetFirstTrack, 
     queuePushTrack,
@@ -14,11 +15,11 @@ export {
 
 
 //wrap conditional prefetching for easier use
-import { prefetchNextTrack } from "./lib/api.js";
+import { prefetchTrack } from "./lib/api.js";
 export async function conditionalPrefetch() {
     const nextTrackId = QueueStore.peekId(1);
     if (nextTrackId) {
-        prefetchNextTrack(nextTrackId);
+        prefetchTrack(nextTrackId);
     }
 }
 

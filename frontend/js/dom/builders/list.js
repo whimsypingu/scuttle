@@ -29,9 +29,13 @@ export const SEARCH_ACTIONS = Object.freeze({
         name: "queue",
         icon: "fa fa-plus-square"
     },
+    rightDeep: {
+        name: "queueFirst",
+        icon: "fa fa-plus-circle"
+    },
     left: {
-        name: "like",
-        icon: "fa fa-heart"
+        name: "download",
+        icon: "fa fa-cloud-download"
     }
 });
 

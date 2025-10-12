@@ -28,7 +28,7 @@ async def get_audio_stream(id: str, req: Request, full: bool = False):
 
     download_queue = queue_manager.get(G.DOWNLOAD_QUEUE_NAME)
 
-    if not db.is_downloaded(id):
+    if not await db.is_downloaded(id):
         if not download_queue.contains(job):
             await download_queue.push(job)
         

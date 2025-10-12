@@ -14,11 +14,35 @@ import {
     setClearInput
 } from "./index.js";
 
+import { 
+    loadTrack, 
+    playLoadedTrack,
+    cleanupCurrentAudio,
+
+    updatePlayPauseButtonDisplay,
+
+    resetUI,
+    updateMediaSession
+} from "../audio/index.js";
+
+import { 
+    prefetchTrack,
+    queuePushTrack,
+    queuePushFrontTrack,
+    queueSetAllTracks,
+    queueSetFirstTrack,
+    renderQueue,
+    queueRemoveTrack,
+    conditionalPrefetch
+} from "../queue/index.js";
+
 import { logDebug } from "../../utils/debug.js";
 
 import { searchDomEls } from "../../dom/selectors.js";
-import { prefetchNextTrack } from "../queue/lib/api.js";
 import { showToast } from "../toast/index.js";
+
+import { TrackStore } from "../../cache/TrackStore.js";
+import { QueueStore } from "../../cache/QueueStore.js";
 
 const { searchInputEl, deepSearchButtonEl, downloadSearchButtonEl, searchDropdownEl, searchListEl } = searchDomEls;
 
@@ -170,9 +194,9 @@ export async function onDocumentSearchClick(e) {
     const isInDownloadSearchButton = downloadSearchButtonEl.contains(e.target);
     const isInDropdown = searchListEl.contains(e.target);
 
-    logDebug(`Status: isInSearchInput: ${isInSearchInput}, isInDropdown: ${isInDropdown}`);
-    logDebug("searchDropdownEl:", searchDropdownEl);
-    logDebug("searchListEl:", searchListEl);
+    //(`Status: isInSearchInput: ${isInSearchInput}, isInDropdown: ${isInDropdown}`);
+    //logDebug("searchDropdownEl:", searchDropdownEl);
+    //logDebug("searchListEl:", searchListEl);
 
     if (isInSearchInput) {
         //handle search input focus
@@ -182,30 +206,10 @@ export async function onDocumentSearchClick(e) {
         onSearchFocus();
     } else if (isInDropdown) {
         //handle dropdown touch, scroll handled in separate touchmove
-        logDebug("IS IN DROPDOWN");
-        
-        // Log the closest match attempts
-        const trackItemEl = e.target.closest(".list-track-item");
-        logDebug("Closest .list-track-item result:", trackItemEl);
-
-        // Optional: log the full ancestor chain to visually see where you clicked
-        let node = e.target;
-        let chain = [];
-        while (node) {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                chain.push(`${node.tagName.toLowerCase()}${node.className ? "." + node.className.replace(/\s+/g, ".") : ""}`);
-            }
-            node = node.parentElement;
-        }
-        logDebug("DOM ancestry chain:", chain.join(" → "));
-
-        if (trackItemEl) {
-            const trackId = trackItemEl.dataset.trackId;
-            logDebug("Clicked track item ID:", trackId);
-        }        
+        await onClickSearchList(e);
+        onLoseSearchFocus();
+        hideDropdown();
     } else {
-        logDebug("ELSE");
-
         //unfocus anywhere else
         onLoseSearchFocus();
 
@@ -220,16 +224,8 @@ export async function onDocumentSearchClick(e) {
 
 }
 
-
-export async function onSearchInputClick() {
-    const data = await search(""); //set the search results to blank
-    onSearchFocus();
-}
-
-
 //clicking the queue list will check for this
 export async function onClickSearchList(e) {
-    logDebug("CLICK");
     //check what was clicked
     const button = e.target.closest("button");
     const li = e.target.closest("li.list-track-item");
@@ -257,11 +253,10 @@ async function onClickPlayButton(dataset) {
     //0. parse data
     const trackId = dataset.trackId;
 
-    const isDownloaded = dataset.isDownloaded;
-    if (!isDownloaded) {
-        prefetchNextTrack(trackId);
+    const isDownloaded = dataset.isDownloaded === "true"; //dataset are strings
+    if (!isDownloaded) { //so why does this not trigger? i dont see the not downloaded debug message?
         showToast("Downloading...");
-        onSearchInputBlur(); //this might be wrong
+        await prefetchTrack(trackId);
         return;
     }
 

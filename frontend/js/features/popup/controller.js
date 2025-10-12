@@ -12,6 +12,7 @@ import { getInputValue, getSelectedPlaylists } from "./lib/utils.js";
 import { editPlaylist, deletePlaylist, editTrack, deleteTrack } from "./lib/api.js";
 import { showToast } from "../toast/index.js";
 import { TrackStore } from "../../cache/TrackStore.js";
+import { LikeStore } from "../../cache/LikeStore.js";
 
 
 
@@ -224,6 +225,9 @@ export function showEditTrackPopup(trackId) {
         }
         const confirmed = await showAreYouSurePopup(options);
         if (confirmed) {
+            TrackStore.remove(trackId);
+            PlaylistStore.removeTrackFromAll(trackId);
+            LikeStore.remove(trackId);
             await deleteTrack(trackId);
             await hidePopup();
         }

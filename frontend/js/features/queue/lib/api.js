@@ -6,7 +6,7 @@ import { postRequest, getResponse } from "../../../utils/index.js";
 import { logDebug } from "../../../utils/debug.js";
 
 
-export async function prefetchNextTrack(id) {
+export async function prefetchTrack(id) {
     fetch(`/audio/stream/${id}`).catch(err => logDebug(err));
 }
 
