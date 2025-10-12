@@ -1,5 +1,6 @@
 //static/js/websocket/socket.js
 
+import { showToast } from "../../features/toast/index.js";
 import { logDebug } from "../../utils/debug.js";
 
 
@@ -48,12 +49,18 @@ export function initWebSocket() {
 
     socket.onopen = () => {
         logDebug("WebSocket connection established.");
+        setTimeout(() => showToast("Online"), 500);
     };
 
+    let reconnectDelay = 1000; // 1s initial exponential backoff retry
     socket.onclose = (event) => {
         logDebug("[WARN] WebSocket connection closed.", event.code, event.reason); //1006 on ios typically
+        logDebug("Closed. Reconnecting in", reconnectDelay, "ms");
         socket = null;
-        setTimeout(initWebSocket, reconnectTimeout);
+        setTimeout(initWebSocket, reconnectDelay);
+        reconnectDelay = Math.min(reconnectDelay * 1.5, 10000); // max 10s
+
+        setTimeout(() => showToast("Offline"), 300); //show disconnect after delay
     };
 
     socket.onerror = (err) => {
