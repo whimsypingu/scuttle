@@ -142,7 +142,8 @@
     border-radius: var(--radius-l);
     background: var(--bg-5);
     overflow: hidden;
-    padding: 0;
+    padding-inline: 0;
+    padding-block: var(--space-l);
     margin: 0;
 }
 

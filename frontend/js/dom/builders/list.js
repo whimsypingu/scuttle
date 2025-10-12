@@ -66,7 +66,12 @@ export const QUEUE_ACTIONS = Object.freeze({
  * @param {number} [track.duration] - Track duration in seconds.
  *
  * @param {Object} [options] - Optional customization.
- * @param {number} [options.index] - Position in playlist (if specified, will display index number). Defaults to nothing
+ * @param {boolean} [options.showIndex=false] - Whether to show the index or not
+ * @param {number} [options.index=-1] - Position in playlist (if specified, will display index number). Defaults to invalid -1
+ * @param {number} [options.indexOffset=1] - Offset to the position to visibly show (ex. position is 0 in the PlaylistStore, so shows as track 1)
+ * @param {boolean} [options.showDownloadStatus=false] - Whether to show the download status area.
+ * @param {boolean} [options.isDownloaded=false] - Whether the track is already downloaded (controls the icon).
+ *        Note: The download icon is only shown if `showDownloadStatus` is true and `isDownloaded` is false.
  * @param {Object} [options.actions] - Swipe actions configuration (defaults to `queueActions`).
  * @param {Object} [options.actions.left] - Left swipe action (primary). Object with `name` and `icon`.
  * @param {Object} [options.actions.leftDeep] - Left swipe deep action (secondary). Object with `name` and `icon`.
@@ -79,7 +84,13 @@ export const QUEUE_ACTIONS = Object.freeze({
  * const trackItem = buildTrackListItem(
  *     { id: "abc123", title: "Song Title", artist: "Artist Name", duration: 245 },
  *     { 
+ *         showIndex: true,
  *         index: 0,
+ *         indexOffset: 1,
+ * 
+ *         showDownloadStatus: true,
+ *         isDownloaded: false,
+ * 
  *         actions: {
  *             left: { name: "queue", icon: "fa fa-plus-square" },
  *             leftDeep: { name: "queueFirst", icon: "fa fa-plus-circle" },
@@ -93,7 +104,11 @@ export function buildTrackListItem(track, options = {}) {
     const {
         showIndex = false,
         index = -1,
-        indexOffset = 1, //offset the shown text value
+        indexOffset = 1, //offset the shown text 
+        
+        showDownloadStatus = false,
+        isDownloaded = true, //downloaded or not
+
         actions = DEFAULT_ACTIONS,
     } = options;
 
@@ -131,6 +146,13 @@ export function buildTrackListItem(track, options = {}) {
             </a>
         </div>
     ` : "";
+
+    //build the downloaded area if needed
+    const downloadedArea = showDownloadStatus ? `
+        <div class="download-status">
+            ${!isDownloaded ? `<i class="fa fa-cloud-download"></i>` : ""}
+        </div>
+    ` : "";
     
     //jesus apple is so FUCKING cringe for putting auto detect links and phone numbers
     li.innerHTML = `
@@ -143,6 +165,9 @@ export function buildTrackListItem(track, options = {}) {
                 <p class="title">${track.title || "Untitled"}</p>
                 <p class="artist">${track.artist || "Unknown artist"}</p>
             </div>
+
+            ${downloadedArea}
+
             <div class="duration">
                 <p class="duration-value">${formatTime(track.duration, false)}</p>
             </div>

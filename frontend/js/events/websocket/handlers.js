@@ -11,6 +11,7 @@ import {
     renderNewCustomPlaylist, 
     renderPlaylist, 
     renderPlaylistById, 
+    renderSearch, 
     updateAllListTrackItems } from "../../features/playlist/index.js";
 import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 import { showToast } from "../../features/toast/index.js";
@@ -215,7 +216,12 @@ function handleADUnlogDownload(payload) {
 
 function handleADSearch(payload) {
     //do something with RecentStore.js here
-    renderPlaylist(searchListEl, payload.content, false, SEARCH_ACTIONS);
+    const tracks = payload.content;
+
+    console.log(tracks);
+
+    console.log(TrackStore.getTracks());
+    renderSearch(tracks);
 }
 
 

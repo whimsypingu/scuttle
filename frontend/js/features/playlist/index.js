@@ -33,7 +33,7 @@ import { playlistDomEls } from "../../dom/selectors.js";
 const { searchListEl, libraryListEl, likedListEl, titleSearchEl, playlistsEl } = playlistDomEls;
 
 export function renderSearch(tracks) {
-    playlistUI.renderPlaylist(searchListEl, tracks);
+    playlistUI.renderPlaylist(searchListEl, tracks, false, true);
 }
 
 export function renderLibrary() {
