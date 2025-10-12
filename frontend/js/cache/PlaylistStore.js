@@ -111,6 +111,22 @@ export const PlaylistStore = (() => {
         },
 
         /**
+         * Remove a track from all playlists in the store.
+         * @param {string} trackId - The ID of the track to remove from all playlists.
+         * @returns {number} The number of playlists the track was removed from.
+         */
+        removeTrackFromAll(trackId) {
+            let removedCount = 0;
+            for (const pl of Object.values(playlists)) {
+                if (pl.tracks.has(trackId)) {
+                    pl.tracks.remove(trackId);
+                    removedCount++;
+                }
+            }
+            return removedCount;
+        },
+
+        /**
          * Get all track IDs in a playlist.
          * @param {string} playlistId - The ID of the playlist.
          * @returns {Array<string>} An array of track IDs.

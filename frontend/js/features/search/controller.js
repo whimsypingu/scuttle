@@ -14,10 +14,37 @@ import {
     setClearInput
 } from "./index.js";
 
+import { 
+    loadTrack, 
+    playLoadedTrack,
+    cleanupCurrentAudio,
+
+    updatePlayPauseButtonDisplay,
+
+    resetUI,
+    updateMediaSession
+} from "../audio/index.js";
+
+import { 
+    prefetchTrack,
+    queuePushTrack,
+    queuePushFrontTrack,
+    queueSetAllTracks,
+    queueSetFirstTrack,
+    renderQueue,
+    queueRemoveTrack,
+    conditionalPrefetch
+} from "../queue/index.js";
+
 import { logDebug } from "../../utils/debug.js";
 
 import { searchDomEls } from "../../dom/selectors.js";
-const { searchInputEl, deepSearchButtonEl, downloadSearchButtonEl, searchDropdownEl } = searchDomEls;
+import { showToast } from "../toast/index.js";
+
+import { TrackStore } from "../../cache/TrackStore.js";
+import { QueueStore } from "../../cache/QueueStore.js";
+
+const { searchInputEl, deepSearchButtonEl, downloadSearchButtonEl, searchDropdownEl, searchListEl } = searchDomEls;
 
 
 
@@ -47,6 +74,9 @@ export async function onSearchEnter(e) {
 
     const data = await deepSearch(q);
     logDebug("data:", data);
+
+    unfocusSearchInput();
+    hideDropdown();
 }
 
 
@@ -60,6 +90,9 @@ async function onDeepSearchButtonClick() {
     //websocket handles populating?
     const data = await deepSearch(q);
     logDebug("data:", data);
+
+    unfocusSearchInput();
+    hideDropdown();
 }
 
 async function onDownloadSearchButtonClick() {
@@ -70,6 +103,9 @@ async function onDownloadSearchButtonClick() {
     //websocket handles populating?
     const data = await downloadSearch(q);
     logDebug("data:", data);
+
+    unfocusSearchInput();
+    hideDropdown();
 }
 
 
@@ -156,14 +192,23 @@ export async function onDocumentSearchClick(e) {
     const isInSearchInput = searchInputEl.contains(e.target);
     const isInDeepSearchButton = deepSearchButtonEl.contains(e.target);
     const isInDownloadSearchButton = downloadSearchButtonEl.contains(e.target);
-    const isInDropdown = searchDropdownEl.contains(e.target);
+    const isInDropdown = searchListEl.contains(e.target);
+
+    //(`Status: isInSearchInput: ${isInSearchInput}, isInDropdown: ${isInDropdown}`);
+    //logDebug("searchDropdownEl:", searchDropdownEl);
+    //logDebug("searchListEl:", searchListEl);
 
     if (isInSearchInput) {
         //handle search input focus
+        const data = await search("");
+        console.log("data:", data);
+
         onSearchFocus();
     } else if (isInDropdown) {
         //handle dropdown touch, scroll handled in separate touchmove
-        blurInputButKeepDropdown();
+        await onClickSearchList(e);
+        onLoseSearchFocus();
+        hideDropdown();
     } else {
         //unfocus anywhere else
         onLoseSearchFocus();
@@ -177,4 +222,87 @@ export async function onDocumentSearchClick(e) {
 
     }
 
+}
+
+//clicking the queue list will check for this
+export async function onClickSearchList(e) {
+    //check what was clicked
+    const button = e.target.closest("button");
+    const li = e.target.closest("li.list-track-item");
+    const dataset = li?.dataset;
+
+    //handle button or whole row pressed
+    if (button) {
+        if (button.classList.contains("queue-button")) {
+            logDebug("Queue clicked");
+            await onClickQueueButton(dataset);
+
+        } else if (button.classList.contains("more-button")) {
+            logDebug("more //BUILD ME", li?.dataset);
+        }
+    } else if (li) {
+        logDebug("Play clicked");
+        await onClickPlayButton(dataset);
+    }
+}
+
+//helpers
+async function onClickPlayButton(dataset) {
+    const start = performance.now();
+
+    //0. parse data
+    const trackId = dataset.trackId;
+
+    const isDownloaded = dataset.isDownloaded === "true"; //dataset are strings
+    if (!isDownloaded) { //so why does this not trigger? i dont see the not downloaded debug message?
+        showToast("Downloading...");
+        await prefetchTrack(trackId);
+        return;
+    }
+
+    //logDebug("[onClickPlayButton] dataset:", dataset);
+    logDebug("[onClickPlayButton] track:", TrackStore.get(trackId));
+
+    if (!trackId) {
+        logDebug("Missing track data attributes in dataset");
+        return;
+    }
+
+    //1. make changes to local queue
+    QueueStore.setFirst(trackId);
+
+    //2. attempt loading after cleanup
+    try {
+        await cleanupCurrentAudio();
+        await loadTrack(trackId);
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to clean or load audio:", err);
+    }
+
+    //3. make optimistic ui changes
+    const track = TrackStore.get(trackId);
+    logDebug("TRACK LOAD COMPLETE, WAITING FOR TRACK:", track);
+
+    updateMediaSession(track, true);
+    renderQueue();
+    resetUI();
+    updatePlayPauseButtonDisplay(true);
+
+    //4. send changes to server (returns websocket message to sync ui)
+    try {
+        await queueSetFirstTrack(trackId);
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to set first track in backend:", err);
+    }
+
+    try {
+        //5. play audio
+        await playLoadedTrack();
+    } catch (err) {
+        logDebug("[onClickPlayButton] Failed to play audio:", err);
+    }
+
+    const end = performance.now();
+    const elapsed = (end - start).toFixed(1);
+    logDebug(`[onClickPlayButton] Total elapsed: ${elapsed} ms`);
 }

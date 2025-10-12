@@ -1,6 +1,7 @@
 //static/js/features/playlist/lib/ui.js
 
 import { PlaylistStore } from "../../../cache/PlaylistStore.js";
+import { TrackStore } from "../../../cache/TrackStore.js";
 import { buildNewPlaylist } from "../../../dom/builders/list.js";
 import { 
     buildTrackListItem, 
@@ -75,7 +76,7 @@ export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = nul
 
 
 //renders a list of tracks in a playlist
-export function renderPlaylist(listEl, tracks, showIndex = true, actions = DEFAULT_ACTIONS) { //rename to renderList
+export function renderPlaylist(listEl, tracks, showIndex = true, showDownloadStatus = false, actions = DEFAULT_ACTIONS) { //rename to renderList
     listEl.innerHTML = "";
 
     if (!tracks?.length) {
@@ -83,29 +84,23 @@ export function renderPlaylist(listEl, tracks, showIndex = true, actions = DEFAU
         listEl.appendChild(item);
         return;
     }
-    
-    //handle index check once
-    if (showIndex) {
-        //build rows
-        tracks.forEach((track, index) => {
-            const options = {
-                showIndex: showIndex,
-                index: index,
-                actions: actions,
-            };
-            const item = buildTrackListItem(track, options);
-            listEl.appendChild(item);
-        });
-    } else {
-        tracks.forEach((track) => {
-            const options = {
-                showIndex: showIndex,
-                actions: actions,
-            };
-            const item = buildTrackListItem(track, options);
-            listEl.appendChild(item);
-        });
-    }
+
+    tracks.forEach((track, index) => {
+        const isDownloaded = !!TrackStore.get(track.id);
+        console.log("isDownloaded:", isDownloaded);
+
+        const options = {
+            showIndex: showIndex,
+            index: index,
+
+            showDownloadStatus: showDownloadStatus,
+            isDownloaded: isDownloaded,
+
+            actions: actions
+        }
+        const item = buildTrackListItem(track, options);
+        listEl.appendChild(item);
+    })
 }
 
 
@@ -140,7 +135,7 @@ export function updateAllListTrackItems(trackId, title, artist) {
 
 
 //renders a custom playlist by id (just a simple refresh) based on current status in playlistStore
-export function renderPlaylistById(id, showIndex = true, actions = DEFAULT_ACTIONS) {
+export function renderPlaylistById(id, showIndex = true, showDownloadStatus = false, actions = DEFAULT_ACTIONS) {
     const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
 
     console.log("[renderPlaylistById]:", playlistEl);
@@ -158,7 +153,7 @@ export function renderPlaylistById(id, showIndex = true, actions = DEFAULT_ACTIO
     const listEl = playlistEl.querySelector(".list-track");
     const tracks = PlaylistStore.getTracks(id);
 
-    renderPlaylist(listEl, tracks, showIndex, actions);
+    renderPlaylist(listEl, tracks, showIndex, showDownloadStatus, actions);
 }
 
 

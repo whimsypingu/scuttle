@@ -38,17 +38,23 @@ class PlayQueueAction(str, Enum):
 class AudioDatabaseAction(str, Enum):
     SET_METADATA = "set_metadata"
 
+    CREATE_PLAYLIST = "create_playlist"
     UPDATE_PLAYLISTS = "update_playlists"
-    DELETE_TRACK = "delete_track"
-
     EDIT_PLAYLIST = "edit_playlist"
     DELETE_PLAYLIST = "delete_playlist"
 
-    SEARCH = "search"
 
+    LOG_TRACK = "log_track"
+    UNLOG_TRACK = "unlog_track"
+    
+    LOG_DOWNLOAD = "log_download"
+    UNLOG_DOWNLOAD = "unlog_download"
+
+
+    GET_DOWNLOADS_CONTENT = "get_downloads_content"
+
+    SEARCH = "search"
     FETCH_LIKES = "fetch_likes"
 
-    CREATE_PLAYLIST = "create_playlist"
-    
     GET_ALL_PLAYLISTS = "get_all_playlists"
     GET_PLAYLIST_CONTENT = "get_playlist_content"

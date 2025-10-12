@@ -82,16 +82,29 @@
     white-space: nowrap;
 }
 
+.list-track-item .foreground .download-status {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: var(--space-m);
+
+    font: var(--p2);
+    color: var(--text-3);
+    min-width: 3ch;
+    text-align: right;
+}
+
 .list-track-item .foreground .duration {
     flex: 0 0 auto;
     display: flex;
     justify-content: flex-end;
     align-items: center;
-}
-.list-track-item .foreground .duration .duration-value {
-    text-align: right;
+
     font: var(--p2);
     color: var(--text-3);
+    min-width: 5ch;
+    text-align: right;
 }
 
 /* nothing in tracklist */

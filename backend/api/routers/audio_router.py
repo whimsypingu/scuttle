@@ -21,13 +21,14 @@ async def get_audio_stream(id: str, req: Request, full: bool = False):
     """
     Streams the requested track.
     """
-    job = DownloadJob(id=id)
+    job = DownloadJob(id=id) #add an ensure_fetched field so it fetches if it required a download
 
     queue_manager = req.app.state.queue_manager
+    db: AudioDatabase = req.app.state.db
 
     download_queue = queue_manager.get(G.DOWNLOAD_QUEUE_NAME)
 
-    if not is_downloaded(track_or_id=id):
+    if not await db.is_downloaded(id):
         if not download_queue.contains(job):
             await download_queue.push(job)
         

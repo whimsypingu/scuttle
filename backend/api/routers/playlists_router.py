@@ -49,6 +49,24 @@ async def get_playlist_content(req: Request, id: Optional[int] = Query(None)):
     return JSONResponse(content={"content": content}, status_code=200)
 
 
+@router.get("/downloads")
+async def get_downloads_content(req: Request):
+    """
+    Fetch all currently downloaded track IDs.
+
+    This endpoint retrieves the list of downloaded track IDs from the local
+    SQLite database, ordered by their download time.
+
+    Returns:
+        JSONResponse: An object containing a list of downloaded track IDs.
+    """
+    db: AudioDatabase = req.app.state.db
+    content = await db.get_downloads_content()
+
+    print("DOWNLOADS CONTENT:", content)
+
+    return JSONResponse(content={"content": content}, status_code=200)
+
 
 @router.post("/create")
 async def create_playlist(body: CreatePlaylistRequest, req: Request) -> Response:
@@ -226,6 +244,6 @@ async def delete_track(body: DeleteTrackRequest, req: Request) -> Response:
 
     db: AudioDatabase = req.app.state.db
 
-    await db.delete_track(track_id)
+    await db.unlog_download(track_id)
 
     return JSONResponse(content={"status": "deleted"}, status_code=200)

@@ -20,7 +20,8 @@ import {
     queueSetFirstTrack,
     renderQueue,
     queueRemoveTrack,
-    conditionalPrefetch
+    conditionalPrefetch,
+    prefetchTrack
 } from "../queue/index.js";
 
 import { toggleLike } from "./lib/api.js";
@@ -315,6 +316,8 @@ export async function onSwipe(dataset, actionName) {
     const track = TrackStore.get(trackId);
     if (!track) {
         logDebug("Missing track in TrackStore");
+        prefetchTrack(trackId);
+        showToast(`Downloading...`);
         return;
     }
 
