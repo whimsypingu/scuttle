@@ -56,7 +56,6 @@ def main():
     from boot.utils import terminate_process
 
     from boot.notify import post_webhook_json
-    from boot.utils.misc import update_env
     from boot.uvicorn import start_uvicorn, wait_for_uvicorn
     from boot.tunnel.cloudflared import start_cloudflared, get_cloudflared_url
 

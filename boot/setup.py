@@ -2,7 +2,8 @@ import os
 import subprocess
 import venv
 
-from boot.utils.misc import IS_WINDOWS, update_env, vprint
+from boot.utils.misc import IS_WINDOWS, vprint
+from boot.utils.env import update_env
 from boot.tunnel.cloudflared import download_cloudflared
 
 VENV_DIR = "venv"

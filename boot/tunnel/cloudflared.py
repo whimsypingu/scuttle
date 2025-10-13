@@ -9,7 +9,8 @@ import requests
 import os
 from dotenv import load_dotenv
 
-from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, update_env
+from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint
+from boot.utils.env import update_env
 from boot.utils.threads import drain_output
 
 
