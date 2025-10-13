@@ -14,48 +14,10 @@ What it does:
 
 import argparse
 import os
-import time
-from datetime import datetime, timedelta
-from dotenv import load_dotenv
-
-from boot.awake import prevent_sleep, allow_sleep
-from boot.setup import setup
-from boot.utils import terminate_process
-
-from boot.notify import post_webhook_json
-from boot.utils.misc import update_env
-from boot.uvicorn import start_uvicorn, wait_for_uvicorn
-from boot.tunnel.cloudflared import start_cloudflared, get_cloudflared_url
-
-
-#load in environment variables
-load_dotenv()
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-if not DISCORD_WEBHOOK_URL:
-    raise ValueError("DISCORD_WEBHOOK_URL not found in environment")
-
-TUNNEL_BIN_PATH = os.getenv("TUNNEL_BIN_PATH")
-if not TUNNEL_BIN_PATH:
-    raise ValueError("TUNNEL_BIN_PATH not found in environment")
-
-
-#messages
-def log(message, send_webhook=False):
-    """
-    Logs a message and optionally sends it to a Discord webhook
-    
-    Parameters
-        message (str): Message
-        send_webhook (bool): Whether to post or not
-    """
-    print(message)
-    if send_webhook:
-        post_webhook_json(DISCORD_WEBHOOK_URL, {"content": message})
-
 
 def main():
 
-    #------------------------------- Keep system awake and setup -------------------------------#
+    #------------------------------- Setup -------------------------------#
     verbose = False
 
     parser = argparse.ArgumentParser(
@@ -79,11 +41,49 @@ def main():
         verbose = True
 
     if args.setup:
+        from boot.setup import setup
         setup(verbose=verbose)
         print("✅ Setup complete. You can now run `python main.py` to start the app.")
         return
     
-    update_env("DISCORD_WEBHOOK_URL", "https://discord.com/api/webhooks/1422356407289774101/GIGbDlk7ASmFqgARnzr9kd0-kLo6Jf77Ivif7Fl_Z08UJBJ89vjzVWWWhi5jDJgQKhPv")
+
+    #------------------------------- Run -------------------------------#
+    import time
+    from datetime import datetime, timedelta
+    from dotenv import load_dotenv
+
+    from boot.awake import prevent_sleep, allow_sleep
+    from boot.utils import terminate_process
+
+    from boot.notify import post_webhook_json
+    from boot.utils.misc import update_env
+    from boot.uvicorn import start_uvicorn, wait_for_uvicorn
+    from boot.tunnel.cloudflared import start_cloudflared, get_cloudflared_url
+
+    #load in environment variables
+    load_dotenv()
+    DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+    if not DISCORD_WEBHOOK_URL:
+        raise ValueError("DISCORD_WEBHOOK_URL not found in environment")
+
+    TUNNEL_BIN_PATH = os.getenv("TUNNEL_BIN_PATH")
+    if not TUNNEL_BIN_PATH:
+        raise ValueError("TUNNEL_BIN_PATH not found in environment")
+
+
+    #messages
+    def log(message, send_webhook=False):
+        """
+        Logs a message and optionally sends it to a Discord webhook
+        
+        Parameters
+            message (str): Message
+            send_webhook (bool): Whether to post or not
+        """
+        print(message)
+        if send_webhook:
+            post_webhook_json(DISCORD_WEBHOOK_URL, {"content": message})
+    
     keep_awake_proc = prevent_sleep(verbose=verbose)
 
     num_restarts = 0

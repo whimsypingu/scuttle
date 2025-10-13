@@ -2,7 +2,7 @@ import os
 import subprocess
 import venv
 
-from boot.utils.misc import IS_WINDOWS, vprint
+from boot.utils.misc import IS_WINDOWS, update_env, vprint
 from boot.tunnel.cloudflared import download_cloudflared
 
 VENV_DIR = "venv"
@@ -36,8 +36,27 @@ def ensure_venv(verbose=False):
 
 
 def setup(verbose=False):
-    ensure_venv(verbose)
-    download_cloudflared(verbose)
+    #user venv consent
+    consent_venv = input("Do you allow this script to create a virtual environment? (y/n): ").strip().lower()
+    if consent_venv != "y":
+        print("Skipping virtual environment setup.")
+    else:
+        ensure_venv(verbose)
+
+    #user cloudflared consent
+    consent_cloudflared = input("Do you allow this script to download cloudflared? (y/n): ").strip().lower()
+    if consent_cloudflared == "y":
+        download_cloudflared(verbose)
+    else:
+        print("Skipping cloudflared download.")
+
+    #user discord webhook url
+    webhook_url = input("Enter your Discord webhook URL (or leave blank to skip): ").strip()
+    if webhook_url:
+        update_env("DISCORD_WEBHOOK_URL", webhook_url)
+        print("Webhook URL saved to .env.")
+    else:
+        print("Webhook URL set skipped.")
 
 
 ################################################
