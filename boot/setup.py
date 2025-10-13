@@ -3,6 +3,7 @@ import subprocess
 import venv
 
 from boot.utils.misc import IS_WINDOWS, vprint
+from boot.tunnel.cloudflared import download_cloudflared
 
 VENV_DIR = "venv"
 REQUIREMENTS_FILE = "requirements.txt"
@@ -33,6 +34,10 @@ def ensure_venv(verbose=False):
 
     return python_bin
 
+
+def setup(verbose=False):
+    ensure_venv(verbose)
+    download_cloudflared(verbose)
 
 
 ################################################

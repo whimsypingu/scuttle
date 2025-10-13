@@ -12,12 +12,14 @@ What it does:
 - restarts both if either dies. Posts status messages to the webhook.
 """
 
+import argparse
 import os
 import time
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 from boot.awake import prevent_sleep, allow_sleep
+from boot.setup import setup
 from boot.utils import terminate_process
 
 from boot.notify import post_webhook_json
@@ -54,7 +56,33 @@ def log(message, send_webhook=False):
 def main():
 
     #------------------------------- Keep system awake and setup -------------------------------#
-    verbose=False
+    verbose = False
+
+    parser = argparse.ArgumentParser(
+        description="Run the audio archival tool or perform setup tasks."
+    )
+
+    parser.add_argument(
+        "--setup",
+        action="store_true",
+        help="Create virtual environment, install dependencies, and download tunnel."
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print detailed setup output."
+    )
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        verbose = True
+
+    if args.setup:
+        setup(verbose=verbose)
+        print("✅ Setup complete. You can now run `python main.py` to start the app.")
+        return
+    
     update_env("DISCORD_WEBHOOK_URL", "https://discord.com/api/webhooks/1422356407289774101/GIGbDlk7ASmFqgARnzr9kd0-kLo6Jf77Ivif7Fl_Z08UJBJ89vjzVWWWhi5jDJgQKhPv")
     keep_awake_proc = prevent_sleep(verbose=verbose)
 
