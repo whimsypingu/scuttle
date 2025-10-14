@@ -25,15 +25,18 @@ def main():
     #------------------------------- Parse arguments -------------------------------#
     parser = argparse.ArgumentParser(
         description=(
-            "Scuttle - a local music management app.\n\n"
+            "Scuttle\n\n"
             "Installation & Setup Instructions:\n"
-            "1. Run 'python main.py --setup' to create a virtual environment and install dependencies.\n"
-            "2. Activate the virtual environment:\n"
-            "   - Windows (cmd): 'venv\\Scripts\\activate.bat'\n"
-            "   - Windows (PowerShell): 'venv\\Scripts\\Activate.ps1'\n"
-            "   - macOS/Linux: 'source venv/bin/activate'\n"
-            "3. Navigate to your discord server and get a webhook url.\n"
-            "4. Re-run 'python main.py --set-webhook [url]' to start the app."
+            "  1. Run 'python main.py --setup' to create a virtual environment and install dependencies.\n"
+            "  2. Activate the virtual environment:\n"
+            "    - Windows (cmd): 'venv\\Scripts\\activate.bat'\n"
+            "    - Windows (PowerShell): 'venv\\Scripts\\Activate.ps1'\n"
+            "    - macOS/Linux: 'source venv/bin/activate'\n"
+            "  3. Navigate to your discord server and get a webhook url.\n"
+            "  4. Re-run 'python main.py --set-webhook [url]' to start the app.\n\n"
+            "Running Scuttle:\n"
+            "  - Start the app: 'python main.py'\n"
+            "  - Close the app: Press Ctrl+C in the terminal"
         ),
         epilog=(
             "Example usage:\n"
@@ -54,7 +57,7 @@ def main():
         metavar="URL",
         help=(
             "Set the Discord webhook URL to receive updates.\n"
-            "   - Example: -w https://discord.com/api/webhooks/..."
+            "  - Example: -w https://discord.com/api/webhooks/..."
         )
     )
     parser.add_argument(
