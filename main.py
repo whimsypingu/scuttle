@@ -24,23 +24,48 @@ def main():
 
     #------------------------------- Parse arguments -------------------------------#
     parser = argparse.ArgumentParser(
-        description="Run Scuttle. To install, first run python main.py --setup."
+        description=(
+            "Scuttle - a local music management app.\n\n"
+            "Installation & Setup Instructions:\n"
+            "1. Run 'python main.py --setup' to create a virtual environment and install dependencies.\n"
+            "2. Activate the virtual environment:\n"
+            "   - Windows (cmd): 'venv\\Scripts\\activate.bat'\n"
+            "   - Windows (PowerShell): 'venv\\Scripts\\Activate.ps1'\n"
+            "   - macOS/Linux: 'source venv/bin/activate'\n"
+            "3. Navigate to your discord server and get a webhook url.\n"
+            "4. Re-run 'python main.py --set-webhook [url]' to start the app."
+        ),
+        epilog=(
+            "Example usage:\n"
+            "  python main.py --setup\n"
+            "  python main.py --set-webhook https://discord.com/api/webhooks/...\n"
+            "  python main.py"
+        ),
+        formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "-v", "--verbose",
         action="store_true",
-        help="Print detailed output."
+        help="Print detailed output for debugging."
     )
     parser.add_argument(
         "-w", "--set-webhook",
         type=str,
         metavar="URL",
-        help="Set the Discord webhook URL to receive updates."
+        help=(
+            "Set the Discord webhook URL to receive updates.\n"
+            "   - Example: -w https://discord.com/api/webhooks/..."
+        )
     )
     parser.add_argument(
         "-s", "--setup",
         action="store_true",
-        help="Set up the environment (create venv, install dependencies) and exit."
+        help=(
+            "Set up environment and exit.\n"
+            "  - Create venv (default ./venv)\n"
+            "  - Install pip packages from requirements.txt\n"
+            "  - Download cloudflared binary to tools/"
+        )
     )
     args = parser.parse_args()
 
@@ -117,7 +142,7 @@ def main():
         while True:
             #------------------------------- Start server -------------------------------#
             log("🚀 Starting Uvicorn server...")
-            server_proc, server_queue = start_uvicorn(verbose=True)
+            server_proc, server_queue = start_uvicorn(verbose=verbose)
             wait_for_uvicorn(verbose=verbose)
 
 
