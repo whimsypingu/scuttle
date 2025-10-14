@@ -109,13 +109,15 @@ def main():
 
     #load in environment variables
     load_dotenv()
+    send_webhook = False
     DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
     if not DISCORD_WEBHOOK_URL:
         print(
-            "[INFO] No Discord webhook set."
-            "Notifications will be disabled."
+            "[INFO] No Discord webhook set.\n"
+            "Notifications will be disabled.\n"
             "Set a webhook with 'python main.py --set-webhook [URL]'."
         )
+        send_webhook = True
 
     TUNNEL_BIN_PATH = os.getenv("TUNNEL_BIN_PATH")
     if not TUNNEL_BIN_PATH:
@@ -143,7 +145,7 @@ def main():
     num_restarts = 0
     last_restart = datetime.now()
 
-    log("========================\n🚀 Scuttle Booting Up!", send_webhook=True)
+    log("========================\n🚀 Scuttle Booting Up!", send_webhook=send_webhook)
 
     try:
         while True:
@@ -162,10 +164,12 @@ def main():
             tunnel_url = get_cloudflared_url(tunnel_queue, timeout=60, verbose=verbose)
         
             if tunnel_url: 
-                log(f"✅ Tunnel URL: {tunnel_url}", send_webhook=True)
-                log("📨 Discord webhook sent!")
+                log(f"✅ Tunnel URL: {tunnel_url}", send_webhook=send_webhook)
+
+                if send_webhook:
+                    log("📨 Discord webhook sent!")
             else:
-                log("❌ Failed to get tunnel URL in time.", send_webhook=True)
+                log("❌ Failed to get tunnel URL in time.", send_webhook=send_webhook)
 
         
             #------------------------------- Monitor loop -------------------------------#
@@ -174,15 +178,15 @@ def main():
 
                 #periodically restart
                 if datetime.now() - last_restart > timedelta(hours=2): #magic number here!??
-                    log("⏳ Restarting both processes after refresh...", send_webhook=True)
+                    log("⏳ Restarting both processes after refresh...", send_webhook=send_webhook)
                     break
             
                 if server_proc.poll() is not None:
-                    log("❌ Server crashed, restarting both...", send_webhook=True)
+                    log("❌ Server crashed, restarting both...", send_webhook=send_webhook)
                     break
 
                 if tunnel_proc.poll() is not None:
-                    log("⚠️ Tunnel crashed, restarting tunnel only...", send_webhook=True)
+                    log("⚠️ Tunnel crashed, restarting tunnel only...", send_webhook=send_webhook)
 
                     #kill and restart tunnel
                     terminate_process(tunnel_proc)
@@ -191,9 +195,9 @@ def main():
                     tunnel_url = get_cloudflared_url(tunnel_queue, timeout=60, verbose=verbose)
 
                     if tunnel_url:
-                        log(f"✅ Tunnel URL restarted: {tunnel_url}", send_webhook=True)
+                        log(f"✅ Tunnel URL restarted: {tunnel_url}", send_webhook=send_webhook)
                     else:
-                        log("❌ Failed to get tunnel URL in time.", send_webhook=True)                
+                        log("❌ Failed to get tunnel URL in time.", send_webhook=send_webhook)                
                     continue
 
 
@@ -204,7 +208,7 @@ def main():
             num_restarts += 1
             last_restart = datetime.now()
 
-            log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=True)
+            log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=send_webhook)
     
     except KeyboardInterrupt:
 
@@ -212,7 +216,7 @@ def main():
         terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
         terminate_process(server_proc, "Server", verbose=verbose)
 
-        log("\n⏹ KeyboardInterrupt received, shutting down Scuttle...", send_webhook=True)
+        log("\n⏹ KeyboardInterrupt received, shutting down Scuttle...", send_webhook=send_webhook)
      
     finally:
         #clean up correctly when keyboard interrupted
