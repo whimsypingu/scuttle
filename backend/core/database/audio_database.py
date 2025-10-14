@@ -54,10 +54,6 @@ class AudioDatabase:
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA foreign_keys = ON;")
 
-        #generate
-        if is_new:
-            self.build()
-
 
     def close(self):
         if self._conn:

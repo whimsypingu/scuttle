@@ -55,7 +55,7 @@ def _get_cloudflared_name():
         
     return {
         "asset_name": asset_name,
-        "url": url
+        "url": download_url
     }
 
 
