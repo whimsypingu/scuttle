@@ -111,7 +111,11 @@ def main():
     load_dotenv()
     DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
     if not DISCORD_WEBHOOK_URL:
-        raise ValueError("DISCORD_WEBHOOK_URL not found in environment")
+        print(
+            "[INFO] No Discord webhook set."
+            "Notifications will be disabled."
+            "Set a webhook with 'python main.py --set-webhook [URL]'."
+        )
 
     TUNNEL_BIN_PATH = os.getenv("TUNNEL_BIN_PATH")
     if not TUNNEL_BIN_PATH:
