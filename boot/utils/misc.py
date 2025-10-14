@@ -2,8 +2,6 @@ import os
 from pathlib import Path
 import sys
 
-from dotenv import load_dotenv
-
 
 IS_WINDOWS = os.name == "nt"
 IS_MAC = sys.platform == "darwin"
@@ -18,6 +16,8 @@ BACKEND_DIR = ROOT_DIR / "backend"
 FRONTEND_DIR = ROOT_DIR / "frontend"
 
 BOOT_DIR = ROOT_DIR / "boot"
+VENV_DIR = ROOT_DIR / "venv"
+REQ_FILE = ROOT_DIR / "requirements.txt"
 
 ENV_FILE = ROOT_DIR / ".env"
 
@@ -25,7 +25,7 @@ ENV_FILE = ROOT_DIR / ".env"
 def update_env(key, value):
     """
     Update or insert a key=value pair in the .env file. 
-    Calls load_dotenv(override=True) afterwards.
+    DOES NOT call load_dotenv(override=True) afterwards.
     Creates .env file if doesn't exist
 
     Args:
@@ -54,8 +54,6 @@ def update_env(key, value):
     # Write all lines back to the .env file
     with ENV_FILE.open("w") as f:
         f.writelines(lines)
-
-    load_dotenv(dotenv_path=ENV_FILE, override=True)
 
 
 def vprint(message, verbose=False):

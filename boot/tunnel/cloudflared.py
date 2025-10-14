@@ -7,7 +7,6 @@ import platform
 import time
 import requests
 import os
-from dotenv import load_dotenv
 
 from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, update_env
 from boot.utils.threads import drain_output
@@ -121,7 +120,6 @@ def start_cloudflared(bin_path=None, url="localhost:8000", verbose=False):
     """
     if not bin_path:
         try: 
-            load_dotenv(override=True)
             bin_path = os.environ.get("TUNNEL_BIN_PATH")
             vprint(f"Path to Cloudflared binary found {bin_path}", verbose)
         except:
