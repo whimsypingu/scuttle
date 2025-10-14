@@ -6,7 +6,8 @@ from pathlib import Path
 from boot.utils.misc import IS_WINDOWS, VENV_DIR, REQ_FILE, vprint
 
 def run(cmd, check=True):
-    print(">", " ".join(cmd))
+    cmd_strs = [str(c) for c in cmd] #typeerror fix on windows
+    print(">", " ".join(cmd_strs))
     subprocess.run(cmd, check=check) #check status code
 
 def ensure_venv(verbose=False):
