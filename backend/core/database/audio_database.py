@@ -35,6 +35,9 @@ class AudioDatabase:
         self.PLAYLISTS_TABLE = "playlists"
         self.PLAYLIST_TRACKS_TABLE = "playlist_tracks"
 
+        #ensure parent directories exist
+        self._filepath.parent.mkdir(parents=True, exist_ok=True)
+
         #generate
         is_new = not self._filepath.exists()
         if is_new:
@@ -50,10 +53,6 @@ class AudioDatabase:
         )
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA foreign_keys = ON;")
-
-        #generate
-        if is_new:
-            self.build()
 
 
     def close(self):

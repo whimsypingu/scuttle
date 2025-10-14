@@ -1,18 +1,17 @@
 import os
 import subprocess
 import venv
+from pathlib import Path
 
-from boot.utils.misc import IS_WINDOWS, vprint
-
-VENV_DIR = "venv"
-REQUIREMENTS_FILE = "requirements.txt"
+from boot.utils.misc import IS_WINDOWS, VENV_DIR, REQ_FILE, vprint
 
 def run(cmd, check=True):
-    print(">", " ".join(cmd))
+    cmd_strs = [str(c) for c in cmd] #typeerror fix on windows
+    print(">", " ".join(cmd_strs))
     subprocess.run(cmd, check=check) #check status code
 
 def ensure_venv(verbose=False):
-    if not os.path.exists(VENV_DIR):
+    if not VENV_DIR.exists():
         vprint("Creating virtual environment...", verbose)
         venv.create(VENV_DIR, with_pip=True)
     else:
@@ -20,18 +19,22 @@ def ensure_venv(verbose=False):
 
     #get venv python path
     if IS_WINDOWS:
-        python_bin = os.path.join(VENV_DIR, "Scripts", "python.exe")
+        python_bin = VENV_DIR / "Scripts" / "python.exe"
     else:
-        python_bin = os.path.join(VENV_DIR, "bin", "python")
+        python_bin = VENV_DIR / "bin" / "python"
 
     #upgrade pip
     run([python_bin, "--version"])
     run([python_bin, "-m", "pip", "install", "--upgrade", "pip"])
-    run([python_bin, "-m", "pip", "install", "--upgrade", "-r", REQUIREMENTS_FILE])
+    run([python_bin, "-m", "pip", "install", "--upgrade", "-r", REQ_FILE])
 
     run([python_bin, "-m", "pip", "list"])
 
     return python_bin
+
+
+def setup_all(verbose=False):
+    python_bin = ensure_venv(verbose=True)
 
 
 

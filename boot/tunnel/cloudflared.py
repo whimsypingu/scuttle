@@ -5,9 +5,9 @@ import subprocess
 import sys
 import platform
 import time
-import requests
+import urllib.request
+import json
 import os
-from dotenv import load_dotenv
 
 from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, update_env
 from boot.utils.threads import drain_output
@@ -37,16 +37,25 @@ def _get_cloudflared_name():
     #https://github.com/cloudflare/cloudflared/releases/download/2025.9.1/cloudflared-windows-amd64.exe
     #https://github.com/cloudflare/cloudflared/releases/download/2025.9.1/cloudflared-linux-amd64
     #gets the download link for the latest release version
-    r = requests.get("https://api.github.com/repos/cloudflare/cloudflared/releases/latest")
-    release_data = r.json()
+    url = "https://api.github.com/repos/cloudflare/cloudflared/releases/latest"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            release_data = json.load(response)
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch cloudflared release info: {e}") from e
 
+    download_url = None
     for asset in release_data.get("assets", []):
-        if asset["name"] == asset_name:
-            url = asset["browser_download_url"]
-    
+        if asset.get("name") == asset_name:
+            download_url = asset.get("browser_download_url")
+            break
+
+    if not download_url:
+        raise RuntimeError(f"Could not find cloudflared asset for {asset_name}")
+        
     return {
         "asset_name": asset_name,
-        "url": url
+        "url": download_url
     }
 
 
@@ -70,15 +79,13 @@ def download_cloudflared(target_path=None, verbose=False):
 
     temp_path = target_path.with_suffix(target_path.suffix + ".part") if target_path.suffix else target_path.with_suffix(".part")
     try:
-        with requests.get(url, stream=True, timeout=60) as r:
-            r.raise_for_status() #status code raises error on 4xx/5xx codes
-
-            #ensure directory exists
-            temp_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(temp_path, "wb") as f:
-                for chunk in r.iter_content(8192):
-                    if chunk:
-                        f.write(chunk)
+        with urllib.request.urlopen(url, timeout=60) as response, open(temp_path, "wb") as out_file:
+            CHUNK_SIZE = 8192
+            while True:
+                chunk = response.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                out_file.write(chunk)
 
         #atomic replace (works on same filesystem)
         temp_path.replace(target_path)
@@ -95,14 +102,14 @@ def download_cloudflared(target_path=None, verbose=False):
 
         return target_path
 
-    except Exception:
+    except Exception as e:
         #cleanup partial file if anything went wrong
         try:
             if temp_path.exists():
                 temp_path.unlink()
         except Exception:
             pass
-        raise
+        raise RuntimeError(f"Failed to download cloudflared: {e}") from e
 
 
 
@@ -121,7 +128,6 @@ def start_cloudflared(bin_path=None, url="localhost:8000", verbose=False):
     """
     if not bin_path:
         try: 
-            load_dotenv(override=True)
             bin_path = os.environ.get("TUNNEL_BIN_PATH")
             vprint(f"Path to Cloudflared binary found {bin_path}", verbose)
         except:
