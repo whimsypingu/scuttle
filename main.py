@@ -109,7 +109,7 @@ def main():
 
     #load in environment variables
     load_dotenv()
-    send_webhook = False
+    send_webhook = True
     DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
     if not DISCORD_WEBHOOK_URL:
         print(
@@ -117,7 +117,7 @@ def main():
             "Notifications will be disabled.\n"
             "Set a webhook with 'python main.py --set-webhook [URL]'."
         )
-        send_webhook = True
+        send_webhook = False
 
     TUNNEL_BIN_PATH = os.getenv("TUNNEL_BIN_PATH")
     if not TUNNEL_BIN_PATH:
