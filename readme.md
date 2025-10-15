@@ -7,6 +7,14 @@ Scuttle is a responsive web-based audio archival tool for managing and playing y
 - Self-host your audio library and stream to any device with a browser
 - Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
 
+### Table of Contents
+- [Installation](#installation)
+- [Usage](#usage)
+- [Dependencies](#dependencies)
+- [Future features](#future-features)
+- [License](#license)
+- [Disclaimer](#disclaimer)
+
 
 ## Installation
 
@@ -14,6 +22,10 @@ Scuttle is a responsive web-based audio archival tool for managing and playing y
 Navigate to a folder where you want to put Scuttle, open a terminal and run:
 ```bash
 git clone https://github.com/whimsypingu/scuttle.git
+```
+
+Then run this to preview options:
+```bash
 cd scuttle
 python main.py --help
 ```
@@ -102,3 +114,29 @@ scuttle/
 ├─ sw.js                # Service worker
 ```
 
+
+## Future Features
+
+Scuttle is still in active development. Here are some planned features and improvements:
+
+- [ ] Mobile UI improvements (swipe on queue to play next)
+- [ ] Auto queue songs in a playlist
+- [ ] Import playlist from YouTube  
+- [ ] Improved search functionality
+- [ ] Pagination for faster loading with larger libraries
+- [ ] User authentication and multi-user support  
+- [ ] Audio editing (silence removal, enhanced quality)
+- [ ] Backend management from the web interface (download queue, server status)
+
+These are not guaranteed but they reflect the current development priorities and ideas for future releases. Suggestions are welcome!
+
+
+## License
+This project is licensed under the [MIT License](./LICENSE).
+
+
+## Disclaimer
+Scuttle is provided for **personal, non-commercial use** only.
+The developers do not **not endorse, support, or encourage downloading copyrighted material** without permission.
+You are solely responsible for complying with all applicable laws and the terms of service of any platforms you interact with.
+This project is intended to help users **archive, manage, and listen to their own legally obtained audio collections**. The developers are not responsible for any misuse of this software.
