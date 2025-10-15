@@ -1,4 +1,5 @@
-# Scuttle
+![Scuttle banner](./frontend/assets/color_banner.png)
+---
 Scuttle is a responsive web-based audio archival tool for managing and playing your personal audio collection.
 
 - Search and download audio
@@ -42,18 +43,12 @@ python main.py --setup
 
 ### 3. Activate the virtual environment
 Before running the server, activate the virtual environment:
-* Windows (cmd):
-```bash
-venv\Scripts\activate
-```
-* Windows (Powershell):
-```bash
-venv\Scripts\Activate.ps1
-```
-* macOS/Linux
-```bash
-source venv/bin/activate
-```
+
+| Platform             | Command                     |
+| -------------------- | --------------------------- |
+| Windows (cmd)        | `venv\Scripts\activate`     |
+| Windows (PowerShell) | `venv\Scripts\Activate.ps1` |
+| macOS/Linux          | `source venv/bin/activate`  |
 
 
 ## Usage

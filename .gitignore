@@ -6,4 +6,5 @@ bot/users.json
 data/
 downloads/
 backend/data/
+frontend/assets/banner.svg
 tools/
