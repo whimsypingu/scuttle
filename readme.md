@@ -1,11 +1,11 @@
 # Scuttle
 Scuttle is a responsive web-based audio archival tool for managing and playing your personal audio collection.
 
-- [x] Search and download audio
-- [x] Play, pause, and skip tracks
-- [x] Create and manage playlists
-- [x] Self-host your audio library and stream to any device with a browser
-- [x] Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
+- Search and download audio
+- Play, pause, and skip tracks
+- Create and manage playlists
+- Self-host your audio library and stream to any device with a browser
+- Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
 
 ### Table of Contents
 - [Installation](#installation)
