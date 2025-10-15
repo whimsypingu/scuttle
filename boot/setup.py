@@ -13,6 +13,7 @@ def run(cmd, check=True):
 def ensure_venv(verbose=False):
     if not VENV_DIR.exists():
         vprint("Creating virtual environment...", verbose)
+        vprint("This may take a while...", verbose)
         venv.create(VENV_DIR, with_pip=True)
     else:
         vprint("Virtual environment already exists.", verbose)

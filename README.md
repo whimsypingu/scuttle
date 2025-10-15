@@ -11,7 +11,9 @@ Scuttle is a responsive web-based audio archival tool for managing and playing y
 ### Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
+- [Architecture](#architecture)
 - [Dependencies](#dependencies)
+- [Bugs](#known-issues)
 - [Future features](#future-features)
 - [License](#license)
 - [Disclaimer](#disclaimer)
@@ -77,6 +79,30 @@ python main.py --set-webhook [URL]
 Press ```Ctrl+C``` in the terminal to shut off the server and allow your device to sleep normally again.
 
 
+## Architecture
+Scuttle was built to provide users with a free and simple audio streaming service. At a really basic level it consists of a client-server model:
+
+- **Backend (Python)**
+    - Runs a local HTTP server using FastAPI
+    - Handles audio download, library management, and tunneling (via Cloudflared).
+- **Frontend (JavaScript)**
+    - Responsive web UI served by the backend
+    - Handles playback, queue management, playlists, etc
+    - Communicates with server through REST and Websocket endpoints
+
+```mermaid
+flowchart LR
+    A["Server (your computer)"]
+    B("Discord (click the url)")
+    C["Client (your phone)"]
+
+    A -->|"Cloudflared (get a url)"| B
+    B --> C
+    C -->|"REST"| A
+    A -->|"Websocket"| C
+```
+
+
 ## Dependencies
 This project requires Python 3.8+ and the following Python packages:
 
@@ -110,18 +136,31 @@ scuttle/
 ```
 
 
+## Known Issues
+There are some known bugs that haven't been bothered to be fixed yet.
+* Cleaning out unused downloads
+* yt-dlp updates
+* yt-dlp download options and timeout failure cleanup/notification
+
+
 ## Future Features
+Scuttle is still in active development. Here are some planned features and improvements grouped by category:
 
-Scuttle is still in active development. Here are some planned features and improvements:
-
+**User Experience:**
+- [ ] Tracking user audio actions and usage, to provide a recap by month or even suggest artists or creators to donate to or support based on percentage listened
 - [ ] Mobile UI improvements (swipe on queue to play next)
 - [ ] Auto queue songs in a playlist
-- [ ] Import playlist from YouTube  
 - [ ] Improved search functionality
 - [ ] Pagination for faster loading with larger libraries
-- [ ] User authentication and multi-user support  
+
+**Integrations:**
+- [ ] Import playlist from YouTube  
+- [ ] User authentication and multi-user support
+- [ ] Syncing to a central server (?) for recommendations
+
+**Tools:**
 - [ ] Audio editing (silence removal, enhanced quality)
-- [ ] Backend management from the web interface (download queue, server status)
+- [ ] Backend management from the web interface (download queue, server restart)
 
 These are not guaranteed but they reflect the current development priorities and ideas for future releases. Suggestions are welcome!
 
