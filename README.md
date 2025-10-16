@@ -8,6 +8,8 @@ Scuttle is a responsive web-based audio archival tool for managing and playing y
 - Self-host your audio library and stream to any device with a browser
 - Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
 
+This requires Python 3.8+. You can run Scuttle by downloading this as a zip, and running scuttle.bat on Windows. See [installation](#installation) and [usage](#usage) for more details.
+
 ### Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
@@ -138,7 +140,7 @@ scuttle/
 
 ## Known Issues
 There are some known bugs that haven't been bothered to be fixed yet.
-* Cleaning out unused downloads
+* Cleaning out unused downloads (Done?)
 * yt-dlp updates
 * yt-dlp download options and timeout failure cleanup/notification
 
