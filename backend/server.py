@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.core.database.cleanup import cleanup_download_folder
 from backend.core.worker.download import DownloadWorker
 from backend.core.youtube.client import YouTubeClient
 from backend.core.database.audio_database import AudioDatabase
@@ -44,6 +45,7 @@ async def lifespan(app: FastAPI):
     db = AudioDatabase(name=G.AUDIO_DATABASE_NAME, filepath=G.DB_FILE, event_bus=event_bus)
     await db.build()
     await db.view_all()
+    cleanup_download_folder(db, G.DOWNLOAD_DIR)
 
     print(await db.search(""))
 
