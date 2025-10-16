@@ -140,7 +140,7 @@ scuttle/
 
 ## Known Issues
 There are some known bugs that haven't been bothered to be fixed yet.
-* Cleaning out unused downloads
+* Cleaning out unused downloads (Done?)
 * yt-dlp updates
 * yt-dlp download options and timeout failure cleanup/notification
 
