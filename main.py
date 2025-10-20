@@ -68,6 +68,7 @@ def main():
             "  - Create venv (default ./venv)\n"
             "  - Install pip packages from requirements.txt\n"
             "  - Download cloudflared binary to tools/"
+            "  - Install ffmpeg dependency into venv"
         )
     )
     args = parser.parse_args()
