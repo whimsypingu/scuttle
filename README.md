@@ -8,7 +8,7 @@ Scuttle is a responsive web-based audio archival tool for managing and playing y
 - Self-host your audio library and stream to any device with a browser
 - Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
 
-This requires Python 3.8+. You can run Scuttle by downloading this as a zip, and running ```scuttle.bat``` on Windows. For manual setup see [installation](#installation) and [usage](#usage) for more details.
+This requires Python 3.8+ and ffmpeg. You can run Scuttle by downloading this as a zip, and running ```scuttle.bat``` on Windows. For manual setup see [installation](#installation) and [usage](#usage) for more details.
 
 ### Table of Contents
 - [Installation](#installation)
@@ -32,14 +32,21 @@ git clone https://github.com/whimsypingu/scuttle.git
 Then run this to preview options:
 ```bash
 cd scuttle
+```
+
+```bash
 python main.py --help
 ```
+
+For Windows, the ```scuttle.bat``` file can be double-clicked to perform all setup.
+
 
 ### 2. Setup the environment
 Run the setup script to prepare the python environment. This will:
 * Create a Python virtual environment (```/venv```)
-* Install all required dependencies (please see ```/requirements.txt``` in [dependencies](#dependencies))
+* Install all required python library dependencies (please see ```/requirements.txt``` in [dependencies](#dependencies))
 * Download a ```cloudflared``` executable for tunneling from [the official open source repository](https://github.com/cloudflare/cloudflared/releases/latest/)
+* Install ffmpeg into the virtual python environment if necessary (Only for Windows right now)
 
 ```bash
 python main.py --setup
