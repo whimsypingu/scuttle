@@ -82,10 +82,14 @@ def main():
     if args.setup:
         from boot.setup import ensure_venv
         from boot.tunnel.cloudflared import download_cloudflared
+        from boot.install_ffmpeg import install_ffmpeg
 
         download_cloudflared(verbose=verbose)
 
         python_bin = ensure_venv(verbose=args.verbose)
+
+        install_ffmpeg(verbose=verbose)
+
         print("\n✅ Environment setup complete.")
         print("👉 To activate the virtual environment, run:\n")
         if IS_WINDOWS:
