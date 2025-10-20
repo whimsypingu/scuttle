@@ -1,6 +1,7 @@
 import requests
 import re
 import json
+import urllib.request
 from urllib.parse import urlparse
 
 from backend.core.lib.utils import find_key
@@ -8,9 +9,23 @@ from backend.core.playlists.base.extractor import PlaylistExtractor
 
 
 class SpotifyPlaylistExtractor(PlaylistExtractor):
+    SPOTIFY_PLAYLIST_RE = re.compile(
+        r"(spotify:playlist:|open\.spotify\.com/playlist|spotify\.link/)", re.IGNORECASE
+    )
+
     def matches_url(self) -> bool:
-        return "spotify.com/playlist" in self.url or "spotify:playlist:" in self.url #URI handling too
+        return bool(self.SPOTIFY_PLAYLIST_RE.search(self.url))
+        #return "spotify.com/playlist" in self.url or "spotify:playlist:" in self.url #URI handling too
     
+
+    def _resolve_link(self):
+        try: 
+            with urllib.request.urlopen(self.url, timeout=15) as response:
+                self.set_url(response.geturl())
+        except Exception as e:
+            print(f"[DEBUG] Failed to resolve link: {e}")
+            return
+
 
     def _embed_url(self):
         # handles forms like:
@@ -44,6 +59,7 @@ class SpotifyPlaylistExtractor(PlaylistExtractor):
 
     def fetch_data(self):
         #get optimal webpage for scraping
+        self._resolve_link()
         embed_url = self._embed_url()
         #print(f"embed_url: {embed_url}")
 
@@ -91,5 +107,7 @@ class SpotifyPlaylistExtractor(PlaylistExtractor):
         #debugging
         # for t in tracks:
         #     print(json.dumps(t, indent=4))
+        if not tracks:
+            raise ValueError(f"No tracks found")
 
         return tracks

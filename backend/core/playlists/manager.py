@@ -20,7 +20,7 @@ class PlaylistExtractorManager:
                     return []
         
         #failed to find an extractor
-        print("Failed to find an appropriate extractor")
+        print("[ERROR] Failed to find an appropriate extractor")
         return []
     
         
