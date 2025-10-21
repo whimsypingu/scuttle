@@ -18,13 +18,17 @@ class DownloadJob:
             {
                 playlist_id: True #see audio_database.update_track_playlists()
             }
+        queue_first: Optional boolean for whether to push to play queue after download or not
+        queue_last: Optional boolean for whether to push to play queue after download or not
     """
     def __init__(
         self,
         id: Optional[str] = None,
         query: Optional[str] = None,
         metadata: Optional[dict] = None,
-        updates: Optional[dict] = None
+        updates: Optional[dict] = None,
+        queue_first: Optional[bool] = False,
+        queue_last: Optional[bool] = False
     ):
         if not id and not query:
             raise ValueError("Either 'id' or 'query' must be provided.")
@@ -33,6 +37,8 @@ class DownloadJob:
         self.query = query
         self.metadata = metadata
         self.updates = updates #follows convention of {playlist_id: checked(bool)}
+        self.queue_first = queue_first
+        self.queue_last = queue_last
 
     def get_type(self) -> str:
         if self.id:
@@ -52,6 +58,12 @@ class DownloadJob:
     
     def get_updates(self) -> dict | None:
         return self.updates
+    
+    def get_queue_first_status(self) -> bool | None:
+        return self.queue_first
+
+    def get_queue_last_status(self) -> bool | None:
+        return self.queue_last
 
 
     def get_identifier(self) -> str:

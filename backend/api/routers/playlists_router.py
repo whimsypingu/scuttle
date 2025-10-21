@@ -116,7 +116,8 @@ async def create_playlist(body: CreatePlaylistRequest, req: Request) -> Response
                             "id": playlist_id,
                             "checked": True
                         }
-                    ]
+                    ],
+                    queue_last=True,
                 )
                 await download_queue.push(job)
 

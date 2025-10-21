@@ -64,7 +64,7 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
         HTTPException: Returns 500 if any unexpected error occurs during processing.
     """
     id = body.id
-    job = DownloadJob(id=id)
+    job = DownloadJob(id=id, queue_first=True)
 
     queue_manager = req.app.state.queue_manager
 
@@ -75,10 +75,8 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
         #queueing logic for replacing first item in queue if available
         if is_downloaded(track_or_id=id):
             await play_queue.set_first(id)
-        else:
-            await play_queue.insert_next(id)
-            if not download_queue.contains(job):
-                await download_queue.insert_next(job)
+        elif not download_queue.contains(job):
+            await download_queue.insert_next(job)
     
         return Response(status_code=204)
     except Exception as e:
@@ -104,7 +102,7 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
         HTTPException: Returns 500 if any unexpected error occurs during processing.
     """
     id = body.id
-    job = DownloadJob(id=id)
+    job = DownloadJob(id=id, queue_last=True)
 
     queue_manager = req.app.state.queue_manager
     
@@ -113,11 +111,10 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
 
     try:
         #normal queueing logic
-        await play_queue.push(id)
-
-        if not is_downloaded(track_or_id=id):
-            if not download_queue.contains(job):
-                await download_queue.push(job)
+        if is_downloaded(track_or_id=id):
+            await play_queue.push(id)
+        elif not download_queue.contains(job):
+            await download_queue.push(job)
         
         return Response(status_code=204)
     except Exception as e:
@@ -148,15 +145,16 @@ async def queue_push_front(body: QueuePushTrackRequest, req: Request) -> Respons
     download_queue = queue_manager.get(G.DOWNLOAD_QUEUE_NAME)
 
     id = body.id
-    job = DownloadJob(id=id)
+    job = DownloadJob(id=id, queue_first=True)
 
     try:
         #push to front
-        await play_queue.insert_next(id)
+        if is_downloaded(track_or_id=id):
+            await play_queue.insert_next(id)
+        
+        elif not download_queue.contains(job):
+            await download_queue.insert_next(job)
 
-        if not is_downloaded(track_or_id=id):
-            if not download_queue.contains(job):
-                await download_queue.push(job)
         return Response(status_code=204)
     except Exception as e:
         traceback.print_exc()
