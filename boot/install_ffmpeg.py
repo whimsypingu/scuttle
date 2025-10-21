@@ -6,7 +6,7 @@ import zipfile
 import urllib.request
 from pathlib import Path
 import subprocess
-from boot.utils.misc import IS_WINDOWS, VENV_DIR, vprint
+from boot.utils.misc import IS_WINDOWS, IS_MAC, IS_LINUX, VENV_DIR, vprint
 
 # FFMPEG_URLS = {
 #     ("Windows", "AMD64"): "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
@@ -17,9 +17,13 @@ from boot.utils.misc import IS_WINDOWS, VENV_DIR, vprint
 
 
 def has_ffmpeg() -> bool:
+    ffmpeg_path = shutil.which("ffmpeg")
+    if not ffmpeg_path:
+        return False
+
     try:
         result = subprocess.run(
-            ["ffmpeg", "-version"],
+            [ffmpeg_path, "-version"],
             capture_output=True,
             text=True,
             timeout=5
@@ -27,7 +31,6 @@ def has_ffmpeg() -> bool:
         return result.returncode == 0
     except (FileNotFoundError, subprocess.SubprocessError):
         return False
-
 
 
 #fw the emojis HEAVY here actually
@@ -62,14 +65,77 @@ def install_ffmpeg_windows(verbose=False):
     vprint("🎉 ffmpeg and ffprobe installed successfully!", verbose)
 
 
+
+def install_ffmpeg_macos(verbose=False):
+    url = "https://evermeet.cx/ffmpeg/getrelease/zip"
+
+    venv_bin = VENV_DIR / "bin"  # macOS/Linux use "bin", not "Scripts"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        archive_path = Path(tmp) / "ffmpeg.zip"
+        vprint(f"⬇️  Downloading ffmpeg static build from {url} ...", verbose)
+
+        with urllib.request.urlopen(url) as response, open(archive_path, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+
+        vprint("📦 Extracting archive ...", verbose)
+        extract_dir = Path(tmp) / "extracted"
+        shutil.unpack_archive(archive_path, extract_dir)
+
+        # Move ffmpeg + ffprobe to venv/bin
+        for name in ("ffmpeg", "ffprobe"):
+            src = next(extract_dir.rglob(name), None)
+            if src and src.is_file():
+                dest = venv_bin / name
+                shutil.copy2(src, dest)
+                os.chmod(dest, 0o755)
+                vprint(f"✅ Installed {dest.name} to {venv_bin}", verbose)
+
+    vprint("🎉 ffmpeg and ffprobe installed successfully!", verbose)
+
+
+
+def install_ffmpeg_linux(verbose=False):
+    url = "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
+    venv_bin = VENV_DIR / "bin"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        archive_path = Path(tmp) / "ffmpeg.tar.xz"
+        vprint(f"⬇️  Downloading ffmpeg static build from {url} ...", verbose)
+
+        with urllib.request.urlopen(url) as response, open(archive_path, "wb") as out_file:
+            shutil.copyfileobj(response, out_file)
+
+        vprint("📦 Extracting archive ...", verbose)
+        extract_dir = Path(tmp) / "extracted"
+        shutil.unpack_archive(archive_path, extract_dir)
+
+        # find ffmpeg and ffprobe in extracted folder
+        for name in ("ffmpeg", "ffprobe"):
+            src = next(extract_dir.rglob(name), None)
+            if src and src.is_file():
+                dest = venv_bin / name
+                shutil.copy2(src, dest)
+                os.chmod(dest, 0o755)
+                vprint(f"✅ Installed {dest.name} to {venv_bin}", verbose)
+
+    vprint("🎉 ffmpeg and ffprobe installed successfully on Linux!", verbose)
+
+
+
+
 def install_ffmpeg(verbose=False):
     if not has_ffmpeg():
         if IS_WINDOWS:
             install_ffmpeg_windows(verbose=verbose)
+        elif IS_MAC:
+            install_ffmpeg_macos(verbose=verbose)
+        elif IS_LINUX:
+            install_ffmpeg_linux(verbose=verbose)
         else:
-            pass
+            vprint("Unsupported OS for automatic ffmpeg install", verbose)
     else:
-        pass
+        vprint("ffmpeg already installed", verbose)
 
 
 
