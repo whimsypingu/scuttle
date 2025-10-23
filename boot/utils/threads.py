@@ -1,4 +1,4 @@
-from queue import Queue
+from queue import Empty, Queue
 import subprocess
 from threading import Thread
 
@@ -59,3 +59,14 @@ def drain_output(proc, verbose=False):
     thread = Thread(target=_enqueue_stream, args=(proc.stdout, stdout_queue), kwargs={"verbose": verbose}, daemon=True)
     thread.start()
     return stdout_queue
+
+
+def drain_queue(q):
+    lines = []
+    while True:
+        try:
+            lines.append(q.get_nowait())
+        except Empty:
+            break
+    return lines
+    

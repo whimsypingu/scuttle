@@ -16,6 +16,7 @@ import os
 import time
 import argparse
 from datetime import datetime, timedelta
+from queue import Empty
 
 from boot.utils.misc import IS_WINDOWS, update_env
 
@@ -105,7 +106,7 @@ def main():
     from dotenv import load_dotenv
 
     from boot.awake import prevent_sleep, allow_sleep
-    from boot.utils import terminate_process
+    from boot.utils import terminate_process, drain_queue
 
     from boot.notify import post_webhook_json
     from boot.uvicorn import start_uvicorn, wait_for_uvicorn
@@ -148,7 +149,10 @@ def main():
     keep_awake_proc = prevent_sleep(verbose=verbose)
 
     num_restarts = 0
-    last_restart = datetime.now()
+    last_activity = datetime.now()
+
+    IDLE_TIMEOUT = timedelta(hours=3) #restart timeout
+    POLL_INTERVAL = 60 #seconds
 
     log("========================\n🚀 Scuttle Booting Up!", send_webhook=send_webhook)
 
@@ -179,11 +183,18 @@ def main():
         
             #------------------------------- Monitor loop -------------------------------#
             while True:
-                time.sleep(5)
+                try:
+                    #read server logs non-blockingly
+                    lines = drain_queue(server_queue)
+                    if lines:
+                        last_activity = datetime.now()
+                        print(f"[server]: {last_activity}: {lines[-1].strip()}")
+                except Empty:
+                    pass
 
-                #periodically restart
-                if datetime.now() - last_restart > timedelta(hours=2): #magic number here!??
-                    log("⏳ Restarting both processes after refresh...", send_webhook=send_webhook)
+                #idle restart
+                if datetime.now() - last_activity > IDLE_TIMEOUT:
+                    log("💤 No activity detected, restarting for refresh...", send_webhook=send_webhook)
                     break
             
                 if server_proc.poll() is not None:
@@ -204,6 +215,9 @@ def main():
                     else:
                         log("❌ Failed to get tunnel URL in time.", send_webhook=send_webhook)                
                     continue
+                
+
+                time.sleep(POLL_INTERVAL)
 
 
             #------------------------------- Cleanup before restart -------------------------------#
@@ -211,7 +225,7 @@ def main():
             terminate_process(server_proc, "Server", verbose=verbose)
 
             num_restarts += 1
-            last_restart = datetime.now()
+            last_activity = datetime.now()
 
             log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=send_webhook)
     
