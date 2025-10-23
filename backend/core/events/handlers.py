@@ -28,11 +28,13 @@ def register_event_handlers(event_bus: EventBus, websocket_manager: WebsocketMan
 
     #(source, action)
     subscriptions = [
+        (G.PLAY_QUEUE_NAME, PQA.SET_ALL),
         (G.PLAY_QUEUE_NAME, PQA.SET_FIRST),
         (G.PLAY_QUEUE_NAME, PQA.INSERT_NEXT),
         (G.PLAY_QUEUE_NAME, PQA.PUSH),
         (G.PLAY_QUEUE_NAME, PQA.POP),
         (G.PLAY_QUEUE_NAME, PQA.REMOVE),
+        (G.PLAY_QUEUE_NAME, PQA.CLEAR),
         (G.PLAY_QUEUE_NAME, PQA.SEND_CONTENT),
 
 

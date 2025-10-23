@@ -86,7 +86,7 @@ async def download_search(req: Request, q: str):
 
     download_queue = queue_manager.get(G.DOWNLOAD_QUEUE_NAME)
 
-    job = DownloadJob(query=q)
+    job = DownloadJob(query=q, queue_first=True)
     await download_queue.push(job)
 
     return JSONResponse(content={"status": "queued"}, status_code=200)

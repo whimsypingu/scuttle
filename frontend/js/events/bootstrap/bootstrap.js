@@ -8,6 +8,7 @@ import { LikeStore } from "../../cache/LikeStore.js";
 import { QueueStore } from "../../cache/QueueStore.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
 import { TrackStore } from "../../cache/TrackStore.js";
+import { setLoopButton } from "../../features/audio/index.js";
 
 
 //loads source of truth for library, TrackStore, which other references rely on
@@ -32,6 +33,7 @@ async function bootstrapQueue() {
         QueueStore.setAll(data.content); //accepts ids
 
         renderQueue();
+        setLoopButton(true, false)
     } catch (err) {
         console.error("Bootstrap failed", err);
     }

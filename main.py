@@ -183,14 +183,11 @@ def main():
         
             #------------------------------- Monitor loop -------------------------------#
             while True:
-                try:
-                    #read server logs non-blockingly
-                    lines = drain_queue(server_queue)
-                    if lines:
-                        last_activity = datetime.now()
-                        print(f"[server]: {last_activity}: {lines[-1].strip()}")
-                except Empty:
-                    pass
+                #read server logs non-blockingly
+                lines = drain_queue(server_queue)
+                if lines:
+                    last_activity = datetime.now()
+                    #print(f"[server]: {last_activity}: {lines[-1].strip()}")
 
                 #idle restart
                 if datetime.now() - last_activity > IDLE_TIMEOUT:

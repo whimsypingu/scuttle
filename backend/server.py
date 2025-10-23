@@ -63,7 +63,7 @@ async def lifespan(app: FastAPI):
     playlist_ext_manager = PlaylistExtractorManager()
 
     # workers
-    download_worker = DownloadWorker(download_queue=download_queue, youtube_client=yt, audio_database=db)
+    download_worker = DownloadWorker(play_queue=play_queue, download_queue=download_queue, youtube_client=yt, audio_database=db)
     download_task = asyncio.create_task(download_worker.run())
 
     # Assign to app.state for global access

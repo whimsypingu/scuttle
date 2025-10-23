@@ -41,6 +41,7 @@ import { QueueStore } from "../../cache/QueueStore.js";
 import { getPlayerEl, setIosPlaybackInterrupt } from "./lib/streamTrick.js";
 
 
+
 //autoplay
 export async function onAudioEnded() {
     try {
@@ -77,6 +78,7 @@ export async function onAudioEnded() {
 
     //3. clean
     try {
+        await cleanupCurrentAudio();
     } catch (err) {
         logDebug("[onAudioEnded] cleanup failed:", err);
     }
@@ -189,25 +191,29 @@ export async function onNextButtonClick() {
 
 //play or pause
 export async function onPlayPauseButtonClick() {
-    console.error(trackState());
+    const state = trackState(); //get current state
+    console.error(state);
+    logDebug("trackState:", state);
 
     //1. check for track
     const track = QueueStore.peekTrack();
     if (!track) return;
 
     //2. handle click
-    if (trackState()) {
+    if (state === false) {
+        //currently playing, so it pauses
+        pauseLoadedTrack();
+        updatePlayPauseButtonDisplay(false);
+    } else {
+        //paused or undefined: Handles case where freshly opened but there is stuff in the queue
         try {
             await loadTrack(track.id);
-            await playLoadedTrack();   
+            await playLoadedTrack();
             updatePlayPauseButtonDisplay(true);
         } catch (err) {
             updatePlayPauseButtonDisplay(false);
             logDebug("Play failed:", err);
         }
-    } else {
-        pauseLoadedTrack();
-        updatePlayPauseButtonDisplay(false);
     }
 }
 

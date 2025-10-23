@@ -2,6 +2,7 @@
 
 import { LikeStore } from "../../cache/LikeStore.js";
 import { PlaylistStore } from "../../cache/PlaylistStore.js";
+import { QueueStore } from "../../cache/QueueStore.js";
 import { TrackStore } from "../../cache/TrackStore.js";
 import { $, SELECTORS } from "../../dom/index.js";
 import { 
@@ -12,10 +13,12 @@ import {
     renderPlaylist, 
     renderPlaylistById, 
     updateAllListTrackItems } from "../../features/playlist/index.js";
+import { renderQueue } from "../../features/queue/index.js";
 
 import { renderSearch } from "../../features/search/index.js";
 import { hideSpinner, showSpinner } from "../../features/spinner/index.js";
 import { showToast } from "../../features/toast/index.js";
+import { logDebug } from "../../utils/debug.js";
 
 
 
@@ -23,12 +26,13 @@ import { showToast } from "../../features/toast/index.js";
 //handles websocket messages //later this should be migrated from the backend to ensure consistency
 export const handlers = {
     play_queue: {
-        set_all: handlePQSA,
-        set_first: handlePQSF,
-        insert_next: handlePQIN,
-        push: handlePQPU,
-        pop: handlePQPO,
-        remove: handlePQRE
+        set_all: handlePQSetAll,
+        set_first: handlePQSetFirst,
+        insert_next: handlePQInsertNext,
+        push: handlePQPush,
+        pop: handlePQPop,
+        remove: handlePQRemove,
+        clear: handlePQClear
     },
     audio_database: {
         set_metadata: handleADSetMetadata,
@@ -66,32 +70,55 @@ function handleTaskFinish(payload) {
 }
 
 
-
 //player queue related websocket messages update the state of the local queue (for caching), and also the ui
-function handlePQSA(payload) {
+function handlePQSetAll(payload) {
     //sync up queue and render?
+    logDebug("[SetAll]: ", payload.content);
+    QueueStore.setAll(payload.content);
+    renderQueue();
 }
 
-function handlePQSF(payload) {
+function handlePQSetFirst(payload) {
     //sync up queue and render?
+    logDebug("[SetFirst]: ", payload.content);
+    QueueStore.setAll(payload.content);
+    renderQueue();
 }
 
-function handlePQIN(payload) {
+function handlePQInsertNext(payload) {
     //sync up queue and render?
+    logDebug("[InsertNext]: ", payload.content);
+    QueueStore.setAll(payload.content);
+    renderQueue();
 }
 
-function handlePQPU(payload) {
+function handlePQPush(payload) {
     //sync up queue and render?
+    logDebug("[Push]: ", payload.content);
+    QueueStore.setAll(payload.content);
+    renderQueue();
 }
 
-function handlePQPO(payload) {
+function handlePQPop(payload) {
     //sync up queue and render?
+    logDebug("[Pop]: ", payload.content);
+    QueueStore.setAll(payload.content);
+    renderQueue();
 }
 
-function handlePQRE(payload) {
+function handlePQRemove(payload) {
     //sync up queue and render?
+    logDebug("[Remove]: ", payload.content);
+    QueueStore.setAll(payload.content);
+    renderQueue();
 }
 
+function handlePQClear(payload) {
+    //sync up queue and render?
+    logDebug("[Clear]: ", payload.content);
+    QueueStore.setAll(payload.content);
+    renderQueue();
+}
 
 
 
