@@ -7,7 +7,7 @@ const LOOP_ALL = "all";
 const LOOP_ONE = "one";
 
 //track looping type
-let loopMode = LOOP_NONE;
+let loopMode = LOOP_ALL;
 
 function setLoopMode(mode) {
     if ([LOOP_NONE, LOOP_ALL, LOOP_ONE].includes(mode)) {
