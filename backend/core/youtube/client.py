@@ -40,7 +40,8 @@ class YouTubeClient:
         self.dl_format_filter = dl_format_filter or "bestaudio/best"
         self.dl_format = dl_format or "mp3"
         self.dl_quality = dl_quality or "0"
-        self.dl_user_agent = dl_user_agent or "Mozilla/5.0" #"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+        self.dl_user_agent = dl_user_agent or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
+        #self.dl_user_agent = dl_user_agent or "Mozilla/5.0" #"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
 
         self.dl_temp_format = "%(ext)s"
         

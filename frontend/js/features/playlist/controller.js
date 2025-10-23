@@ -313,13 +313,8 @@ export async function onSwipe(dataset, actionName) {
         return;
     }
 
-    const track = TrackStore.get(trackId);
-    if (!track) {
-        logDebug("Missing track in TrackStore");
-        prefetchTrack(trackId);
-        showToast(`Downloading...`);
-        return;
-    }
+
+    const isDownloaded = dataset.isDownloaded === "true"; //dataset are strings
 
     //1. handle action type
     logDebug("[onSwipe] actionName:", actionName);
@@ -327,9 +322,13 @@ export async function onSwipe(dataset, actionName) {
     switch (actionName) {
         case "queue":
             // Add to end of the queue (frontend first for snappy UI)
-            QueueStore.push(trackId);
-            renderQueue();
-            showToast(`Queued`); //optionally include track.title but should probably prevent js injection
+            if (!isDownloaded) {
+                showToast("Downloading...");
+            } else {
+                QueueStore.push(trackId);
+                renderQueue();
+                showToast(`Queued`); //optionally include track.title but should probably prevent js injection
+            }
 
             try {
                 await queuePushTrack(trackId); //backend
@@ -341,9 +340,13 @@ export async function onSwipe(dataset, actionName) {
 
         case "queueFirst":
             // Insert track at the front of the queue (to be played next)
-            QueueStore.pushFront(trackId);
-            renderQueue();
-            showToast(`Next`);
+            if (!isDownloaded) {
+                showToast("Downloading...");
+            } else {
+                QueueStore.pushFront(trackId);
+                renderQueue();
+                showToast(`Next`);
+            }
 
             try {
                 await queuePushFrontTrack(trackId);

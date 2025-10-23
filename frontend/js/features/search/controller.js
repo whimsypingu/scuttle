@@ -256,7 +256,11 @@ async function onClickPlayButton(dataset) {
     const isDownloaded = dataset.isDownloaded === "true"; //dataset are strings
     if (!isDownloaded) { //so why does this not trigger? i dont see the not downloaded debug message?
         showToast("Downloading...");
-        await prefetchTrack(trackId);
+        try {
+            await queuePushFrontTrack(trackId);
+        } catch (err) {
+            logDebug("Queue failed", err);
+        }
         return;
     }
 
