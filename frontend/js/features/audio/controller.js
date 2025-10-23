@@ -42,20 +42,6 @@ import { getPlayerEl, setIosPlaybackInterrupt } from "./lib/streamTrick.js";
 
 
 
-export async function onLoad() {
-    const track = QueueStore.peekTrack();
-    logDebug(`[onLoad]: track ${track}`);
-    if (!track) return;
-
-    try {
-        //await cleanupCurrentAudio();
-        await loadTrack(track.id);
-    } catch (err) {
-        logDebug("[onLoad] Failed to clean or load audio:", err);
-    }
-}
-
-
 //autoplay
 export async function onAudioEnded() {
     try {
@@ -215,10 +201,11 @@ export async function onPlayPauseButtonClick() {
 
     //2. handle click
     if (state === false) {
+        //currently playing, so it pauses
         pauseLoadedTrack();
         updatePlayPauseButtonDisplay(false);
     } else {
-        //paused or undefined
+        //paused or undefined: Handles case where freshly opened but there is stuff in the queue
         try {
             await loadTrack(track.id);
             await playLoadedTrack();
@@ -228,20 +215,6 @@ export async function onPlayPauseButtonClick() {
             logDebug("Play failed:", err);
         }
     }
-
-    // if (trackState()) {
-    //     try {
-    //         await loadTrack(track.id);
-    //         await playLoadedTrack();   
-    //         updatePlayPauseButtonDisplay(true);
-    //     } catch (err) {
-    //         updatePlayPauseButtonDisplay(false);
-    //         logDebug("Play failed:", err);
-    //     }
-    // } else {
-    //     pauseLoadedTrack();
-    //     updatePlayPauseButtonDisplay(false);
-    // }
 }
 
 //previous --gonna become a mess when previous track is allowed
