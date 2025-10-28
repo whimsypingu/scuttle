@@ -77,6 +77,8 @@
     );
 
     transition: all 0.3s ease;
+
+
     /* 
     position: relative;
     z-index: 100; */
@@ -88,6 +90,12 @@
     text-align: left;
     font: var(--h1);
     color: var(--text-2);
+
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 

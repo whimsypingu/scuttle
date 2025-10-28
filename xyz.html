@@ -1,0 +1,315 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Long-press reorderable UL</title>
+<style>
+  body { font-family: system-ui, sans-serif; padding: 20px; }
+  .scroll-list {
+    width: 360px;
+    height: 360px;
+    overflow: auto;
+    border: 1px solid #ccc;
+    padding: 0;
+    margin: 0;
+  }
+  .scroll-list li {
+    list-style: none;
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    background: white;
+    user-select: none; /* avoid selecting text while dragging */
+    -webkit-user-drag: none; /* prevent image dragging on webkit */
+    touch-action: none; /* useful for consistent touch handling */
+    cursor: grab;
+  }
+  .scroll-list li:active { cursor: grabbing; }
+  .drag-placeholder {
+    background: #f0f8ff;
+    border: 2px dashed #89c;
+    min-height: 40px;
+    box-sizing: border-box;
+  }
+  .drag-ghost {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    transform: translate(-50%, -50%);
+    opacity: 0.95;
+    border-radius: 6px;
+    background: white;
+  }
+</style>
+</head>
+<body>
+
+<h3>Long-press + drag to reorder</h3>
+<ul id="list" class="scroll-list">
+  <li data-id="1">Item 1</li>
+  <li data-id="2">Item 2</li>
+  <li data-id="3">Item 3</li>
+  <li data-id="4">Item 4</li>
+  <li data-id="5">Item 5</li>
+  <li data-id="6">Item 6</li>
+  <li data-id="7">Item 7</li>
+  <li data-id="8">Item 8</li>
+  <li data-id="9">Item 9</li>
+  <li data-id="10">Item 10</li>
+</ul>
+
+<script>
+(function () {
+  const LONGPRESS_MS = 350;       // long press duration
+  const MOVE_THRESHOLD = 8;       // px movement before canceling long-press
+  const AUTOSCROLL_MARGIN = 40;   // px from edges to start auto-scroll
+  const AUTOSCROLL_SPEED = 8;     // px per frame
+
+  const list = document.getElementById('list');
+
+  let longpressTimer = null;
+  let startX = 0, startY = 0;
+  let dragging = false;
+  let draggedEl = null;
+  let ghost = null;
+  let placeholder = null;
+  let pointerId = null;
+  let lastPointerX = 0, lastPointerY = 0;
+  let rafId = null;
+
+  // Utility to get pointer coords
+  function getPoint(e) {
+    if (e.touches && e.touches[0]) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.changedTouches && e.changedTouches[0]) {
+      return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    } else {
+      return { x: e.clientX, y: e.clientY };
+    }
+  }
+
+  // Find the <li> under a page point, ignoring ghost and placeholder
+  function liFromPoint(x, y) {
+    let elem = document.elementFromPoint(x, y);
+    while (elem && elem !== list) {
+      if (elem.matches && elem.matches('li') && elem !== ghost && elem !== placeholder) return elem;
+      elem = elem.parentElement;
+    }
+    return null;
+  }
+
+  // Begin drag after longpress
+  function beginDrag(e, origEl) {
+    dragging = true;
+    draggedEl = origEl;
+    draggedEl.classList.add('dragging'); // optional CSS hook
+
+    // create placeholder with same height
+    placeholder = document.createElement('li');
+    placeholder.className = 'drag-placeholder';
+    placeholder.style.height = `${draggedEl.offsetHeight}px`;
+    draggedEl.parentNode.insertBefore(placeholder, draggedEl.nextSibling);
+
+    // create ghost clone
+    ghost = draggedEl.cloneNode(true);
+    ghost.className = 'drag-ghost';
+    ghost.style.width = `${draggedEl.offsetWidth}px`;
+    document.body.appendChild(ghost);
+
+    // hide original (but keep in DOM to preserve indexes)
+    draggedEl.style.display = 'none';
+
+    // initial position
+    const p = getPoint(e);
+    lastPointerX = p.x;
+    lastPointerY = p.y;
+    moveGhostTo(p.x, p.y);
+
+    // prevent native long-press context menu on mobile
+    if (e.preventDefault) e.preventDefault();
+
+    startAutoScroll();
+  }
+
+  function endDrag() {
+    if (!dragging) return;
+    stopAutoScroll();
+
+    // insert dragged element where placeholder is
+    placeholder.parentNode.insertBefore(draggedEl, placeholder);
+    draggedEl.style.display = ''; // restore display
+    draggedEl.classList.remove('dragging');
+
+    // cleanup
+    placeholder.remove();
+    ghost.remove();
+    placeholder = null;
+    ghost = null;
+    draggedEl = null;
+    dragging = false;
+    pointerId = null;
+    if (rafId) cancelAnimationFrame(rafId);
+  }
+
+  function cancelLongpress() {
+    if (longpressTimer) {
+      clearTimeout(longpressTimer);
+      longpressTimer = null;
+    }
+  }
+
+  function moveGhostTo(x, y) {
+    if (!ghost) return;
+    ghost.style.left = `${x}px`;
+    ghost.style.top = `${y}px`;
+  }
+
+  // pointer move handler while dragging
+  function onPointerMove(e) {
+    const p = getPoint(e);
+    lastPointerX = p.x; lastPointerY = p.y;
+
+    if (!dragging) {
+      // if moved more than threshold, cancel longpress
+      const dx = p.x - startX, dy = p.y - startY;
+      if (Math.hypot(dx, dy) > MOVE_THRESHOLD) cancelLongpress();
+      return;
+    }
+
+    moveGhostTo(p.x, p.y);
+
+    // find li under pointer and insert placeholder accordingly
+    const target = liFromPoint(p.x, p.y);
+    if (target && target !== placeholder && target !== draggedEl) {
+      const rect = target.getBoundingClientRect();
+      const before = (p.y < rect.top + rect.height / 2);
+      if (before) {
+        target.parentNode.insertBefore(placeholder, target);
+      } else {
+        target.parentNode.insertBefore(placeholder, target.nextSibling);
+      }
+    }
+  }
+
+  // pointer up / cancel
+  function onPointerUp(e) {
+    cancelLongpress();
+    if (dragging) {
+      endDrag();
+    }
+    window.removeEventListener('mousemove', onPointerMove);
+    window.removeEventListener('mouseup', onPointerUp);
+    window.removeEventListener('touchmove', onPointerMove, {passive:false});
+    window.removeEventListener('touchend', onPointerUp);
+    window.removeEventListener('touchcancel', onPointerUp);
+  }
+
+  // Auto-scroll logic: moves the scroll container when pointer is near top/bottom
+  let autoScrollActive = false;
+  function autoScrollStep() {
+    if (!dragging) { autoScrollActive = false; return; }
+
+    const rect = list.getBoundingClientRect();
+    const y = lastPointerY;
+
+    if (y < rect.top + AUTOSCROLL_MARGIN) {
+      // scroll up
+      list.scrollTop -= AUTOSCROLL_SPEED;
+    } else if (y > rect.bottom - AUTOSCROLL_MARGIN) {
+      // scroll down
+      list.scrollTop += AUTOSCROLL_SPEED;
+    }
+
+    // keep ghost following if container moves
+    moveGhostTo(lastPointerX, lastPointerY);
+    rafId = requestAnimationFrame(autoScrollStep);
+  }
+
+  function startAutoScroll() {
+    if (!autoScrollActive) {
+      autoScrollActive = true;
+      rafId = requestAnimationFrame(autoScrollStep);
+    }
+  }
+  function stopAutoScroll() {
+    autoScrollActive = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  // Attach listeners to each li (delegation supported below)
+  // We use event delegation from the list so new items work too.
+  list.addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return; // left button only
+    const li = e.target.closest('li');
+    if (!li || !list.contains(li)) return;
+
+    // Record starting coords
+    const p = getPoint(e);
+    startX = p.x; startY = p.y;
+
+    // start longpress timer
+    cancelLongpress();
+    longpressTimer = setTimeout(() => {
+      beginDrag(e, li);
+      longpressTimer = null;
+    }, LONGPRESS_MS);
+
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+  });
+
+  list.addEventListener('touchstart', function (e) {
+    if (e.touches.length > 1) return; // ignore multi-touch
+    const li = e.target.closest('li');
+    if (!li || !list.contains(li)) return;
+
+    const p = getPoint(e);
+    startX = p.x; startY = p.y;
+
+    cancelLongpress();
+    longpressTimer = setTimeout(() => {
+      beginDrag(e, li);
+      longpressTimer = null;
+    }, LONGPRESS_MS);
+
+    window.addEventListener('touchmove', onPointerMove, {passive:false});
+    window.addEventListener('touchend', onPointerUp);
+    window.addEventListener('touchcancel', onPointerUp);
+  }, {passive:true});
+
+  // If the user scrolls or does something else, cancel longpress
+  list.addEventListener('scroll', cancelLongpress, {passive:true});
+  window.addEventListener('resize', cancelLongpress);
+
+  // Prevent context menu (right click) during dragging
+  window.addEventListener('contextmenu', function (e) {
+    if (dragging) e.preventDefault();
+  });
+
+  // Cleanup in case pointer leaves window...
+  window.addEventListener('mouseleave', () => {
+    cancelLongpress();
+  });
+
+  // Optional: allow pressing ESC to cancel mid-drag
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dragging) {
+      // restore original ordering by moving draggedEl back (if we still have placeholder)
+      if (placeholder && draggedEl) {
+        placeholder.parentNode.insertBefore(draggedEl, placeholder);
+        draggedEl.style.display = '';
+      }
+      // cleanup
+      if (placeholder) placeholder.remove();
+      if (ghost) ghost.remove();
+      placeholder = null; ghost = null; draggedEl = null;
+      dragging = false;
+      cancelLongpress();
+      stopAutoScroll();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

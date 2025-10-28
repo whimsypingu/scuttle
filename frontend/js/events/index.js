@@ -43,6 +43,9 @@ async function setupMobileEvents() {
 
         const { setupSwipeEventListeners } = await import("./mobile/swipe.js");
         setupSwipeEventListeners();
+
+        const { setupReorderEventListeners } = await import("./mobile/reorder.js");
+        setupReorderEventListeners();
     } else {
         logDebug("DESKTOP ACTIVE");
         

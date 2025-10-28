@@ -33,6 +33,13 @@
     transition: background-color 0.1s ease, transform 0.1s ease;
     cursor: pointer;
     position: relative;
+
+    /* prevent text highlights on drag */
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 
@@ -121,6 +128,31 @@
     transition: background-color 0.1s ease, transform 0.1s ease;
     cursor: none;
     color: var(--text-3);
+}
+
+
+
+/* frontend/js/events/mobile/reorder.js */
+.dragging {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    background: var(--bg-3);
+    width: 70%;
+
+    opacity: 0.8;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    transform: translate(-50%, -50%) scale(0.9);
+    transform-origin: center;
+    border-radius: 8px;
+    transition: box-shadow 0.2s ease;
+}
+
+.drag-placeholder {
+    border: 2px dashed rgba(150,150,150,0.3);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.05);
+    margin: 2px 0;
 }
 
 
