@@ -2,6 +2,7 @@
 
 import { LikeStore } from "../../../cache/LikeStore.js";
 import { PlaylistStore } from "../../../cache/PlaylistStore.js";
+import { QueueStore } from "../../../cache/QueueStore.js";
 import { TrackStore } from "../../../cache/TrackStore.js";
 
 
@@ -10,6 +11,8 @@ import { TrackStore } from "../../../cache/TrackStore.js";
  * 
  * Converts the `id` property of the given playlist dataset to an integer.
  * If the `id` cannot be parsed as a number, `NaN` will be returned.
+ * 
+ * Note: Add more extractors if necessary in the future here, like additional fields besides just id.
  * 
  * @param {Object} playlistDataset - The dataset object representing a playlist.
  * @param {string} playlistDataset.id - The playlist ID, string like 'library' or '5'.
@@ -56,11 +59,15 @@ export function getPlaylistTrackIds(playlistDataset) {
         case "liked":
             return LikeStore.getIds();
 
+        case "queue":
+            return QueueStore.getIds();
+
         default:
             //user playlist
             return PlaylistStore.getTrackIds(playlistId);
     }
 }
+
 
 
 

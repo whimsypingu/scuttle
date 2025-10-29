@@ -50,6 +50,14 @@ export function createIdStore() {
             const [removed] = idList.splice(index, 1);
             return removed || null;
         },
+        reorder(fromIndex, toIndex) {
+            if (fromIndex < 0 || fromIndex >= idList.length || toIndex < 0 || toIndex >= idList.length) {
+                return null;
+            }
+            const [moved] = idList.splice(fromIndex, 1);
+            idList.splice(toIndex, 0, moved);
+            return true;
+        },
         
         //setters
         clear() {

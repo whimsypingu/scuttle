@@ -26,7 +26,7 @@ import {
 
 import { toggleLike } from "./lib/api.js";
 
-import { renderPlaylist } from "./lib/ui.js";
+import { renderPlaylist, renderPlaylistById } from "./lib/ui.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
 import { LikeStore } from "../../cache/LikeStore.js";
@@ -289,6 +289,8 @@ async function onClickQueueFrontButton(dataset) {
 
 //which action to do "queue", "more"
 import { domEls } from "../../dom/selectors.js";
+import { PlaylistStore } from "../../cache/PlaylistStore.js";
+import { renderLiked } from "./index.js";
 const { likedListEl } = domEls;
 
 /**
@@ -410,6 +412,38 @@ export async function onSwipe(dataset, actionName) {
 
 
 
-export async function onReorder(playlistDataset, fromIndex, toIndex) {
-    const playlistId = listEl.dataset.id;
+export async function onReorder(dataset, fromIndex, toIndex) {
+    const { playlistId } = getPlaylistData(dataset);
+
+    if (fromIndex == toIndex) return;
+
+    switch (playlistId) {
+        case "liked":
+            LikeStore.reorder(fromIndex, toIndex);
+            renderLiked();
+            break; 
+        
+        case "queue":
+            QueueStore.reorder(fromIndex, toIndex);
+            renderQueue();
+
+            try {
+                const trackIds = QueueStore.getIds();
+                await queueSetAllTracks(trackIds);
+            } catch (err) {
+                logDebug("Queueset failed", err);
+            }
+            break;
+
+        default:
+            //user playlist
+            PlaylistStore.reorderTrack(playlistId, fromIndex, toIndex);
+            renderPlaylistById(playlistId);
+
+            const tracks = PlaylistStore.getTracks(playlistId);
+            tracks.forEach((track, index) => {
+                logDebug(`${index + 1}: ${track.title}`); // or track.title if that’s your property
+            });
+            break;
+    }
 }

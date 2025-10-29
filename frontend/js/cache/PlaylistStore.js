@@ -24,6 +24,7 @@ export const PlaylistStore = (() => {
             return playlists[id] || null;
         },
 
+        
         //modifiers
         /**
          * Create a new playlist and add it to the store.
@@ -139,20 +140,7 @@ export const PlaylistStore = (() => {
             const pl = playlists[playlistId];
             if (!pl) return false;
 
-            const ids = pl.tracks.getIds(); //get the ordered list of track IDs
-            if (
-                fromIndex < 0 || fromIndex >= ids.length ||
-                toIndex < 0 || toIndex >= ids.length
-            ) return false;
-
-            //move track in O(1)
-            const [moved] = ids.splice(fromIndex, 1);
-            ids.splice(toIndex, 0, moved);
-
-            //update the IdStore with new order
-            pl.tracks.setAll(ids);
-
-            return true;
+            return pl.tracks.reorder(fromIndex, toIndex);
         },
 
         /**

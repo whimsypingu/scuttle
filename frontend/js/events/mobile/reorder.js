@@ -252,8 +252,11 @@ function endDrag() {
 
     logDebug("[endDrag]: index: ", placeholder.dataset.index);
     logDebug("[endDrag]: playlist: ", playlistEl.dataset.id);
-    //onReorder()
 
+    //perform data structure changes
+    const fromIndex = parseInt(draggedEl.dataset.index);
+    const toIndex = parseInt(placeholder.dataset.index);
+    onReorder(playlistEl.dataset, fromIndex, toIndex);
 
     placeholder.remove();
 
