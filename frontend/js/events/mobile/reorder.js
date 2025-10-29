@@ -8,7 +8,7 @@ import { logDebug } from "../../utils/debug.js";
  * Enables long-press + drag reordering for .list-track-item elements
  * inside scrollable lists. Uses a single global event listener (delegation).
  */
-const LONG_PRESS_DURATION = 300; //ms
+const LONG_PRESS_DURATION = 1000; //ms
 const MOVE_THRESHOLD = 8; 
 const AUTOSCROLL_MARGIN = 40;
 const AUTOSCROLL_SPEED = 12; //px/frame
@@ -153,10 +153,12 @@ function endDrag() {
     dragging = false;
     
     //document.body.classList.remove("noselect");
+    document.dispatchEvent(new CustomEvent("cancelSwipe", { bubbles: true }));
     logDebug("[endDrag]");
 }
 
 function cancelLongpress() {
+    logDebug("[cancelLongpress]");
     if (longpressTimer) { 
         clearTimeout(longpressTimer); 
         longpressTimer = null; 
@@ -164,27 +166,68 @@ function cancelLongpress() {
 }
 
 
-function onMove(e) {
-    //see this link for fixing the cancerous safari highlight issue
-    // https://www.reddit.com/r/webdev/comments/g1wvsb/comment/k327tmc/?force-legacy-sct=1
-    e.preventDefault();
+/** -------------------------------------------------
+ * Event Handlers
+ * -------------------------------------------------
+ */
+
+function onCancelDragTouchMove(e) {
+    const p = getPoint(e);
+
+    const dx = p.x - startX;
+    const dy = p.y - startY;
+
+    if (Math.hypot(dx, dy) > MOVE_THRESHOLD) {
+        cancelLongpress();
+
+        document.removeEventListener("touchmove", onCancelDragTouchMove, { passive: false });
+    }
+}
+
+function onDragTouchMove(e) {
 
     const p = getPoint(e);
     lastPointerX = p.x;
     lastPointerY = p.y;
     
     if (!dragging) {
-        //cancel longpress
-        if ((Math.abs(lastPointerY - startY)) > MOVE_THRESHOLD) cancelLongpress();
+        //cancel 
+        const dx = lastPointerX - startX;
+        const dy = lastPointerY - startY;
+
+        if (Math.hypot(dx, dy) > MOVE_THRESHOLD) {
+            cancelLongpress();
+            
+            //reset so that you have to hold again from this spot
+            startX = lastPointerX;
+            startY = lastPointerY;
+        }
         return;
     }
+
+    //see this link for fixing the cancerous safari highlight issue
+    // https://www.reddit.com/r/webdev/comments/g1wvsb/comment/k327tmc/?force-legacy-sct=1
+    e.preventDefault();
 
     moveGhost();
     updatePlaceholder();
 }
 
 
-function onStart(e) {
+function onDragTouchEnd() {
+    document.body.classList.remove("noselect");
+
+    logDebug("[onDragTouchEnd]: document classList:", document.body.classList.value);
+
+    cancelLongpress();
+    if (dragging) endDrag();
+
+    document.removeEventListener("touchmove", onDragTouchMove, { passive: false });
+    document.removeEventListener("touchend", onDragTouchEnd);
+}
+
+
+function onDragTouchStart(e) {
     const target = e.target.closest(".list-track-item");
     if (!target) return;
 
@@ -197,24 +240,25 @@ function onStart(e) {
     startY = p.y;
 
     cancelLongpress();
+
+
+    document.addEventListener("touchmove", onCancelDragTouchMove, { passive: false });
+
     longpressTimer = setTimeout(() => {
         beginDrag(e, target);
         longpressTimer = null;
+
+        logDebug("[onDragTouchStart]: document classList:", document.body.classList.value);
+
+        //attach the correct drag touchmove
+        document.removeEventListener("touchmove", onCancelDragTouchMove, { passive: false });
+        document.addEventListener("touchmove", onDragTouchMove, { passive: false });
+
     }, LONG_PRESS_DURATION);
 
-    window.addEventListener("touchmove", onMove, { passive: false });
-    window.addEventListener("touchend", onEnd);
+    document.addEventListener("touchend", onDragTouchEnd);
 }
 
-function onEnd() {
-    document.body.classList.remove("noselect");
-
-    cancelLongpress();
-    if (dragging) endDrag();
-
-    window.removeEventListener("touchmove", onMove, { passive: false });
-    window.removeEventListener("touchend", onEnd);
-}
 
 
 
@@ -224,7 +268,7 @@ function onEnd() {
  * Should be called once after DOM is ready.
  */
 export function setupReorderEventListeners() {
-    document.addEventListener("touchstart", onStart, { passive: false });
+    document.addEventListener("touchstart", onDragTouchStart, { passive: true });
 
     console.log("Reorder listener active");
 }

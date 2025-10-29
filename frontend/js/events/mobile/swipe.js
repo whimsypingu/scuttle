@@ -294,11 +294,109 @@ function resetSwipeState() {
  * -------------------------------------------------
  */
 
+function onSwipeTouchMove(e) {
+    if (!activeEl) return;
+
+    //calculate distance moved from initial touch
+    deltaX = e.touches[0].clientX - startX;
+    deltaY = e.touches[0].clientY - startY;
+
+    // Cancel swipe if vertical motion dominates
+    if (Math.abs(deltaY) > SWIPE_VERTICAL_CANCEL_THRESHOLD) {
+        resetSwipeState();
+        return;
+    }
+
+    // Lock direction only after horizontal threshold is exceeded
+    if (Math.abs(deltaX) > SWIPE_LOCK_THRESHOLD) {
+        //logDebug("swipeDirection:", swipeDirection);
+
+        swipeDirection = deltaX > 0 ? "right" : "left"; //determine swipe direction
+
+        e.preventDefault(); //prevent background scroll if there is any
+    } else {
+        //logDebug("swipeDirection: null");
+            
+        //direction not yet locked, reset visuals
+        swipeDirection = null;
+        updateSwipeBackground("left", 0);
+        updateSwipeBackground("right", 0);
+        return;
+    }
+
+    // Animate background only after direction is locked
+    //this is the actual swipe distance, clamped
+    //begins after direction is locked, capped by maximum swipe distance
+    trueAbsSwipeDist = Math.min(Math.max(Math.abs(deltaX) - SWIPE_LOCK_THRESHOLD, 0), maxSwipe);
+
+    updateSwipeBackground(swipeDirection, trueAbsSwipeDist);
+}
+
+function onSwipeTouchEnd() {
+    if (!activeEl) return;
+
+    // Cancel if swipe direction wasn't locked or swipe is too short
+    if (!swipeDirection) {
+        resetSwipeState();
+        return;
+    }
+
+    //determine thresholds
+    const isDeep = trueAbsSwipeDist >= deepThreshold;       //secondary action
+    const isNormal = trueAbsSwipeDist >= normalThreshold;   //primary action
+
+    const actionName = getSwipeActionName(activeEl, swipeDirection, isNormal, isDeep);
+    if (actionName) {
+
+        //execute swipe action handler: see frontend/js/features/playlist/controller.js
+        onSwipe(activeEl.dataset, actionName);
+    }
+
+    //reset swipe state and visuals
+    resetSwipeState();
+
+    document.removeEventListener("touchmove", onSwipeTouchMove, { passive: false });
+    document.removeEventListener("touchend", onSwipeTouchEnd);
+    document.removeEventListener("cancelSwipe", onSwipeTouchEnd);
+}
+
+
+function onSwipeTouchStart(e) {
+    const target = e.target.closest(".list-track-item");
+    if (!target) return;
+
+    activeEl = target;
+
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+
+    maxSwipe = activeEl.offsetWidth * 0.6;
+    normalThreshold = maxSwipe * 0.4;
+    deepThreshold = maxSwipe * 0.8;
+
+    swipeDirection = null;
+    activeEl.classList.add("swiping");
+
+    document.addEventListener("touchmove", onSwipeTouchMove, { passive: false });
+    document.addEventListener("touchend", onSwipeTouchEnd);
+    document.addEventListener("cancelSwipe", onSwipeTouchEnd);
+}
+
+
 /**
  * Sets up global swipe event listeners for all .list-track-item elements.
  * Handles touchstart, touchmove, and touchend gestures.
  * Should be called once after the DOM is ready.
  */
+export function setupSwipeEventListeners() {
+    document.addEventListener("touchstart", onSwipeTouchStart, { passive: true });
+
+    console.log("Swipe listener active");
+}
+
+
+
+/*
 export function setupSwipeEventListeners() {
     // Touch start
     document.addEventListener("touchstart", e => {
@@ -383,7 +481,6 @@ export function setupSwipeEventListeners() {
     }, { passive: false });
 
     console.log("Swipe listener active");
-}
-
+}*/
 
 
