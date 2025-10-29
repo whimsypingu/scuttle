@@ -150,7 +150,6 @@ function updatePlaceholder() {
  * -------------------------------------------------
  */
 
-
 /**
  * Continuously scrolls the list while dragging near its vertical edges.
  * Called recursively via requestAnimationFrame.
@@ -260,6 +259,7 @@ function cancelLongpress() {
         longpressTimer = null; 
     }
 }
+
 
 
 /** -------------------------------------------------
