@@ -127,6 +127,35 @@ export const PlaylistStore = (() => {
         },
 
         /**
+         * Reorder a track within a playlist by moving it from one index to another.
+         * This operation updates the internal track ID order for the specified playlist.
+         * 
+         * @param {string} playlistId - The ID of the playlist to modify.
+         * @param {number} fromIndex - The current 0-based index of the track to move.
+         * @param {number} toIndex - The target 0-based index to move the track to (0 would be the first element).
+         * @returns {boolean} True if the reorder was successful, false otherwise.
+         */
+        reorderTrack(playlistId, fromIndex, toIndex) {
+            const pl = playlists[playlistId];
+            if (!pl) return false;
+
+            const ids = pl.tracks.getIds(); //get the ordered list of track IDs
+            if (
+                fromIndex < 0 || fromIndex >= ids.length ||
+                toIndex < 0 || toIndex >= ids.length
+            ) return false;
+
+            //move track in O(1)
+            const [moved] = ids.splice(fromIndex, 1);
+            ids.splice(toIndex, 0, moved);
+
+            //update the IdStore with new order
+            pl.tracks.setAll(ids);
+
+            return true;
+        },
+
+        /**
          * Get all track IDs in a playlist.
          * @param {string} playlistId - The ID of the playlist.
          * @returns {Array<string>} An array of track IDs.

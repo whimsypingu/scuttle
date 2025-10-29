@@ -407,3 +407,9 @@ export async function onSwipe(dataset, actionName) {
             break;
     }
 }
+
+
+
+export async function onReorder(playlistDataset, fromIndex, toIndex) {
+    const playlistId = listEl.dataset.id;
+}

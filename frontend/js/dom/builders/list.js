@@ -208,7 +208,7 @@ export function buildTrackListEmptyItem() {
 
 export function buildNewPlaylist(name, id) {
     const playlist = document.createElement("div");
-    playlist.classList.add("playlist");
+    playlist.classList.add("playlist", "reorderable");
 
     playlist.dataset.name = name;
     playlist.dataset.id = id;

@@ -1,3 +1,4 @@
+import { onReorder } from "../../features/playlist/controller.js";
 import { logDebug } from "../../utils/debug.js";
 
 
@@ -42,6 +43,8 @@ const LONG_PRESS_DURATION = 1000; //ms
 const MOVE_THRESHOLD = 8; 
 const AUTOSCROLL_MARGIN = 40;
 const AUTOSCROLL_SPEED = 12; //px/frame
+
+let playlistEl = null; //which playlist is being edited
 
 let placeholder = null; //keeps layout intact
 
@@ -136,8 +139,13 @@ function updatePlaceholder() {
         //where to insert
         if (before) {
             target.parentNode.insertBefore(placeholder, target);
+
+            //store info on where the placeholder now sits
+            placeholder.dataset.index = parseInt(target.dataset.index) - 1;
         } else {
             target.parentNode.insertBefore(placeholder, target.nextSibling);
+
+            placeholder.dataset.index = target.dataset.index;
         }
     }
 }
@@ -198,6 +206,7 @@ function stopAutoScroll() {
 /**
  * Begins a drag operation after longpress is detected.
  * Creates a placeholder, enables autoscroll, and updates state.
+ * Dispatches `cancelSwipe` to cancel any active swipe gesture.
  * @param {TouchEvent|MouseEvent} e - Original event that triggered drag.
  * @param {HTMLElement} el - The element being dragged.
  */
@@ -210,7 +219,9 @@ function beginDrag(e, el) {
     placeholder = document.createElement('li');
     placeholder.className = "drag-placeholder";
     placeholder.style.height = `${draggedEl.offsetHeight}px`;
+
     draggedEl.parentNode.insertBefore(placeholder, draggedEl.nextSibling);
+    updatePlaceholder();
 
     //set most recent cursor coordinates for ghost
     const p = getPoint(e);
@@ -230,7 +241,6 @@ function beginDrag(e, el) {
 
 /**
  * Finalizes the drag and re-inserts element in new position.
- * Dispatches `cancelSwipe` to cancel any active swipe gesture.
  */
 function endDrag() {
     if (!dragging) return;
@@ -240,13 +250,17 @@ function endDrag() {
     placeholder.parentNode.insertBefore(draggedEl, placeholder);
     undoGhost();
 
+    logDebug("[endDrag]: index: ", placeholder.dataset.index);
+    logDebug("[endDrag]: playlist: ", playlistEl.dataset.id);
+    //onReorder()
+
+
     placeholder.remove();
 
     placeholder = null;
+    playlistEl = null;
     draggedEl = null;
     dragging = false;
-    
-    //logDebug("[endDrag]");
 }
 
 /**
@@ -341,6 +355,12 @@ function onDragTouchEnd() {
  * @param {TouchEvent} e
  */
 function onDragTouchStart(e) {
+
+    //1. first check if click was triggered on a reorderable list (for excluding reordering search results)
+    playlistEl = e.target.closest(".reorderable");
+    if (!playlistEl) return;
+
+    //2. find actual item
     const target = e.target.closest(".list-track-item");
     if (!target) return;
 
