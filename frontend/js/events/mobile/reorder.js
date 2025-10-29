@@ -36,7 +36,7 @@ import { logDebug } from "../../utils/debug.js";
 /** -------------------------------------------------
  * State Variables
  * -------------------------------------------------
- * Used internally to track swipe state.
+ * Used internally to track dragging state.
  */
 const LONG_PRESS_DURATION = 1000; //ms
 const MOVE_THRESHOLD = 8; 
