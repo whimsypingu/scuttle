@@ -17,6 +17,9 @@ import { logDebug } from "../../utils/debug.js";
  *   - Determining primary vs secondary (deep) actions based on swipe distance
  *   - Executing corresponding track actions (queue, like, more, etc.)
  * 
+ * Uses event delegation and dynamically attaches event listeners only when needed
+ * to optimize performance on mobile/touch interfaces.
+ *  
  * Features:
  *   - Configurable swipe thresholds based on element width
  *   - Theme and icon updates for revealed actions
@@ -294,6 +297,12 @@ function resetSwipeState() {
  * -------------------------------------------------
  */
 
+
+/**
+ * Called repeatedly during a swipe gesture.
+ * Determines direction, clamps distance, and updates visual state.
+ * @param {TouchEvent} e
+ */
 function onSwipeTouchMove(e) {
     if (!activeEl) return;
 
@@ -332,6 +341,11 @@ function onSwipeTouchMove(e) {
     updateSwipeBackground(swipeDirection, trueAbsSwipeDist);
 }
 
+
+/**
+ * Called when the touch ends or when a `cancelSwipe` event is dispatched.
+ * Determines if thresholds were met and triggers the appropriate action.
+ */
 function onSwipeTouchEnd() {
     if (!activeEl) return;
 
@@ -361,6 +375,12 @@ function onSwipeTouchEnd() {
 }
 
 
+
+/**
+ * Called when the user begins touching a list item.
+ * Initializes the swipe state and binds temporary event listeners.
+ * @param {TouchEvent} e
+ */
 function onSwipeTouchStart(e) {
     const target = e.target.closest(".list-track-item");
     if (!target) return;
