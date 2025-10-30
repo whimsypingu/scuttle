@@ -1,8 +1,9 @@
 //static/js/features/playlist/lib/ui.js
 
+import { LikeStore } from "../../../cache/LikeStore.js";
 import { PlaylistStore } from "../../../cache/PlaylistStore.js";
 import { TrackStore } from "../../../cache/TrackStore.js";
-import { buildNewPlaylist } from "../../../dom/builders/list.js";
+import { buildNewPlaylist, buildPlaylistContent } from "../../../dom/builders/list.js";
 import { 
     buildTrackListItem, 
     buildTrackListEmptyItem, 
@@ -77,13 +78,23 @@ export function renderNewCustomPlaylist(customPlaylistEl, name, id, tempId = nul
 
 //renders a list of tracks in a playlist
 export function renderPlaylist(listEl, tracks, showIndex = true, showDownloadStatus = false, actions = DEFAULT_ACTIONS) { //rename to renderList
+    if (!listEl) {
+        console.warn("renderPlaylist: list element not found");
+        return;
+    }
+    
+    //clear list
     listEl.innerHTML = "";
 
+    //no tracks
     if (!tracks?.length) {
         const item = buildTrackListEmptyItem();
         listEl.appendChild(item);
         return;
     }
+
+    //batch together into a fragment
+    const frag = document.createDocumentFragment();
 
     tracks.forEach((track, index) => {
         const isDownloaded = !!TrackStore.get(track.id);
@@ -99,8 +110,11 @@ export function renderPlaylist(listEl, tracks, showIndex = true, showDownloadSta
             actions: actions
         }
         const item = buildTrackListItem(track, options);
-        listEl.appendChild(item);
-    })
+        frag.appendChild(item);
+    });
+
+    //put into the dom
+    listEl.appendChild(frag);
 }
 
 
@@ -124,20 +138,13 @@ export function updateAllListTrackItems(trackId, title, artist) {
 }
 
 
-// export function deleteAllListTrackItems(trackId) {
-//     const els = document.querySelectorAll(`li[data-track-id="${trackId}"]`);
-
-//     els.forEach(el => {
-//         el.remove();
-//     });
-// }
-
 
 
 //renders a custom playlist by id (just a simple refresh) based on current status in playlistStore
 export function renderPlaylistById(id, showIndex = true, showDownloadStatus = false, actions = DEFAULT_ACTIONS) {
-    const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`);
-
+    //find playlist with the id
+    const playlistEl = document.querySelector(`.playlist[data-id="${id}"]`); 
+    
     console.log("[renderPlaylistById]:", playlistEl);
     if (!playlistEl) return;
 
@@ -151,9 +158,23 @@ export function renderPlaylistById(id, showIndex = true, showDownloadStatus = fa
 
     //update playlist tracks
     const listEl = playlistEl.querySelector(".list-track");
-    const tracks = PlaylistStore.getTracks(id);
+    if (!listEl) return; //cancel any rendering operations if no .list-track (hidden)
 
-    renderPlaylist(listEl, tracks, showIndex, showDownloadStatus, actions);
+    let tracks = null;
+    switch (id) {
+        case "library":
+            tracks = TrackStore.getTracks();
+            break;
+        
+        case "liked":
+            tracks = LikeStore.getTracks();
+            break;
+
+        default:
+            tracks = PlaylistStore.getTracks(id);
+            break;
+    }
+    renderPlaylist(listEl, tracks, showIndex, showDownloadStatus, actions); //runs defensively, so it won't do anything if listEl is invalid
 }
 
 
@@ -180,11 +201,15 @@ let playlistExpanded = false;
 export function expandPlaylist(titleSearchEl, parentEl, playlistEl) {
     const isExpanded = playlistEl.classList.contains("expanded");
     
-    if (isExpanded || (!isExpanded && playlistExpanded)) return false; //do nothing if already expanded or other one is expanded
+    if (isExpanded || playlistExpanded) return false; //do nothing if already expanded or other one is expanded
 
     playlistExpanded = true;
-    playlistEl.classList.add("expanded");
 
+    //render the other stuff in the playlist
+    buildPlaylistContent(playlistEl);
+    renderPlaylistById(playlistEl.dataset.id);
+
+    playlistEl.classList.add("expanded");
     titleSearchEl.classList.add("collapsed"); //minimize title and search bar
 
     //extract elements (may be redundant if caller knows them but it's negligible performance damage)
@@ -229,7 +254,7 @@ export function expandPlaylist(titleSearchEl, parentEl, playlistEl) {
  * @param {HTMLElement} parentEl - The scrollable parent container of all playlists.
  * @param {HTMLElement} playlistEl - The specific playlist element to collapse.
  * @returns {boolean} `true` if collapse succeeded, `false` otherwise.
- */
+ */  
 export function collapsePlaylist(titleSearchEl, parentEl, playlistEl) {
     const isExpanded = playlistEl.classList.contains("expanded");
 
@@ -251,6 +276,26 @@ export function collapsePlaylist(titleSearchEl, parentEl, playlistEl) {
 
     //list track height
     listTrackEl.style.height = "0px";
+
+
+    //wait for CSS transition to finish before DOM removal
+    const handleTransitionEnd = (event) => {
+        if (event.target !== playlistEl) return; //only care about playlist transition end
+
+        //cleanup listener to avoid leaks
+        playlistEl.removeEventListener("transitionend", handleTransitionEnd);
+
+        //remove heavy content to minimize memory + rendering cost
+        const optionsEl = playlistEl.querySelector(".playlist-options");
+        const listTrackEl = playlistEl.querySelector(".list-track");
+        if (optionsEl) optionsEl.remove();
+        if (listTrackEl) listTrackEl.remove();
+
+        console.log("[collapsePlaylist]: removed hidden DOM nodes after transition");
+    };
+
+    //attach transitionend listener
+    playlistEl.addEventListener("transitionend", handleTransitionEnd);
 
     return true
 }

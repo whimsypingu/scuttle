@@ -18,8 +18,6 @@ async function bootstrapLibrary() {
         console.log("Bootstrap library content:", data.content);
 
         TrackStore.setAll(data.content);
-
-        renderPlaylist(domEls.libraryListEl, TrackStore.getTracks());
     } catch (err) {
         console.error("Bootstrap failed", err);
     }
@@ -47,9 +45,6 @@ async function bootstrapLikes() {
         const likes = data.content;
         
         LikeStore.setAll(likes); //accepts ids
-        const tracks = LikeStore.getTracks();
-
-        renderPlaylist(domEls.likedListEl, tracks);
     } catch (err) {
         console.error("Bootstrap failed", err);
     }
@@ -75,7 +70,6 @@ async function bootstrapPlaylists() {
 
             //create visual elements
             const newCustomListEl = renderNewCustomPlaylist(playlistDomEls.customPlaylistEl, pl.name, pl.id);
-            renderPlaylist(newCustomListEl, PlaylistStore.getTracks(pl.id));
         }
     } catch (err) {
         console.error("Bootstrap failed", err);

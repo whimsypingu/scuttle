@@ -446,7 +446,8 @@ export async function onSwipe(dataset, actionName) {
 export async function onReorder(dataset, fromIndex, toIndex) {
     const { playlistId } = getPlaylistData(dataset);
 
-    if (fromIndex == toIndex) return;
+    console.log("[onReorder]: fromIndex:", fromIndex, " toIndex:", toIndex);
+    if (parseInt(fromIndex) == parseInt(toIndex)) return;
 
     switch (playlistId) {
         case "liked":
