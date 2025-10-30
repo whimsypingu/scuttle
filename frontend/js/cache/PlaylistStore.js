@@ -24,6 +24,7 @@ export const PlaylistStore = (() => {
             return playlists[id] || null;
         },
 
+        
         //modifiers
         /**
          * Create a new playlist and add it to the store.
@@ -124,6 +125,22 @@ export const PlaylistStore = (() => {
                 }
             }
             return removedCount;
+        },
+
+        /**
+         * Reorder a track within a playlist by moving it from one index to another.
+         * This operation updates the internal track ID order for the specified playlist.
+         * 
+         * @param {string} playlistId - The ID of the playlist to modify.
+         * @param {number} fromIndex - The current 0-based index of the track to move.
+         * @param {number} toIndex - The target 0-based index to move the track to (0 would be the first element).
+         * @returns {boolean} True if the reorder was successful, false otherwise.
+         */
+        reorderTrack(playlistId, fromIndex, toIndex) {
+            const pl = playlists[playlistId];
+            if (!pl) return false;
+
+            return pl.tracks.reorder(fromIndex, toIndex);
         },
 
         /**

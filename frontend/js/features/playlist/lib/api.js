@@ -44,3 +44,8 @@ export async function createPlaylist(tempId, name, importUrl) {
     const response = await postRequest(`/playlists/create`, { "temp_id": tempId, "name": name, "import_url": importUrl });
     console.log("createPlaylist status:", response.status);
 }
+
+export async function reorderPlaylist(id, fromIndex, toIndex) {
+    const response = await postRequest(`/playlists/reorder-playlist`, { "id": id, "from_index": fromIndex, "to_index": toIndex });
+    console.log("reorderPlaylist status:", response.status);
+}

@@ -47,6 +47,18 @@ export const LikeStore = (() => {
 
 
         /**
+         * Reorder
+         * 
+         * @param {number} fromIndex 
+         * @param {number} toIndex 
+         * @returns {boolean}
+         */
+        reorder(fromIndex, toIndex) {
+            return store.reorder(fromIndex, toIndex);
+        },
+
+
+        /**
          * Get all liked track IDs.
          *
          * @returns {string[]} - An array of liked track IDs.

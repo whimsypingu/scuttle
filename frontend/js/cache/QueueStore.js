@@ -112,6 +112,19 @@ export const QueueStore = (() => {
             return null;
         },
 
+        /**
+         * Reorder only works on elements not currently playing
+         * @param {number} fromIndex 
+         * @param {number} toIndex 
+         * @returns {boolean}
+         */
+        reorder(fromIndex, toIndex) {
+            if (fromIndex < 1 || toIndex < 1) {
+                return false;
+            }
+            return store.reorder(fromIndex, toIndex);
+        },
+
 
         /**
          * Replace the first item in the queue with a new ID.

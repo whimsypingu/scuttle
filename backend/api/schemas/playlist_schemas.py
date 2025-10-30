@@ -8,6 +8,12 @@ class CreatePlaylistRequest(BaseModel):
     import_url: Optional[str]
 
 
+class ReorderPlaylistRequest(BaseModel):
+    id: str
+    from_index: int
+    to_index: int
+
+
 class PlaylistSelection(BaseModel):
     id: str             #technically should be an int, but sqlite will handle conversion.
     checked: bool

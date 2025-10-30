@@ -8,6 +8,7 @@ export {
     toggleLike,
 
     createPlaylist,
+    reorderPlaylist,
 } from "./lib/api.js";
 
 export {

@@ -13,6 +13,13 @@ html, body {
     touch-action: none;
 }
 
+.noselect {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
 
 /* this just prevents overshooting scrolls and revealing whitespace from the browser, on ios */
 #background-layer {
