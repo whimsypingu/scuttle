@@ -698,16 +698,16 @@ class AudioDatabase:
             ''')
             
             n = len(rows)
-            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
+            if n == 0 or from_index < 0 or from_index >= n or to_index < 0 or to_index >= n:
                 return False #invalid
             
-            #remove track from list
-            track_row = rows.pop(from_index)
+            #keep track data in memory
+            track_id = rows[from_index]["id"] #this is id instead of track_id
 
             if to_index == 0:
                 new_position = rows[0]["position"] - 1.0
-            elif to_index >= n:
-                new_position = rows[-1]["position"] + 1.0
+            elif to_index == n-1:                               #this is the last element
+                new_position = rows[n-1]["position"] + 1.0
             else:
                 new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
 
@@ -716,7 +716,7 @@ class AudioDatabase:
                 UPDATE {self.LIKES_TABLE}
                 SET position = ?
                 WHERE id = ?;                    
-            ''', (new_position, track_row["track_id"]))
+            ''', (new_position, track_id))
 
             print("[reorder_likes]: SUCCESS")
             return True
@@ -825,17 +825,19 @@ class AudioDatabase:
                 ORDER BY position ASC;
             ''', (playlist_id,))
             
-            n = len(rows)
-            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
+            n = len(rows) #have to account for the element being reordered. to_index cannot be >= len(rows)
+            if n == 0 or from_index < 0 or from_index >= n or to_index < 0 or to_index >= n:
                 return False #invalid
             
-            #remove track from list
-            track_row = rows.pop(from_index)
+            #keep track data in memory
+            track_id = rows[from_index]["track_id"]
+
+            print("from_index:", from_index, "to_index:", to_index)
 
             if to_index == 0:
                 new_position = rows[0]["position"] - 1.0
-            elif to_index >= n:
-                new_position = rows[-1]["position"] + 1.0
+            elif to_index == n-1:                               #this is the last element
+                new_position = rows[n-1]["position"] + 1.0
             else:
                 new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
 
@@ -844,7 +846,7 @@ class AudioDatabase:
                 UPDATE {self.PLAYLIST_TRACKS_TABLE}
                 SET position = ?
                 WHERE playlist_id = ? AND track_id = ?;                    
-            ''', (new_position, playlist_id, track_row["track_id"]))
+            ''', (new_position, playlist_id, track_id))
 
             print("[reorder_playlist_track]: SUCCESS")
             return True

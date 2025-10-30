@@ -24,7 +24,7 @@ import {
     prefetchTrack
 } from "../queue/index.js";
 
-import { toggleLike } from "./lib/api.js";
+import { reorderPlaylist, toggleLike } from "./lib/api.js";
 
 import { renderPlaylist, renderPlaylistById } from "./lib/ui.js";
 
@@ -421,6 +421,12 @@ export async function onReorder(dataset, fromIndex, toIndex) {
         case "liked":
             LikeStore.reorder(fromIndex, toIndex);
             renderLiked();
+
+            try {
+                await reorderPlaylist(playlistId, fromIndex, toIndex);
+            } catch (err) {
+                logDebug(`reorder liked failed: ${err}`);
+            }
             break; 
         
         case "queue":
@@ -440,10 +446,16 @@ export async function onReorder(dataset, fromIndex, toIndex) {
             PlaylistStore.reorderTrack(playlistId, fromIndex, toIndex);
             renderPlaylistById(playlistId);
 
-            const tracks = PlaylistStore.getTracks(playlistId);
-            tracks.forEach((track, index) => {
-                logDebug(`${index + 1}: ${track.title}`); // or track.title if that’s your property
-            });
+            // const tracks = PlaylistStore.getTracks(playlistId);
+            // tracks.forEach((track, index) => {
+            //     logDebug(`${index + 1}: ${track.title}`); // or track.title if that’s your property
+            // });
+
+            try {
+                await reorderPlaylist(playlistId, fromIndex, toIndex);
+            } catch (err) {
+                logDebug(`reorder playlist ${playlistId} failed: ${err}`);
+            }
             break;
     }
 }
