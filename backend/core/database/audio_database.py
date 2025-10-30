@@ -100,7 +100,9 @@ class AudioDatabase:
             await self._event_bus.publish(event)
 
 
-    #callable exposed functions
+    # ---------------------------------------------------------------------
+    # BUILD
+    # ---------------------------------------------------------------------
     async def build(self):
         async with self._lock:
             await self._execute(f'''
@@ -120,12 +122,19 @@ class AudioDatabase:
                     FOREIGN KEY (id) REFERENCES {self.TRACKS_TABLE}(id) ON DELETE CASCADE
                 );
             ''')
+
+            #likes
             await self._execute(f'''
                 CREATE TABLE IF NOT EXISTS {self.LIKES_TABLE} (
                     id TEXT PRIMARY KEY,
+                    position REAL NOT NULL,
                     liked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (id) REFERENCES {self.DOWNLOADS_TABLE}(id) ON DELETE CASCADE
                 );
+            ''')
+            await self._execute(f'''
+                CREATE INDEX IF NOT EXISTS idx_likes_position
+                ON {self.LIKES_TABLE}(position);
             ''')
 
             #playlists
@@ -140,12 +149,17 @@ class AudioDatabase:
                 CREATE TABLE IF NOT EXISTS {self.PLAYLIST_TRACKS_TABLE} (
                     playlist_id INTEGER NOT NULL,
                     track_id TEXT NOT NULL,
+                    position REAL NOT NULL,
                     added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (playlist_id) REFERENCES {self.PLAYLISTS_TABLE}(id) ON DELETE CASCADE,
                     FOREIGN KEY (track_id) REFERENCES {self.DOWNLOADS_TABLE}(id) ON DELETE CASCADE,
                     PRIMARY KEY (playlist_id, track_id)
                 );
             ''')
+            await self._execute(f'''
+                CREATE INDEX IF NOT EXISTS idx_playlist_tracks_position
+                ON {self.PLAYLIST_TRACKS_TABLE} (playlist_id, position, track_id);
+            ''') #covering index
 
 
     async def view_all(self):
@@ -183,6 +197,9 @@ class AudioDatabase:
                 print("(no playlist tracks found)")
 
 
+    # ---------------------------------------------------------------------
+    # LOGS
+    # ---------------------------------------------------------------------
     async def log_track(self, track: Track):
         """
         Log (insert or update) a track's metadata into the TRACKS table.
@@ -270,8 +287,6 @@ class AudioDatabase:
             }
             await self._emit_event(action=ADA.UNLOG_TRACK, payload={"content": content})
 
-
-
     async def is_logged(self, track_id: str) -> bool:
         """
         Check if a track exists in the TRACKS table (i.e., is logged).
@@ -287,8 +302,6 @@ class AudioDatabase:
                 SELECT 1 FROM {self.TRACKS_TABLE} WHERE id = ? LIMIT 1;
             ''', (track_id,))
             return row is not None
-
-
 
     async def log_download(self, id: str) -> dict:
         """
@@ -355,8 +368,6 @@ class AudioDatabase:
 
             return track
 
-
-
     async def unlog_download(self, id: str):
         """
         Remove a download entry for a track without deleting its metadata.
@@ -394,9 +405,7 @@ class AudioDatabase:
                 "id": id
             }
             await self._emit_event(action=ADA.UNLOG_DOWNLOAD, payload={"content": content})
-
-
-
+            
     async def is_downloaded(self, track_id: str) -> bool:
         """
         Check if a track exists in the DOWNLOADS table (i.e., is downloaded).
@@ -414,7 +423,9 @@ class AudioDatabase:
             return row is not None
 
 
-
+    # ---------------------------------------------------------------------
+    # GET
+    # ---------------------------------------------------------------------
     async def get_downloads_content(self):
         """
         Retrieve full metadata for all downloaded tracks, ordered by download time.
@@ -477,9 +488,58 @@ class AudioDatabase:
 
             return content
 
+    async def get_all_playlists(self):
+        async with self._lock:
+            rows = await self._fetchall(f'''
+                SELECT id, name
+                FROM {self.PLAYLISTS_TABLE}
+                ORDER BY id;
+            ''')
+            playlists = [{"id": row["id"], "name": row["name"]} for row in rows]
 
+            await self._emit_event(action=ADA.GET_ALL_PLAYLISTS, payload={"content": playlists})
+            
+            return playlists
 
+    async def get_playlist_content(self, playlist_id: int):
+        async with self._lock:
+            # Get playlist info
+            playlist_row = await self._fetchone(f'''
+                SELECT id, name
+                FROM {self.PLAYLISTS_TABLE}
+                WHERE id = ?
+            ''', (playlist_id,))
+            if not playlist_row:
+                return {
+                    "id": playlist_id,
+                    "name": None,
+                    "trackIds": []
+                } 
     
+            rows = await self._fetchall(f'''
+                SELECT track_id
+                FROM {self.PLAYLIST_TRACKS_TABLE} 
+                WHERE playlist_id = ?
+                ORDER BY position ASC;
+            ''', (playlist_id,))
+            track_ids = [row["track_id"] for row in rows]
+
+            content = {
+                "id": playlist_row["id"],
+                "name": playlist_row["name"],
+                "trackIds": track_ids
+            }
+
+            await self._emit_event(action=ADA.GET_PLAYLIST_CONTENT, payload={"content": content})
+    
+            return content
+            #PLEASE CHANGE THIS THIS IS SO UGLY
+        
+
+
+    # ---------------------------------------------------------------------
+    # TRACK
+    # ---------------------------------------------------------------------
     async def set_custom_metadata(self, id: str, custom_title: Optional[str] = None, custom_artist: Optional[str] = None):
         async with self._lock:
             #some robustness for handling None or "" values
@@ -513,6 +573,9 @@ class AudioDatabase:
             return content
 
 
+    # ---------------------------------------------------------------------
+    # SEARCH
+    # ---------------------------------------------------------------------
     async def search(self, q: str) -> List[Track]:
         """
         Search for tracks by title or artist, matching both original and custom values.
@@ -569,7 +632,10 @@ class AudioDatabase:
             return [track.to_json() for track in content]
 
 
-    #likes
+
+    # ---------------------------------------------------------------------
+    # LIKES
+    # ---------------------------------------------------------------------
     async def toggle_like(self, id: str):
         async with self._lock:
             #check if already in db
@@ -579,30 +645,86 @@ class AudioDatabase:
             ''', (id,))
 
             if row:
+                #exists already, so remove
                 await self._execute(f'''
                     DELETE FROM {self.LIKES_TABLE}
                     WHERE id = ?;
                 ''', (id,))
             else:
+                #doesn't exist yet, so we add it to the front/top of the list by inserting with a float that has min_pos-1
+                result = await self._fetchone(f'''
+                    SELECT MIN(position) AS min_pos FROM {self.LIKES_TABLE};
+                ''')
+
+                new_position = (result["min_pos"] or 0.0) - 1.0
+
                 await self._execute(f'''
-                    INSERT INTO {self.LIKES_TABLE} (id) VALUES (?);
-                ''', (id,))
+                    INSERT INTO {self.LIKES_TABLE} (id, position) VALUES (?, ?);
+                ''', (id, new_position))
 
     async def fetch_liked_tracks(self):
         async with self._lock:
             rows = await self._fetchall(f'''
                 SELECT id
                 FROM {self.LIKES_TABLE}
-                ORDER BY liked_at ASC;
+                ORDER BY position ASC;
             ''')
             track_ids = [row["id"] for row in rows]
             await self._emit_event(action=ADA.FETCH_LIKES, payload={"content": track_ids})
     
             return track_ids
 
+    async def reorder_likes_track(self, from_index: int, to_index: int):
+        """
+        Reorder a track within the system likes playlist by moving it from one index to another.
+
+        This method updates the `position` column of the track to reflect its new order
+        in the playlist. It uses floating point indexing and sqlite3 indexes (see Build) 
+        to allow fast lookup and insertion without renumbering the entire playlist.
+
+        Args:
+            from_index (int): The current 0-based index of the track to move.
+            to_index (int): Target 0-based index to move the track to.
+
+        Returns:
+            
+        """
+        async with self._lock:
+            #fetch playlist tracks ordered by position
+            rows = await self._fetchall(f'''
+                SELECT id, position
+                FROM {self.LIKES_TABLE}
+                ORDER BY position ASC;
+            ''')
+            
+            n = len(rows)
+            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
+                return False #invalid
+            
+            #remove track from list
+            track_row = rows.pop(from_index)
+
+            if to_index == 0:
+                new_position = rows[0]["position"] - 1.0
+            elif to_index >= n:
+                new_position = rows[-1]["position"] + 1.0
+            else:
+                new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
+
+            #update
+            await self._execute(f'''
+                UPDATE {self.LIKES_TABLE}
+                SET position = ?
+                WHERE id = ?;                    
+            ''', (new_position, track_row["track_id"]))
+
+            return True
 
 
-    #playlists
+
+    # ---------------------------------------------------------------------
+    # PLAYLISTS
+    # ---------------------------------------------------------------------
     async def create_playlist(self, name: str, temp_id: str):
         async with self._lock:
             row = await self._fetchone(f'''
@@ -620,54 +742,6 @@ class AudioDatabase:
             
             return content
         
-    async def get_all_playlists(self):
-        async with self._lock:
-            rows = await self._fetchall(f'''
-                SELECT id, name
-                FROM {self.PLAYLISTS_TABLE}
-                ORDER BY id;
-            ''')
-            playlists = [{"id": row["id"], "name": row["name"]} for row in rows]
-
-            await self._emit_event(action=ADA.GET_ALL_PLAYLISTS, payload={"content": playlists})
-            
-            return playlists
-
-    async def get_playlist_content(self, playlist_id: int):
-        async with self._lock:
-            # Get playlist info
-            playlist_row = await self._fetchone(f'''
-                SELECT id, name
-                FROM {self.PLAYLISTS_TABLE}
-                WHERE id = ?
-            ''', (playlist_id,))
-            if not playlist_row:
-                return {
-                    "id": playlist_id,
-                    "name": None,
-                    "trackIds": []
-                } 
-    
-            rows = await self._fetchall(f'''
-                SELECT track_id
-                FROM {self.PLAYLIST_TRACKS_TABLE} 
-                WHERE playlist_id = ?
-                ORDER BY added_at ASC;
-            ''', (playlist_id,))
-            track_ids = [row["track_id"] for row in rows]
-
-            content = {
-                "id": playlist_row["id"],
-                "name": playlist_row["name"],
-                "trackIds": track_ids
-            }
-
-            await self._emit_event(action=ADA.GET_PLAYLIST_CONTENT, payload={"content": content})
-    
-            return content
-            #PLEASE CHANGE THIS THIS IS SO UGLY
-        
-
 
     #modifications to data
     async def update_track_playlists(self, track_id: str, playlist_updates: list[dict]):
@@ -692,11 +766,20 @@ class AudioDatabase:
                 playlist_id, checked = playlist["id"], playlist["checked"]
 
                 if checked is True:
-                    #insert or keep existing
+                    #insert new track at bottom of playlist (max+1) or keep existing
+                    result = await self._fetchone(f'''
+                        SELECT MAX(position) AS max_pos
+                        FROM {self.PLAYLIST_TRACKS_TABLE}
+                        WHERE playlist_id = ?;
+                    ''', (playlist_id,))
+
+                    new_position = (result["max_pos"] or 0.0) + 1.0
+
                     await self._execute(f'''
-                        INSERT OR IGNORE INTO {self.PLAYLIST_TRACKS_TABLE} (playlist_id, track_id)
-                        VALUES (?, ?);
-                    ''', (playlist_id, track_id))
+                        INSERT INTO {self.PLAYLIST_TRACKS_TABLE} (playlist_id, track_id, position)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(playlist_id, track_id) DO NOTHING;
+                    ''', (playlist_id, track_id, new_position))
 
                 elif checked is False:
                     #remove if exists
@@ -714,6 +797,55 @@ class AudioDatabase:
                 "updates": playlist_updates
             }
             await self._emit_event(ADA.UPDATE_PLAYLISTS, payload={"content": content})
+
+
+    async def reorder_playlist_track(self, playlist_id: int, from_index: int, to_index: int):
+        """
+        Reorder a track within a playlist by moving it from one index to another.
+
+        This method updates the `position` column of the track to reflect its new order
+        in the playlist. It uses floating point indexing and sqlite3 indexes (see Build) 
+        to allow fast lookup and insertion without renumbering the entire playlist.
+
+        Args:
+            playlist_id (int): The ID of the playlist to rename.
+            from_index (int): The current 0-based index of the track to move.
+            to_index (int): Target 0-based index to move the track to.
+
+        Returns:
+            
+        """
+        async with self._lock:
+            # Fetch playlist tracks ordered by position
+            rows = await self._fetchall(f'''
+                SELECT track_id, position
+                FROM {self.PLAYLIST_TRACKS_TABLE}
+                WHERE playlist_id = ?
+                ORDER BY position ASC;
+            ''', (playlist_id,))
+            
+            n = len(rows)
+            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
+                return False #invalid
+            
+            #remove track from list
+            track_row = rows.pop(from_index)
+
+            if to_index == 0:
+                new_position = rows[0]["position"] - 1.0
+            elif to_index >= n:
+                new_position = rows[-1]["position"] + 1.0
+            else:
+                new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
+
+            #update
+            await self._execute(f'''
+                UPDATE {self.PLAYLIST_TRACKS_TABLE}
+                SET position = ?
+                WHERE playlist_id = ? AND track_id = ?;                    
+            ''', (new_position, playlist_id, track_row["track_id"]))
+
+            return True
 
 
 
