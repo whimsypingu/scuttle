@@ -146,8 +146,8 @@ async def reorder_playlist(body: ReorderPlaylistRequest, req: Request) -> Respon
         HTTPException: 500 for unexpected errors.
     """
     id = body.id
-    from_index = body.from_index
-    to_index = body.to_index
+    from_index = int(body.from_index)
+    to_index = int(body.to_index)
 
     db: AudioDatabase = req.app.state.db
 
