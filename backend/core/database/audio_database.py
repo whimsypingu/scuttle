@@ -718,6 +718,7 @@ class AudioDatabase:
                 WHERE id = ?;                    
             ''', (new_position, track_row["track_id"]))
 
+            print("[reorder_likes]: SUCCESS")
             return True
 
 
@@ -845,6 +846,7 @@ class AudioDatabase:
                 WHERE playlist_id = ? AND track_id = ?;                    
             ''', (new_position, playlist_id, track_row["track_id"]))
 
+            print("[reorder_playlist_track]: SUCCESS")
             return True
 
 

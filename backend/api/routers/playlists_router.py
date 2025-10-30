@@ -4,7 +4,7 @@ from fastapi import APIRouter, Query, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 
 
-from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, DeletePlaylistRequest, DeleteTrackRequest, EditPlaylistRequest, EditTrackRequest
+from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, DeletePlaylistRequest, DeleteTrackRequest, EditPlaylistRequest, EditTrackRequest, ReorderPlaylistRequest
 from backend.core.database.audio_database import AudioDatabase
 from backend.core.models.download_job import DownloadJob
 from backend.core.playlists.manager import PlaylistExtractorManager
@@ -127,6 +127,41 @@ async def create_playlist(body: CreatePlaylistRequest, req: Request) -> Response
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     
+
+
+@router.post("/reorder-playlist")
+async def reorder_playlist(body: ReorderPlaylistRequest, req: Request) -> Response:
+    """
+    Reorders a playlist in the database.
+
+    Args:
+        body (ReorderPlaylistRequest): Request body containing id and new name.
+        req (Request): FastAPI request object to access app state.
+
+    Returns:
+        JSONResponse: Status reordering
+
+    Raises:
+        HTTPException: Returns 400 if name is blank.
+        HTTPException: 500 for unexpected errors.
+    """
+    id = body.id
+    from_index = body.from_index
+    to_index = body.to_index
+
+    db: AudioDatabase = req.app.state.db
+
+    try:
+        playlist_id = int(id) #tries to convert, on failure returns ValueError
+
+        #reorder playlist
+        await db.reorder_playlist_track(playlist_id, from_index, to_index)
+    except ValueError:
+        #likes
+        await db.reorder_likes_track(from_index, to_index)
+
+    return JSONResponse(content={"status": "success"})
+
 
 
 @router.post("/edit-playlist")
