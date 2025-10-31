@@ -3,12 +3,12 @@
 Scuttle is a responsive web-based audio archival tool for managing and playing your personal audio collection.
 
 - Search and download audio
-- Play, pause, and skip tracks
+- Play, pause, re-order, and skip tracks
 - Create and manage playlists
 - Self-host your audio library and stream to any device with a browser
 - Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
 
-This requires Python 3.8+ and ffmpeg. You can run Scuttle by downloading this as a zip, and running ```scuttle.bat``` on Windows. For manual setup see [installation](#installation) and [usage](#usage) for more details.
+This requires Python 3.8+ to install. Setting up will install binaries for ffmpeg and cloudflared. You can run Scuttle by downloading this as a zip, and running ```scuttle.bat``` on Windows (No support for one-click setup on Linux or Mac yet). For manual setup see [installation](#installation) and [usage](#usage) for more details.
 
 ### Table of Contents
 - [Installation](#installation)
@@ -39,6 +39,7 @@ python main.py --help
 ```
 
 For Windows, the ```scuttle.bat``` file can be double-clicked to perform all setup.
+No one-click installer for Linux or Mac yet.
 
 
 ### 2. Setup the environment
@@ -82,7 +83,8 @@ Scuttle can provide the tunneled link to a Discord channel using a webhook URL, 
 python main.py --set-webhook [URL]
 ```
 
-💡 While the server is running, your device will stay awake to maintain the connection, though the display may turn off to conserve battery.
+💡 While the server is running, your device will stay awake to maintain the connection, though the display may turn off to conserve battery. Note that closing the computer may turn off the server.
+
 
 ### 2. Shut down the server
 Press ```Ctrl+C``` in the terminal to shut off the server and allow your device to sleep normally again.
@@ -147,9 +149,10 @@ scuttle/
 
 ## Known Issues
 There are some known bugs that haven't been bothered to be fixed yet.
-* Cleaning out unused downloads (Done?)
+* Cleaning out unused downloads (Done, but only on restart)
 * yt-dlp updates
 * yt-dlp download options and timeout failure cleanup/notification
+* Clearing DNS cache (Occasionally breaks cloudflared. If tunnel can't be resolved, clear the cache in command line and retry)
 
 
 ## Future Features
@@ -158,9 +161,10 @@ Scuttle is still in active development. Here are some planned features and impro
 **User Experience:**
 - [ ] Tracking user audio actions and usage, to provide a recap by month or even suggest artists or creators to donate to or support based on percentage listened
 - [ ] Mobile UI improvements (swipe on queue to play next)
-- [ ] Auto queue songs in a playlist
+- [x] Auto queue songs in a playlist on download
 - [ ] Improved search functionality
 - [ ] Pagination for faster loading with larger libraries
+- [x] Optimized rendering for faster UI performance
 
 **Integrations:**
 - [ ] Import playlist from YouTube  
