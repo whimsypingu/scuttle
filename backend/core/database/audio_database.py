@@ -703,7 +703,7 @@ class AudioDatabase:
 
 
             n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
-            if n == 0 or to_index < 0 or to_index >= n:
+            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
                 print("FAILURE")
                 return False #invalid
             
@@ -715,8 +715,8 @@ class AudioDatabase:
 
             if to_index == 0:
                 new_position = rows[0]["position"] - 1.0
-            elif to_index == n-1:                               #this is the last element
-                new_position = rows[n-1]["position"] + 1.0
+            elif to_index == n:                               #this is the last element
+                new_position = rows[-1]["position"] + 1.0
             else:
                 new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
 
@@ -847,7 +847,7 @@ class AudioDatabase:
             ''', (playlist_id,))
             
             n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
-            if n == 0 or to_index < 0 or to_index >= n:
+            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
                 return False #invalid
             
             #remove the moved track so indices reflect post-removal state
@@ -858,8 +858,8 @@ class AudioDatabase:
 
             if to_index == 0:
                 new_position = rows[0]["position"] - 1.0
-            elif to_index == n-1:                               #this is the last element
-                new_position = rows[n-1]["position"] + 1.0
+            elif to_index == n:                               #this is the last element
+                new_position = rows[-1]["position"] + 1.0
             else:
                 new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
 
