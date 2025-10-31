@@ -696,13 +696,16 @@ class AudioDatabase:
                 FROM {self.LIKES_TABLE}
                 ORDER BY position ASC;
             ''')
-            
-            n = len(rows)
+
+            n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
             if n == 0 or from_index < 0 or from_index >= n or to_index < 0 or to_index >= n:
                 return False #invalid
             
-            #keep track data in memory
-            track_id = rows[from_index]["id"] #this is id instead of track_id
+            #remove the moved track so indices reflect post-removal state
+            moved_row = rows.pop(from_index)
+            track_id = moved_row["id"]
+            
+            print("from_index:", from_index, "to_index:", to_index)
 
             if to_index == 0:
                 new_position = rows[0]["position"] - 1.0
@@ -825,12 +828,13 @@ class AudioDatabase:
                 ORDER BY position ASC;
             ''', (playlist_id,))
             
-            n = len(rows) #have to account for the element being reordered. to_index cannot be >= len(rows)
+            n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
             if n == 0 or from_index < 0 or from_index >= n or to_index < 0 or to_index >= n:
                 return False #invalid
             
-            #keep track data in memory
-            track_id = rows[from_index]["track_id"]
+            #remove the moved track so indices reflect post-removal state
+            moved_row = rows.pop(from_index)
+            track_id = moved_row["track_id"]
 
             print("from_index:", from_index, "to_index:", to_index)
 

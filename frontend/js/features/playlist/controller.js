@@ -437,6 +437,7 @@ export async function onSwipe(dataset, actionName) {
  *
  * @example
  * // Move a track from index 2 to index 5 in the user's playlist
+ * // Note that this accounts for 'removing' the element first before re-inserting at the new index 5.
  * onReorder({ playlistId: "12" }, 2, 5);
  *
  * @example
