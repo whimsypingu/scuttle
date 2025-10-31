@@ -697,8 +697,14 @@ class AudioDatabase:
                 ORDER BY position ASC;
             ''')
 
+            print("[reorder_likes] BEFORE reorder:")
+            for r in rows:
+                print(f"  id={r['id']}, position={r['position']}")
+
+
             n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
-            if n == 0 or from_index < 0 or from_index >= n or to_index < 0 or to_index >= n:
+            if n == 0 or to_index < 0 or to_index >= n:
+                print("FAILURE")
                 return False #invalid
             
             #remove the moved track so indices reflect post-removal state
@@ -722,6 +728,18 @@ class AudioDatabase:
             ''', (new_position, track_id))
 
             print("[reorder_likes]: SUCCESS")
+
+            #fetch playlist tracks ordered by position
+            rows = await self._fetchall(f'''
+                SELECT id, position
+                FROM {self.LIKES_TABLE}
+                ORDER BY position ASC;
+            ''')
+
+            print("[reorder_likes] AFTER reorder:")
+            for r in rows:
+                print(f"  id={r['id']}, position={r['position']}")
+
             return True
 
 
@@ -829,7 +847,7 @@ class AudioDatabase:
             ''', (playlist_id,))
             
             n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
-            if n == 0 or from_index < 0 or from_index >= n or to_index < 0 or to_index >= n:
+            if n == 0 or to_index < 0 or to_index >= n:
                 return False #invalid
             
             #remove the moved track so indices reflect post-removal state
