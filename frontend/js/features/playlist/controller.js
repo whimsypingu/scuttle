@@ -411,11 +411,44 @@ export async function onSwipe(dataset, actionName) {
 }
 
 
-
+/**
+ * Handle track reordering within playlists, the queue, or the liked list.
+ *
+ * This function updates both the frontend order (for instant UI feedback)
+ * and the backend database to persist the new order.
+ *
+ * Depending on the playlist type, reordering behaves differently:
+ * 
+ * - `"liked"`: Reorders tracks in the Liked Songs list, then calls the backend
+ *   to persist the new order using `reorderPlaylist()`.
+ * 
+ * - `"queue"`: Reorders the current play queue locally and sends the full
+ *   reordered list of track IDs to the backend using `queueSetAllTracks()`. Should change this though
+ * 
+ * - *(default)* User-created playlists: Reorders tracks within the specified
+ *   playlist locally, re-renders it, and updates the backend via `reorderPlaylist()`.
+ *
+ * If the `fromIndex` and `toIndex` are the same, the function exits early.
+ *
+ * @param {DOMStringMap} dataset - The `data-*` attributes of the dragged element.
+ *   Must contain identifying information used by `getPlaylistData()` to resolve `playlistId`.
+ * @param {number} fromIndex - The 0-based index of the track being moved.
+ * @param {number} toIndex - The 0-based index where the track should be placed.
+ *
+ * @example
+ * // Move a track from index 2 to index 5 in the user's playlist
+ * // Note that this accounts for 'removing' the element first before re-inserting at the new index 5.
+ * onReorder({ playlistId: "12" }, 2, 5);
+ *
+ * @example
+ * // Move a track to the top of the Liked Songs list
+ * onReorder({ playlistId: "liked" }, 10, 0);
+ */
 export async function onReorder(dataset, fromIndex, toIndex) {
     const { playlistId } = getPlaylistData(dataset);
 
-    if (fromIndex == toIndex) return;
+    console.log("[onReorder]: fromIndex:", fromIndex, " toIndex:", toIndex);
+    if (parseInt(fromIndex) == parseInt(toIndex)) return;
 
     switch (playlistId) {
         case "liked":

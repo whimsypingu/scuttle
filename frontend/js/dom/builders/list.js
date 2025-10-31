@@ -207,34 +207,53 @@ export function buildTrackListEmptyItem() {
 
 
 export function buildNewPlaylist(name, id) {
-    const playlist = document.createElement("div");
-    playlist.classList.add("playlist", "reorderable");
+    const playlistEl = document.createElement("div");
+    playlistEl.classList.add("playlist", "reorderable");
 
-    playlist.dataset.name = name;
-    playlist.dataset.id = id;
+    playlistEl.dataset.name = name;
+    playlistEl.dataset.id = id;
 
-    playlist.innerHTML = `
+    playlistEl.innerHTML = `
         <div class="list-header">
             <h3 class="list-title">${name}</h3>
         </div>
-
-        <div class="playlist-options">
-            <button class="playlist-option-button edit-playlist-button">
-                <i class="fa fa-ellipsis-h"></i>
-            </button>
-
-            <button class="playlist-option-button shuffle-playlist-button">
-                <i class="fa fa-random"></i>
-            </button>
-
-            <button class="playlist-option-button play-playlist-button">
-                <i class="fa fa-play"></i>
-            </button>
-        </div>
-
-        <ul class="list-track">
-        </ul>
     `;
 
-    return playlist;
+    return playlistEl;
 }
+
+
+export function buildPlaylistContent(playlistEl) {
+    const frag = document.createDocumentFragment();
+
+    //playlist options section
+    const optionsEl = document.createElement("div");
+    optionsEl.className = "playlist-options";
+    optionsEl.innerHTML = `
+        <button class="playlist-option-button edit-playlist-button">
+            <i class="fa fa-ellipsis-h"></i>
+        </button>
+
+        <button class="playlist-option-button shuffle-playlist-button">
+            <i class="fa fa-random"></i>
+        </button>
+
+        <button class="playlist-option-button play-playlist-button">
+            <i class="fa fa-play"></i>
+        </button>
+    `;
+
+    frag.appendChild(optionsEl);
+
+    //empty tracks list
+    const listTrackEl = document.createElement("ul");
+    listTrackEl.className = "list-track";
+
+    frag.appendChild(listTrackEl);
+
+    //add to playlist
+    playlistEl.appendChild(frag);
+
+    return listTrackEl;
+}
+

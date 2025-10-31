@@ -696,18 +696,27 @@ class AudioDatabase:
                 FROM {self.LIKES_TABLE}
                 ORDER BY position ASC;
             ''')
-            
-            n = len(rows)
-            if n == 0 or from_index < 0 or from_index >= n or to_index < 0 or to_index >= n:
+
+            print("[reorder_likes] BEFORE reorder:")
+            for r in rows:
+                print(f"  id={r['id']}, position={r['position']}")
+
+
+            n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
+            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
+                print("FAILURE")
                 return False #invalid
             
-            #keep track data in memory
-            track_id = rows[from_index]["id"] #this is id instead of track_id
+            #remove the moved track so indices reflect post-removal state
+            moved_row = rows.pop(from_index)
+            track_id = moved_row["id"]
+            
+            print("from_index:", from_index, "to_index:", to_index)
 
             if to_index == 0:
                 new_position = rows[0]["position"] - 1.0
-            elif to_index == n-1:                               #this is the last element
-                new_position = rows[n-1]["position"] + 1.0
+            elif to_index == n:                               #this is the last element
+                new_position = rows[-1]["position"] + 1.0
             else:
                 new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
 
@@ -719,6 +728,18 @@ class AudioDatabase:
             ''', (new_position, track_id))
 
             print("[reorder_likes]: SUCCESS")
+
+            #fetch playlist tracks ordered by position
+            rows = await self._fetchall(f'''
+                SELECT id, position
+                FROM {self.LIKES_TABLE}
+                ORDER BY position ASC;
+            ''')
+
+            print("[reorder_likes] AFTER reorder:")
+            for r in rows:
+                print(f"  id={r['id']}, position={r['position']}")
+
             return True
 
 
@@ -825,19 +846,20 @@ class AudioDatabase:
                 ORDER BY position ASC;
             ''', (playlist_id,))
             
-            n = len(rows) #have to account for the element being reordered. to_index cannot be >= len(rows)
-            if n == 0 or from_index < 0 or from_index >= n or to_index < 0 or to_index >= n:
+            n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
+            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
                 return False #invalid
             
-            #keep track data in memory
-            track_id = rows[from_index]["track_id"]
+            #remove the moved track so indices reflect post-removal state
+            moved_row = rows.pop(from_index)
+            track_id = moved_row["track_id"]
 
             print("from_index:", from_index, "to_index:", to_index)
 
             if to_index == 0:
                 new_position = rows[0]["position"] - 1.0
-            elif to_index == n-1:                               #this is the last element
-                new_position = rows[n-1]["position"] + 1.0
+            elif to_index == n:                               #this is the last element
+                new_position = rows[-1]["position"] + 1.0
             else:
                 new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
 

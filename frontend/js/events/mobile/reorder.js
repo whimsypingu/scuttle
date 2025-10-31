@@ -89,7 +89,7 @@ function itemFromPoint(x, y) {
 
     const item = elem.closest('.list-track-item');
     // optionally ignore ghost and placeholder
-    if (item && item !== draggedEl && item !== placeholder) return item;
+    if (item && item !== draggedEl) return item;
     return null;
 }
 
@@ -132,21 +132,32 @@ function undoGhost() {
  */
 function updatePlaceholder() {
     const target = itemFromPoint(lastPointerX, lastPointerY);
-    if (target && target !== placeholder && target !== draggedEl) {
+    if (target) {
+
         const rect = target.getBoundingClientRect();
         const before = (lastPointerY < rect.top + rect.height / 2);
-        
-        //where to insert
+            
+        const targetIndex = parseInt(target.dataset.index);
+        const draggedIndex = parseInt(draggedEl.dataset.index);
+        let insertIndex;
+
+        //perform visual insertion
         if (before) {
             target.parentNode.insertBefore(placeholder, target);
-
-            //store info on where the placeholder now sits
-            placeholder.dataset.index = parseInt(target.dataset.index) - 1;
+            insertIndex = targetIndex;
         } else {
             target.parentNode.insertBefore(placeholder, target.nextSibling);
-
-            placeholder.dataset.index = target.dataset.index;
+            insertIndex = targetIndex + 1;
         }
+
+        //fix off-by-one bug when moving downwards
+        if (targetIndex > draggedIndex) {
+            insertIndex -= 1;
+        }
+
+        console.log("[updatePlaceholder]: before: ", before, ", target index: ", target.dataset.index, ", insert index: ", insertIndex);
+
+        placeholder.dataset.index = insertIndex;
     }
 }
 
@@ -221,6 +232,7 @@ function beginDrag(e, el) {
     placeholder.style.height = `${draggedEl.offsetHeight}px`;
 
     draggedEl.parentNode.insertBefore(placeholder, draggedEl.nextSibling);
+    placeholder.dataset.index = draggedEl.dataset.index;
     updatePlaceholder();
 
     //set most recent cursor coordinates for ghost
