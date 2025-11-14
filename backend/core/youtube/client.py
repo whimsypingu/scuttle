@@ -35,7 +35,7 @@ class YouTubeClient:
 
         self._event_bus = event_bus
 
-        self.id_src = "YT___" #source for id's, so that it'll be like YT_#######...
+        self.id_src = "YT___" #source for id's, so that it'll be like YT___#######...
 
         self.dl_format_filter = dl_format_filter or "bestaudio/best"
         self.dl_format = dl_format or "mp3"
@@ -137,6 +137,28 @@ class YouTubeClient:
             )
             await self._event_bus.publish(event)
             print("[DEBUG]: Emitted event from YoutubeClient")
+
+
+    async def update(self, timeout=60) -> bool:
+        """
+        Update yt-dlp
+        """
+        cmd = ["yt-dlp", "-U"]
+        print(f"Running command: {' '.join(cmd)}")
+
+        try:
+            code, out, err = await self._run_subprocess(cmd, timeout=timeout)
+
+            if code != 0:
+                print(f"[ERROR] yt-dlp update failed: {err}")
+                return False
+            
+            print("[INFO] yt-dlp updated successfully")
+            return True
+
+        except Exception as e:
+            print(f"[ERROR] Failed to update yt-dlp: {e}")
+            return False
 
     
     async def search(
@@ -245,11 +267,13 @@ class YouTubeClient:
         self,
         id: str, 
         timeout: int = 60,
-        custom_metadata: Optional[dict] = None
+        custom_metadata: Optional[dict] = None,
+        _retry: bool = True
     ) -> bool:
         """
         Downloads a track given a Youtube ID using ytdlp and returns a Track object.
         If custom_track is provided, its fields override the downloaded metadata.
+        Internal flag _retry to attempt again if yt-dlp is updated.
         """
         #send task start notification
         await self._emit_event(action=YTCA.START, payload={})
@@ -323,6 +347,17 @@ class YouTubeClient:
         except Exception as e:
             print(f"[ERROR] Failed to download {id}: {e}")
             await self._emit_event(action=YTCA.ERROR, payload={})
+
+            #only retry once
+            if _retry:
+                print(f"[INFO] Attempting yt-dlp update and one retry")
+
+                success = await self.update()
+                if success:
+                    print(f"[INFO] Retrying download after yt-dlp update")
+                    return await self.download_by_id(id, timeout, custom_metadata, _retry=False) #try again without retry flag
+
+            #if update fails or retry fails, raise original exception
             raise
         
         finally:
