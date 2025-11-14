@@ -165,7 +165,8 @@ class YouTubeClient:
         self, 
         q: str, 
         limit: int = 3, 
-        timeout: int = 60
+        timeout: int = 60,
+        _retry: bool = True
     ) -> List[Track]:
         """
         Search YouTube using yt-dlp with retries and return Track objects.
@@ -221,6 +222,17 @@ class YouTubeClient:
 
         except Exception as e:
             print(f"[ERROR] Failed to search {q}: {e}")
+
+            #only retry once
+            if _retry:
+                print(f"[INFO] Attempting yt-dlp update and one retry")
+
+                success = await self.update()
+                if success:
+                    print(f"[INFO] Retrying search after yt-dlp update")
+                    return await self.search(q, limit, timeout, _retry=False) #try again without retry flag
+
+            #retry failure return empty list
             results = []
         
         print(f"[DEBUG] Searching '{q}' with limit={limit}")
