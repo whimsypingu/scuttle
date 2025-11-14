@@ -264,8 +264,8 @@ class YouTubeClient:
         await self._emit_event(action=YTCA.START, payload={})
 
         #prepares cmd line arguments
-        output_path = get_audio_path(track_or_id=id, base_dir=self.base_dir, audio_format=self.dl_format)
-        temp_path = get_audio_path(track_or_id=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
+        output_path = get_audio_path(id=id, base_dir=self.base_dir, audio_format=self.dl_format)
+        temp_path = get_audio_path(id=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
 
         if id.startswith(self.id_src):
             id = id[len(self.id_src):]

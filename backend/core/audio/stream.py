@@ -9,16 +9,16 @@ import backend.globals as G
 
 import mimetypes
 
-def stream_audio(req: Request, track_or_id: Union[Track, str], full: False) -> StreamingResponse:
+def stream_audio(req: Request, id: str, full: False) -> StreamingResponse:
     #checks for status
-    if not track_or_id:
-        raise HTTPException(status_code=404, detail="No track provided.")
+    if not id:
+        raise HTTPException(status_code=404, detail="No track id provided.")
     
-    if not is_downloaded(track_or_id=track_or_id):
+    if not is_downloaded(id=id):
         raise HTTPException(status_code=404, detail="Track not downloaded.")
 
-    file_path = get_audio_path(track_or_id=track_or_id)
-    file_size = get_audio_size(track_or_id=track_or_id)
+    file_path = get_audio_path(id=id)
+    file_size = get_audio_size(id=id)
 
     #support different filetypes (audio/mpeg for mp3, audio/wav for wav, etc)
     mime, _ = mimetypes.guess_type(str(file_path))

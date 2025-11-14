@@ -20,15 +20,13 @@ from typing import Union
 
 #handles both Track and Track.id
 def get_audio_path(
-    track_or_id: Union[str, Track], 
+    id: str, 
     base_dir: Path = None, 
     audio_format: str = None
 ) -> Path:
 
     if base_dir is None:
         base_dir = G.DOWNLOAD_DIR
-
-    id = track_or_id.id if isinstance(track_or_id, Track) else track_or_id
 
     #if asked for specific format, use it
     if audio_format:
@@ -44,18 +42,18 @@ def get_audio_path(
     return base_dir / f"{id}.mp3"
         
 def is_downloaded(
-    track_or_id: Union[str, Track], 
+    id: str, 
     base_dir: Path = None, 
     audio_format: str = None
 ) -> bool:
-    return get_audio_path(track_or_id, base_dir, audio_format).exists()
+    return get_audio_path(id, base_dir, audio_format).exists()
 
 def get_audio_size(
-    track_or_id: Union[str, Track], 
+    id: str, 
     base_dir: Path = None, 
     audio_format: str = None
 ) -> int:
-    return get_audio_path(track_or_id, base_dir, audio_format).stat().st_size
+    return get_audio_path(id, base_dir, audio_format).stat().st_size
 
 
 #recursively search for first occurrence of a key in a nested dict json
