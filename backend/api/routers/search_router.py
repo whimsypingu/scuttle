@@ -57,7 +57,7 @@ async def deep_search(req: Request, q: Optional[str] = Query(None)):
     yt: YouTubeClient = req.app.state.yt
     db: AudioDatabase = req.app.state.db #put into db?
 
-    results = await yt.robust_search(q)
+    results = await yt.search(q)
 
     for track in results:
         print("ATTEMPTING LOG TRACK:", track)

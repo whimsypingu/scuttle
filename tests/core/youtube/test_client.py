@@ -52,7 +52,7 @@ async def test_download_by_query(tmp_path: Path):
 
     track = await client.download_by_query(q=query)
 
-    search_results = await client.robust_search(q=query, limit=1)
+    search_results = await client.search(q=query, limit=1)
     assert search_results, "Search returned no results"
     expected_track = search_results[0]
 
@@ -65,7 +65,7 @@ async def test_download_by_query(tmp_path: Path):
 
 
 @pytest.mark.asyncio
-async def test_robust_search(tmp_path: Path):
+async def test_search(tmp_path: Path):
     client = YouTubeClient(
         name="test",
         base_dir=tmp_path
@@ -73,7 +73,7 @@ async def test_robust_search(tmp_path: Path):
 
     query = "rick astley never gonna give you up"
 
-    results = await client.robust_search(q=query)
+    results = await client.search(q=query)
 
     assert results, "Search returned no results"
     assert len(results) == 3, f"Expected 3 results, got {len(results)}"

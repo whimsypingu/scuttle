@@ -245,36 +245,6 @@ class YouTubeClient:
         return results
 
 
-    async def robust_search(
-        self,
-        q: str,
-        limit: int = 3,
-        timeout: int = 60,
-        max_attempts: int = 3,
-        base_delay: int = 1,
-        factor: int = 2,
-        max_delay: int = 20
-    ) -> List[Track]:
-        """
-        Robust search wrapper around `search` with retries and exponential backoff.
-        Returns an empty list if all attempts fail.
-        """
-        func_kwargs = dict(q=q, limit=limit, timeout=timeout)
-        try:
-            # Wrap the raw search in the retry helper
-            return await self._retry_async(
-                self.search,
-                max_attempts=max_attempts,
-                base_delay=base_delay,
-                factor=factor,
-                max_delay=max_delay,
-                **func_kwargs
-            )
-        except Exception as e:
-            print(f"[ERROR] Robust search for '{q}' failed after retries: {e}")
-            return []
-
-
     async def download_by_id(
         self,
         id: str, 
@@ -384,7 +354,7 @@ class YouTubeClient:
         custom_metadata: Optional[dict] = None
     ) -> bool:
         
-        result = await self.robust_search(q=q, limit=1, timeout=timeout) #doesnt emit when searching 1 item
+        result = await self.search(q=q, limit=1, timeout=timeout) #doesnt emit when searching 1 item
 
         if not result:
             print(f"[WARN]: No results found for query: {q}")
