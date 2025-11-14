@@ -132,20 +132,57 @@ def apply_loudnorm(input_path: Path):
     return input_path
 
 
-def convert_to_mp3(input_path: Path):
+def compress_audio(input_path: Path, target_format: str = None, bitrate: str = None) -> Path:
     """
-    Convert a processed WAV file into a compressed MP3 file.
-    Uses a temp output file for safety and replaces existing MP3 if needed.
+    Convert a WAV (or other uncompressed) file into a compressed target format (MP3, Opus, etc.)
+    Uses a temporary file for safety and replaces the original if needed.
+
+    In blind tests opus seems to be the best audio file type: 
+    https://hydrogenaudio.org/index.php/topic,117489.0.html
 
     Parameters
     ----------
-    wav_path : Path
-        Path to the input WAV file.
+    input_path : Path
+        Path to the input audio file (WAV recommended).
+    target_format : str
+        Target audio format (e.g., 'mp3', 'opus').
     bitrate : str
-        Target MP3 bitrate (e.g. '192k', '256k', '320k').
+        Target bitrate for lossy formats (e.g., '256k', '192k').
 
     Returns
     -------
     Path
-        The final MP3 file path.
+        Path to the final compressed file.
     """
+    target_path = input_path.with_suffix(f".{target_format}")
+
+    #determine codec based on format
+    if target_format.lower() == "opus":
+        codec = "libopus"
+
+        if bitrate is None:
+            bitrate = "192k"
+
+    #default to mp3 codec if none provided
+    else:
+        codec = "libmp3lame"
+
+        if bitrate is None:
+            bitrate = "256k"
+
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-i", str(input_path),
+        "-c:a", codec,
+        "-b:a", bitrate,
+        str(target_path)
+    ]
+
+    subprocess.run(cmd, check=True)
+
+    #remove original wav file
+    if target_path.exists():
+        input_path.unlink()
+
+    return target_path

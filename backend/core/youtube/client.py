@@ -8,7 +8,7 @@ import sys
 import time
 from typing import Callable, List, Optional
 
-from backend.core.audio.postprocess import trim_silence, apply_loudnorm
+from backend.core.audio.postprocess import compress_audio, trim_silence, apply_loudnorm
 
 from backend.core.lib.utils import get_audio_path
 from backend.core.events.event_bus import EventBus
@@ -329,6 +329,7 @@ class YouTubeClient:
             #postprocess audio file
             trim_silence(output_path)
             apply_loudnorm(output_path)
+            compress_audio(output_path, "opus")
 
             await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
             return track

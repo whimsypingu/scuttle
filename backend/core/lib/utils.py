@@ -27,10 +27,6 @@ def get_audio_path(
 
     if base_dir is None:
         base_dir = G.DOWNLOAD_DIR
-        
-    print(">>> CALLING get_audio_path <<<")
-    print("incoming audio_format:", audio_format)
-    traceback.print_stack(limit=4)
 
     id = track_or_id.id if isinstance(track_or_id, Track) else track_or_id
 
@@ -42,7 +38,6 @@ def get_audio_path(
     for ext in G.AUDIO_EXTENSIONS:
         candidate = base_dir / f"{id}.{ext}"
         if candidate.exists():
-            print(candidate)
             return candidate
 
     #fallback to mp3
