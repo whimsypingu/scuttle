@@ -7,6 +7,9 @@ import subprocess
 import sys
 import time
 from typing import Callable, List, Optional
+
+from backend.core.audio.postprocess import trim_silence, apply_loudnorm
+
 from backend.core.lib.utils import get_audio_path
 from backend.core.events.event_bus import EventBus
 from backend.core.models.event import Event
@@ -322,6 +325,10 @@ class YouTubeClient:
                 for k, v in custom_metadata.items():
                     if v not in (None, "") and hasattr(track, k):
                         setattr(track, k, v)
+
+            #postprocess audio file
+            trim_silence(output_path)
+            apply_loudnorm(output_path)
 
             await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
             return track

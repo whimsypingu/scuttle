@@ -24,6 +24,8 @@ AUDIO_QUALITY = 0 #"192K"
 USER_AGENT = "Mozilla/5.0"# (Windows NT 10.0; Win64; x64) ..." #"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
 STREAM_CHUNK_SIZE = 1024 * 1024 #1MB
 
+AUDIO_EXTENSIONS = ["wav", "mp3"] #order matters because it will look for best quality first
+
 #ytdlp search and download handling arguments
 SEARCH_LIMIT_DEFAULT = 3
 SEARCH_TIMEOUT_DEFAULT = 30

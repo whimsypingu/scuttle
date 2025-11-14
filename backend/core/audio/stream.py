@@ -7,6 +7,8 @@ from backend.core.lib.utils import is_downloaded, get_audio_path, get_audio_size
 from backend.core.models.track import Track
 import backend.globals as G
 
+import mimetypes
+
 def stream_audio(req: Request, track_or_id: Union[Track, str], full: False) -> StreamingResponse:
     #checks for status
     if not track_or_id:
@@ -17,6 +19,10 @@ def stream_audio(req: Request, track_or_id: Union[Track, str], full: False) -> S
 
     file_path = get_audio_path(track_or_id=track_or_id)
     file_size = get_audio_size(track_or_id=track_or_id)
+
+    #support different filetypes (audio/mpeg for mp3, audio/wav for wav, etc)
+    mime, _ = mimetypes.guess_type(str(file_path))
+    content_type = mime or "application/octet-stream"
 
     range_header = req.headers.get("range")
     if range_header and not full:
@@ -56,7 +62,7 @@ def stream_audio(req: Request, track_or_id: Union[Track, str], full: False) -> S
             "Content-Range": f"bytes {start}-{end}/{file_size}",
             "Accept-Ranges": "bytes",
             "Content-Length": str(length),
-            "Content-Type": "audio/mpeg",
+            "Content-Type": content_type,
         }
 
         return StreamingResponse(
@@ -75,7 +81,7 @@ def stream_audio(req: Request, track_or_id: Union[Track, str], full: False) -> S
         headers = {
             "Content-Length": str(file_size),
             "Accept-Ranges": "bytes",
-            "Content-Type": "audio/mpeg",
+            "Content-Type": content_type,
         }
 
         return StreamingResponse(
