@@ -106,8 +106,8 @@ def apply_loudnorm(input_path: Path):
     
     stats = json.loads(match.group())
     
-    print("DONE WITH FIRST PASS:")
-    print(stats)
+    #print("DONE WITH FIRST PASS:")
+    #print(stats)
 
     #build filter for second pass using extracted stats
     loudnorm_filter = (
