@@ -166,7 +166,7 @@ Scuttle is still in active development. Here are some planned features and impro
 - [ ] Improved search functionality
 - [ ] Pagination for faster loading with larger libraries
 - [x] Optimized rendering for faster UI performance
-- [ ] Audio volume normalization across tracks
+- [x] Audio volume normalization across tracks [11/14/25, loudnorm EBU-R128 standard]
 
 **Integrations:**
 - [ ] Import playlist from YouTube, other sources
@@ -176,7 +176,7 @@ Scuttle is still in active development. Here are some planned features and impro
 - [ ] Recommendations (Last.fm?)
 
 **Tools:**
-- [ ] Audio editing (silence removal, enhanced quality)
+- [x] Audio editing (silence removal, enhanced quality) [11/14/25, trim + .opus]
 - [ ] Backend management from the web interface (download queue, server restart)
 
 These are not guaranteed but they reflect the current development priorities and ideas for future releases.
