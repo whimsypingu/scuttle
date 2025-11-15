@@ -7,6 +7,9 @@ import subprocess
 import sys
 import time
 from typing import Callable, List, Optional
+
+from backend.core.audio.postprocess import compress_audio, trim_silence, apply_loudnorm
+
 from backend.core.lib.utils import get_audio_path
 from backend.core.events.event_bus import EventBus
 from backend.core.models.event import Event
@@ -38,7 +41,7 @@ class YouTubeClient:
         self.id_src = "YT___" #source for id's, so that it'll be like YT___#######...
 
         self.dl_format_filter = dl_format_filter or "bestaudio/best"
-        self.dl_format = dl_format or "mp3"
+        self.dl_format = dl_format or "wav"
         self.dl_quality = dl_quality or "0"
         self.dl_user_agent = dl_user_agent or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
         #self.dl_user_agent = dl_user_agent or "Mozilla/5.0" #"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
@@ -261,8 +264,8 @@ class YouTubeClient:
         await self._emit_event(action=YTCA.START, payload={})
 
         #prepares cmd line arguments
-        output_path = get_audio_path(track_or_id=id, base_dir=self.base_dir, audio_format=self.dl_format)
-        temp_path = get_audio_path(track_or_id=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
+        output_path = get_audio_path(id=id, base_dir=self.base_dir, audio_format=self.dl_format)
+        temp_path = get_audio_path(id=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
 
         if id.startswith(self.id_src):
             id = id[len(self.id_src):]
@@ -322,6 +325,11 @@ class YouTubeClient:
                 for k, v in custom_metadata.items():
                     if v not in (None, "") and hasattr(track, k):
                         setattr(track, k, v)
+
+            #postprocess audio file
+            trim_silence(output_path)
+            apply_loudnorm(output_path)
+            compress_audio(output_path, "opus")
 
             await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
             return track

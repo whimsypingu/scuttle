@@ -26,7 +26,7 @@ async def test_download_by_id(tmp_path: Path):
 
     track = await client.download_by_id(id)
 
-    audio_path = get_audio_path(track_or_id=id, base_dir=tmp_path)
+    audio_path = get_audio_path(id=id, base_dir=tmp_path)
     
     print(f"Contents of {tmp_path}:")
     for f in os.listdir(tmp_path):
@@ -56,7 +56,7 @@ async def test_download_by_query(tmp_path: Path):
     assert search_results, "Search returned no results"
     expected_track = search_results[0]
 
-    audio_path = get_audio_path(track_or_id=track.id, base_dir=tmp_path, audio_format="mp3")
+    audio_path = get_audio_path(id=track.id, base_dir=tmp_path, audio_format="mp3")
 
     assert isinstance(track, Track), "Download by query failed"
     assert audio_path.exists(), "Audio file was not created"

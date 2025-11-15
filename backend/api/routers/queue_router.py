@@ -73,7 +73,7 @@ async def queue_set_first_track(body: QueueSetFirstTrackRequest, req: Request) -
 
     try:
         #queueing logic for replacing first item in queue if available
-        if is_downloaded(track_or_id=id):
+        if is_downloaded(id=id):
             await play_queue.set_first(id)
         elif not download_queue.contains(job):
             await download_queue.insert_next(job)
@@ -111,7 +111,7 @@ async def queue_push_track(body: QueuePushTrackRequest, req: Request) -> Respons
 
     try:
         #normal queueing logic
-        if is_downloaded(track_or_id=id):
+        if is_downloaded(id=id):
             await play_queue.push(id)
         elif not download_queue.contains(job):
             await download_queue.push(job)
@@ -149,7 +149,7 @@ async def queue_push_front(body: QueuePushTrackRequest, req: Request) -> Respons
 
     try:
         #push to front
-        if is_downloaded(track_or_id=id):
+        if is_downloaded(id=id):
             await play_queue.insert_next(id)
         
         elif not download_queue.contains(job):
