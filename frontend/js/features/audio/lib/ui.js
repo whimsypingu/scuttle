@@ -20,8 +20,8 @@ export function syncCurrentTimeDisplay(currTimeEl, playerEl) {
 export function setDurationDisplay(durationEl, value) {
     durationEl.textContent = formatTime(value, false);
 }
-export function syncDurationDisplay(durationEl, playerEl) {
-    const duration = isNaN(playerEl.duration) ? 0 : playerEl.duration;
+export function syncDurationDisplay(durationEl, currentTrack) {
+    const duration = currentTrack?.duration ?? 0; //handles currentTrack existing, and currentTrack.duration existing
     setDurationDisplay(durationEl, duration);
 }
 
@@ -33,14 +33,15 @@ const blankColor = "var(--bg-7)";
 export function setProgressBar(progBarEl, percent) {
     progBarEl.style.background = `linear-gradient(to right, ${fillColor} 0%, ${fillColor} ${percent}%, ${blankColor} ${percent}%, ${blankColor} 100%)`;
 }
-export function syncProgressBar(progBarEl, playerEl) {
-    const duration = playerEl.duration;
+export function syncProgressBar(progBarEl, playerEl, currentTrack) {
+    const duration = currentTrack?.duration ?? 0; //handles currentTrack existing, and currentTrack.duration existing
 
-    let percent = (playerEl.currentTime / duration) * 100;
-    
     if (isNaN(duration) || duration === 0) {
-        percent = 0;
+        setProgressBar(progBarEl, 0);
+        return;
     }
+
+    const percent = (playerEl.currentTime / duration) * 100;
     setProgressBar(progBarEl, percent);
 }
 
@@ -59,20 +60,21 @@ export function updatePlayPauseButtonDisplay(ppButtEl, isPlaying) {
 }
 
 
-//helper function to set ui to whatever the song is, and sync up time displays
-export function resetUI(playerEl, currTimeEl, progBarEl, durationEl) {
-    if (!playerEl) {
-        setCurrentTimeDisplay(currTimeEl, 0);
-        setProgressBar(progBarEl, 0);
-        setDurationDisplay(durationEl, 0);
-        return;
+//helper function to set ui to whatever the song is, and sync up time displays after resetting currentTime to 0
+export function resetUI(playerEl, currTimeEl, progBarEl, durationEl, currentTrack) {
+
+    if (playerEl) {
+        playerEl.currentTime = 0;
     }
-    playerEl.currentTime = 0;
-    syncCurrentTimeDisplay(currTimeEl, playerEl);
-    syncProgressBar(progBarEl, playerEl);
-    syncDurationDisplay(durationEl, playerEl);
+    setCurrentTimeDisplay(currTimeEl, 0);
+    setProgressBar(progBarEl, 0);
+
+    //attempt to set optimistically the duration if something was at the front of the queue
+    syncDurationDisplay(durationEl, currentTrack);
 }
 
+
+//is this even used? maybe remove this if it's clutter
 export function setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime) {
     setCurrentTimeDisplay(currTimeEl, currTime);
     setProgressBar(progBarEl, currTime / totalTime);

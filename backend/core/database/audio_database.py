@@ -110,7 +110,7 @@ class AudioDatabase:
                     id TEXT PRIMARY KEY,
                     title TEXT NOT NULL,
                     artist TEXT,
-                    duration INTEGER,
+                    duration REAL,
                     custom_title TEXT,
                     custom_artist TEXT
                 );
@@ -219,7 +219,7 @@ class AudioDatabase:
                 - id (str): Unique track ID (primary key).
                 - title (str): Track title.
                 - artist (str|None): Track artist.
-                - duration (int|None): Track duration in seconds.
+                - duration (float|None): Track duration in seconds.
 
         Emits:
             ADA.LOG_TRACK — with payload containing the track's metadata.
@@ -325,7 +325,7 @@ class AudioDatabase:
                     "id": str,
                     "title": str,
                     "artist": str,
-                    "duration": int
+                    "duration": float
                 }
 
         Side Effects:
@@ -447,7 +447,7 @@ class AudioDatabase:
                         "id": str,
                         "title": str,
                         "artist": str,
-                        "duration": int
+                        "duration": float
                     },
                     ...
                 ]
