@@ -37,7 +37,6 @@ export const syncProgressBar = () => audioUI.syncProgressBar(progBarEl, getPlaye
 export const updatePlayPauseButtonDisplay = (isPlaying) => audioUI.updatePlayPauseButtonDisplay(ppButtonEl, isPlaying);
 
 export const resetUI = () => audioUI.resetUI(getPlayerEl(), currTimeEl, progBarEl, durationEl, QueueStore.peekTrack());
-export const setUI = (currTime, totalTime) => audioUI.setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime);
 
 
 export const spinLoopButton = () => audioUI.spinLoopButton(loopButtonEl);

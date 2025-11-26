@@ -74,13 +74,6 @@ export function resetUI(playerEl, currTimeEl, progBarEl, durationEl, currentTrac
 }
 
 
-//is this even used? maybe remove this if it's clutter
-export function setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime) {
-    setCurrentTimeDisplay(currTimeEl, currTime);
-    setProgressBar(progBarEl, currTime / totalTime);
-    setDurationDisplay(durationEl, totalTime);
-}
-
 
 export function updateMediaSession(track, isPlaying) {
     document.dispatchEvent(new CustomEvent("trackChangedMediaSession", {
