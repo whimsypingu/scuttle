@@ -16,7 +16,8 @@ def get_temp_path(input_path: Path) -> Path:
         Path: Temporary file path with '.tmp' inserted before the original extension.
               Example: 'haiku.mp3' -> 'haiku.tmp.mp3'
     """
-    return input_path.with_suffix(".tmp" + input_path.suffix)
+    stem = input_path.stem  #filename without last suffix
+    return input_path.with_name(stem + ".tmp" + input_path.suffix)
 
 
 def replace_file_safely(input_path: Path, temp_path: Path):
@@ -157,7 +158,7 @@ def compress_audio(input_path: Path, target_format: str = None, bitrate: str = N
     target_path = input_path.with_suffix(f".{target_format}")
 
     #determine codec based on format
-    if target_format.lower() == "opus":
+    if target_format.lower() in ("opus", "webm"):
         codec = "libopus"
 
         if bitrate is None:
@@ -186,3 +187,40 @@ def compress_audio(input_path: Path, target_format: str = None, bitrate: str = N
         input_path.unlink()
 
     return target_path
+
+
+def extract_duration(file_path: Path) -> float:
+    """
+    Get the duration of an audio file in seconds using ffprobe.
+
+    Parameters
+    ----------
+    file_path : Path
+        Path to the audio file.
+
+    Returns
+    -------
+    float
+        Duration of the file in seconds.
+
+    Raises
+    ------
+    RuntimeError
+        If ffprobe fails or cannot parse the duration.
+    """
+    cmd = [
+        "ffprobe",
+        "-v", "error",           # suppress non-error messages
+        "-show_entries", "format=duration",
+        "-of", "default=noprint_wrappers=1:nokey=1",
+        str(file_path)
+    ]
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"ffprobe failed: {result.stderr.strip()}")
+
+    try:
+        return float(result.stdout.strip())
+    except ValueError:
+        raise RuntimeError(f"Failed to parse duration: {result.stdout.strip()}")

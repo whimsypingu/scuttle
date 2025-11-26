@@ -1,4 +1,5 @@
 import { domEls } from "../../dom/selectors.js";
+import { QueueStore } from "../../cache/QueueStore.js";
 const { audioEl, currTimeEl, durationEl, progBarEl, ppButtonEl, loopButtonEl } = domEls;
 
 export { 
@@ -27,16 +28,15 @@ import { getPlayerEl } from "./lib/streamTrick.js";
 export const setCurrentTimeDisplay = (value) => audioUI.setCurrentTimeDisplay(currTimeEl, value);
 export const syncCurrentTimeDisplay = () => audioUI.syncCurrentTimeDisplay(currTimeEl, getPlayerEl());
 
-export const setDurationDisplay = (value) => audioUI.setDurationDisplay(durationEl, value);
-export const syncDurationDisplay = () => audioUI.syncDurationDisplay(durationEl, getPlayerEl());
+export const setDurationDisplay = (value) => audioUI.setDurationDisplay(durationEl, value); //not used in a controller file
+export const syncDurationDisplay = () => audioUI.syncDurationDisplay(durationEl, QueueStore.peekTrack); //not used in a controller file
 
 export const setProgressBar = (percent) => audioUI.setProgressBar(progBarEl, percent);
-export const syncProgressBar = () => audioUI.syncProgressBar(progBarEl, getPlayerEl());
+export const syncProgressBar = () => audioUI.syncProgressBar(progBarEl, getPlayerEl(), QueueStore.peekTrack());
 
 export const updatePlayPauseButtonDisplay = (isPlaying) => audioUI.updatePlayPauseButtonDisplay(ppButtonEl, isPlaying);
 
-export const resetUI = () => audioUI.resetUI(getPlayerEl(), currTimeEl, progBarEl, durationEl);
-export const setUI = (currTime, totalTime) => audioUI.setUI(currTimeEl, progBarEl, durationEl, currTime, totalTime);
+export const resetUI = () => audioUI.resetUI(getPlayerEl(), currTimeEl, progBarEl, durationEl, QueueStore.peekTrack());
 
 
 export const spinLoopButton = () => audioUI.spinLoopButton(loopButtonEl);
