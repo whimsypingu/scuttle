@@ -146,7 +146,7 @@ class YouTubeClient:
         """
         Update yt-dlp
         """
-        cmd = ["yt-dlp", "-U"]
+        cmd = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "-U", "yt-dlp"]
         print(f"Running command: {' '.join(cmd)}")
 
         try:
