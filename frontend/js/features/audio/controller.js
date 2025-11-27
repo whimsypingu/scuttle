@@ -280,7 +280,6 @@ export function startScrubSeek() {
 
 //preview scrub seek, swipe on progress bar
 import { domEls } from "../../dom/selectors.js";
-import { resetSpinner } from "../spinner/index.js";
 const { progBarEl } = domEls;
 
 export function inputScrubSeek() {
