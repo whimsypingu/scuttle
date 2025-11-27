@@ -23,6 +23,14 @@ export function hideSpinner() {
 }
 
 
+// reset spinner visibility to be hidden when reloaded. 
+// may not be accurate still but removes the problem of frontend glitching and showing spinning forever on refocus
+export function resetSpinner() {
+    loadingCounter = 0;
+    updateSpinnerVisibility();
+}
+
+
 
 function updateSpinnerVisibility() {
     if (loadingCounter > 0) {

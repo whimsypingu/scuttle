@@ -35,6 +35,8 @@ import {
 
 import { renderQueue } from "../queue/index.js";
 
+import { resetSpinner } from "../spinner/index.js";
+
 import { logDebug } from "../../utils/debug.js";
 
 import { QueueStore } from "../../cache/QueueStore.js";
@@ -242,6 +244,8 @@ export async function onRefocus() {
         
         renderQueue();
         updatePlayPauseButtonDisplay(false);
+
+        resetSpinner();
     }
 }
 
@@ -276,6 +280,7 @@ export function startScrubSeek() {
 
 //preview scrub seek, swipe on progress bar
 import { domEls } from "../../dom/selectors.js";
+import { resetSpinner } from "../spinner/index.js";
 const { progBarEl } = domEls;
 
 export function inputScrubSeek() {
