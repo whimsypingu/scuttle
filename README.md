@@ -181,6 +181,8 @@ Scuttle is still in active development. Here are some planned features and impro
 
 These are not guaranteed but they reflect the current development priorities and ideas for future releases.
 
+Current work (January 2026) on improved search functionality is being done at [this Google Colab notebook](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing). 
+
 
 ## License
 This project is licensed under the [MIT License](./LICENSE).
