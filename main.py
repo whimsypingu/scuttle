@@ -16,7 +16,6 @@ import os
 import time
 import argparse
 from datetime import datetime, timedelta
-from queue import Empty
 
 from boot.utils.misc import IS_WINDOWS, update_env
 
@@ -242,6 +241,11 @@ def main():
         #cleanup keep-awake process
         allow_sleep(keep_awake_proc, verbose=verbose)
         log("💤 System allowed to sleep again.")
+
+#one time register external SIGTERM shutdown handler
+import signal
+from boot.utils import shutdown_handler
+signal.signal(signal.SIGTERM, shutdown_handler)
 
 if __name__ == "__main__":
     main()

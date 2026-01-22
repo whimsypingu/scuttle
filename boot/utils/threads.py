@@ -1,6 +1,11 @@
+import signal
+import sys
 from queue import Empty, Queue
 import subprocess
 from threading import Thread
+
+def shutdown_handler(signum, frame):
+    raise KeyboardInterrupt
 
 def terminate_process(proc, name="", verbose=False):
     """

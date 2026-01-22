@@ -1,1 +1,1 @@
-from .threads import terminate_process, drain_output, drain_queue
+from .threads import shutdown_handler, terminate_process, drain_output, drain_queue
