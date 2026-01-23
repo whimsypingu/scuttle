@@ -15,6 +15,7 @@ What it does:
 import os
 import time
 import argparse
+import threading
 from datetime import datetime, timedelta
 
 from boot.utils.misc import IS_WINDOWS, update_env
@@ -105,7 +106,7 @@ def main():
     from dotenv import load_dotenv
 
     from boot.awake import prevent_sleep, allow_sleep
-    from boot.utils import terminate_process, drain_queue
+    from boot.utils import start_control_server, terminate_process, drain_queue
 
     from boot.notify import post_webhook_json
     from boot.uvicorn import start_uvicorn, wait_for_uvicorn
@@ -153,10 +154,14 @@ def main():
     IDLE_TIMEOUT = timedelta(hours=3) #restart timeout
     POLL_INTERVAL = 60 #seconds
 
+    shutdown_event = threading.Event() #for shutting down safely
+    control_port = start_control_server(shutdown_event=shutdown_event, port=50067)
+    log(f"CONTROL_PORT={control_port}")
+
     log("========================\n🚀 Scuttle Booting Up!", send_webhook=send_webhook)
 
     try:
-        while True:
+        while not shutdown_event.is_set():
             #------------------------------- Start server -------------------------------#
             log("🚀 Starting Uvicorn server...")
             server_proc, server_queue = start_uvicorn(verbose=verbose)
@@ -181,7 +186,7 @@ def main():
 
         
             #------------------------------- Monitor loop -------------------------------#
-            while True:
+            while not shutdown_event.is_set():
                 #read server logs non-blockingly
                 lines = drain_queue(server_queue)
                 if lines:
@@ -213,17 +218,19 @@ def main():
                     continue
                 
 
-                time.sleep(POLL_INTERVAL)
+                shutdown_event.wait(timeout=POLL_INTERVAL)
+                #time.sleep(POLL_INTERVAL)
 
 
             #------------------------------- Cleanup before restart -------------------------------#
             terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
             terminate_process(server_proc, "Server", verbose=verbose)
 
-            num_restarts += 1
-            last_activity = datetime.now()
+            if not shutdown_event.is_set():
+                num_restarts += 1
+                last_activity = datetime.now()
 
-            log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=send_webhook)
+                log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=send_webhook)
     
     except KeyboardInterrupt:
 
@@ -231,6 +238,7 @@ def main():
         terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
         terminate_process(server_proc, "Server", verbose=verbose)
 
+        shutdown_event.set()
         log("\n⏹ KeyboardInterrupt received, shutting down Scuttle...", send_webhook=send_webhook)
      
     finally:
@@ -240,12 +248,7 @@ def main():
 
         #cleanup keep-awake process
         allow_sleep(keep_awake_proc, verbose=verbose)
-        log("💤 System allowed to sleep again.")
-
-#one time register external SIGTERM shutdown handler
-import signal
-from boot.utils import shutdown_handler
-signal.signal(signal.SIGTERM, shutdown_handler)
+        log("💤 System allowed to sleep again.", send_webhook=send_webhook)
 
 if __name__ == "__main__":
     main()

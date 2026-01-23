@@ -1,11 +1,38 @@
-import signal
-import sys
 from queue import Empty, Queue
 import subprocess
 from threading import Thread
+import socket
 
-def shutdown_handler(signum, frame):
-    raise KeyboardInterrupt
+def start_control_server(shutdown_event, port=0):
+    """
+    Listens for a stop command, from a Rust GUI.
+    
+    Parameters
+        port: Port number on localhost
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("127.0.0.1", port))
+    sock.listen(1)
+
+    bound_port = sock.getsockname()[1]
+
+    def server():
+        while not shutdown_event.is_set():
+            try:
+                conn, _ = sock.accept()
+                msg = conn.recv(1024).decode().strip()
+                conn.close()
+
+                if msg == "STOP":
+                    shutdown_event.set()
+            except OSError:
+                break
+    
+        sock.close()
+    
+    Thread(target=server, daemon=True).start()
+    return bound_port
+
 
 def terminate_process(proc, name="", verbose=False):
     """
