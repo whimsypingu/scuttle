@@ -1,25 +1,39 @@
 use eframe::egui;
 use std::sync::{Arc, Mutex};
+use std::process::Child;
+use std::net::TcpStream;
 
 use crate::server;
 
-pub struct MyApp {
-    pub server_running: bool,
-    pub logs: Arc<Mutex<Vec<String>>>,
-    pub control_port: Option<u16>,
+pub struct ScuttleGUI {
+    //these shouldn't change during program execution
+    pub control_port: u16, //declared as an ephemeral port once at start
+    pub logs: Arc<Mutex<Vec<String>>>, //all logs for the rust gui
+
+    //these can change as the program executes
+    pub server_running: bool, 
+    pub child: Option<Child>, //hold this reference for force kills if needed?
+    pub control_stream: Option<TcpStream>,
 }
 
-impl Default for MyApp {
+
+impl Default for ScuttleGUI {
     fn default() -> Self {
+        let port = server::bind_control_port()
+            .expect("Failed to bind control port");
+
         Self {
-            server_running: false,
+            control_port: port,
             logs: Arc::new(Mutex::new(Vec::new())),
-            control_port: Some(50067),
+
+            child: None,
+            control_stream: None,
+            server_running: false,
         }
     }
 }
 
-impl eframe::App for MyApp {
+impl eframe::App for ScuttleGUI {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("header_panel").show(ctx, |ui| {
             //status
@@ -66,5 +80,12 @@ impl eframe::App for MyApp {
 
         // Smooth UI refresh
         ctx.request_repaint();
+    }
+
+    //safe thread exit on program close without turning off the server
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        if self.server_running {
+            server::stop(self);
+        }
     }
 }

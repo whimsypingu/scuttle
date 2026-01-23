@@ -72,6 +72,14 @@ def main():
             "  - Install ffmpeg dependency into venv"
         )
     )
+    parser.add_argument(
+        "-p", "--control-port",
+        type=int,
+        metavar="PORT",
+        help=(
+            "(Internal) Port to connect to Rust GUI."
+        )
+    )
     args = parser.parse_args()
 
     #parse the arguments and do setup
@@ -101,12 +109,11 @@ def main():
         print("\nThen re-run this script (python main.py) to start Scuttle.")
         return
 
-
     #------------------------------- Begin main code -------------------------------#
     from dotenv import load_dotenv
 
     from boot.awake import prevent_sleep, allow_sleep
-    from boot.utils import start_control_server, terminate_process, drain_queue
+    from boot.utils import wait_for_stop_command, terminate_process, drain_queue
 
     from boot.notify import post_webhook_json
     from boot.uvicorn import start_uvicorn, wait_for_uvicorn
@@ -143,7 +150,6 @@ def main():
         if send_webhook:
             post_webhook_json(DISCORD_WEBHOOK_URL, {"content": message})
 
-
     #------------------------------- Keep system awake -------------------------------#
     load_dotenv(override=True) #prepare .env variables
     keep_awake_proc = prevent_sleep(verbose=verbose)
@@ -154,9 +160,12 @@ def main():
     IDLE_TIMEOUT = timedelta(hours=3) #restart timeout
     POLL_INTERVAL = 60 #seconds
 
+    #shutting down from Rust GUI control server
     shutdown_event = threading.Event() #for shutting down safely
-    control_port = start_control_server(shutdown_event=shutdown_event, port=50067)
-    log(f"CONTROL_PORT={control_port}")
+    if args.control_port is not None:
+        wait_for_stop_command(shutdown_event=shutdown_event, control_port=args.control_port)
+
+    log(f"CONTROL_PORT={args.control_port}")
 
     log("========================\n🚀 Scuttle Booting Up!", send_webhook=send_webhook)
 

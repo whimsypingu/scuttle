@@ -1,1 +1,1 @@
-from .threads import start_control_server, terminate_process, drain_output, drain_queue
+from .threads import wait_for_stop_command, terminate_process, drain_output, drain_queue

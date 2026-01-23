@@ -1,26 +1,56 @@
 use std::process::{Command, Stdio};
 use std::thread;
 use std::io::{BufRead, BufReader, Write};
-use std::net::TcpStream;
-use std::time::Duration;
+use std::net::{TcpStream, TcpListener};
+use std::sync::OnceLock;
 
-use crate::app::MyApp;
+use crate::app::ScuttleGUI;
 
-pub fn start(app: &mut MyApp) {
+//singleton for rust gui tcp port
+static CONTROL_LISTENER: OnceLock<TcpListener> = OnceLock::new();
+
+pub fn bind_control_port() -> std::io::Result<u16> {
+    let listener = TcpListener::bind("127.0.0.1:0")?;
+    let port = listener.local_addr()?.port();
+
+    CONTROL_LISTENER.set(listener).map_err(|_| std::io::Error::new(
+        std::io::ErrorKind::AlreadyExists,
+        "CONTROL_LISTENER already bound",
+    ))?;
+
+    Ok(port)
+}
+
+fn accept_control_connection() -> std::io::Result<TcpStream> {
+    let listener = CONTROL_LISTENER.get().unwrap();
+    let (stream, _) = listener.accept()?; //blocking accept
+    
+    Ok(stream)
+}
+
+pub fn start(app: &mut ScuttleGUI) {
     let project_root = std::env::current_dir()
         .unwrap()
         .parent()
         .unwrap()
         .to_path_buf(); //points to scuttle/ root directory
-    
+
+    let port = app.control_port;
+
     let mut child = Command::new("python")
         .arg("-u")
         .arg("main.py")
+        .arg("--control-port")
+        .arg(port.to_string())
         .current_dir(&project_root)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
         .expect("Failed to start main script");
+
+    //blocking accept
+    let control_stream = accept_control_connection()
+        .expect("Failed to accept control connection");
 
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
@@ -43,27 +73,21 @@ pub fn start(app: &mut MyApp) {
         }
     });
 
-    drop(child);
-
-    app.control_port = Some(50067);
+    app.child = Some(child);
+    app.control_stream = Some(control_stream);
     app.server_running = true;
+
     app.logs.lock().unwrap().push("-- Server started".into());
 }
 
-
-fn send_shutdown_command(port: u16) -> std::io::Result<()> {
-    let mut stream = TcpStream::connect(("127.0.0.1", port))?;
-    stream.set_write_timeout(Some(Duration::from_secs(1)))?;
-    stream.write_all(b"STOP\n")?;
-    Ok(())
-}
-
-pub fn stop(app: &mut MyApp) {
-    if let Some(port) = app.control_port {
-        let _ = send_shutdown_command(port); //ignore result, python logs it
+pub fn stop(app: &mut ScuttleGUI) {
+    if let Some(stream) = &mut app.control_stream {
+        let _ = stream.write_all(b"STOP\n");
     }
 
-    app.control_port = None;
+    app.child = None;
+    app.control_stream = None;
     app.server_running = false;
+
     app.logs.lock().unwrap().push("-- Server stopped".into());
 }

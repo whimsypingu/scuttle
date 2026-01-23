@@ -35,7 +35,7 @@ fn main() -> eframe::Result<()> {
         Box::new(|_cc| {
             //cc.egui_ctx.set_visuals(eframe::egui::Visuals::dark());
 
-            Box::new(app::MyApp::default()) //no semicolon here
+            Box::new(app::ScuttleGUI::default()) //no semicolon here
         }),
     )
 }

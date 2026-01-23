@@ -3,35 +3,31 @@ import subprocess
 from threading import Thread
 import socket
 
-def start_control_server(shutdown_event, port=0):
+def wait_for_stop_command(shutdown_event, control_port=0, verbose=False):
     """
     Listens for a stop command, from a Rust GUI.
     
     Parameters
-        port: Port number on localhost
+        shutdown_event: Event
+        control_port: Port number on localhost
+        verbose: Logs
     """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(("127.0.0.1", port))
-    sock.listen(1)
+    def listener():
+        try:
+            sock = socket.create_connection(("127.0.0.1", control_port))
+            file = sock.makefile("r")
 
-    bound_port = sock.getsockname()[1]
-
-    def server():
-        while not shutdown_event.is_set():
-            try:
-                conn, _ = sock.accept()
-                msg = conn.recv(1024).decode().strip()
-                conn.close()
-
-                if msg == "STOP":
+            for line in file:
+                if line.strip() == "STOP":
                     shutdown_event.set()
-            except OSError:
-                break
-    
-        sock.close()
-    
-    Thread(target=server, daemon=True).start()
-    return bound_port
+                    break
+            
+            sock.close()
+        except Exception as e:
+            print(f"[WARN] Control connection failed: {e}")
+
+    t = Thread(target=listener, daemon=True)
+    t.start()
 
 
 def terminate_process(proc, name="", verbose=False):
