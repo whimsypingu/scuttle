@@ -1,0 +1,14 @@
+#rust source files
+*.rs text eol=lf
+
+#scripts
+*.py text eol=lf
+*.sh text eol=lf
+
+#configs
+*.toml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+#windows
+*.bat text eol=crlf
