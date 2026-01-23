@@ -67,7 +67,6 @@ pub fn start(app: &mut ScuttleGUI) {
         .expect("Failed to accept control connection");
 
     let stdout = child.stdout.take().unwrap();
-    //let stderr = child.stderr.take().unwrap();
 
     // Read stdout
     let logs = app.logs.clone(); //have to clone the <Arc<Mutex>> because &app is not threadsafe
@@ -77,15 +76,6 @@ pub fn start(app: &mut ScuttleGUI) {
             append_log_threadsafe(&logs, line)
         }
     });
-
-    // // Read stderr
-    // let logs_err = app.logs.clone();
-    // thread::spawn(move || {
-    //     let reader = BufReader::new(stderr);
-    //     for line in reader.lines().flatten() {
-    //         logs_err.lock().unwrap().push(format!("ERR: {}", line));
-    //     }
-    // });
 
     app.mark_server_started(child, control_stream);
 }
