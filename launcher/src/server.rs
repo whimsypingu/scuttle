@@ -3,11 +3,17 @@ use std::thread;
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpStream, TcpListener};
 use std::sync::OnceLock;
+use std::sync::{Arc, Mutex};
+use std::collections::VecDeque;
+
 
 use crate::app::ScuttleGUI;
 
 //singleton for rust gui tcp port
 static CONTROL_LISTENER: OnceLock<TcpListener> = OnceLock::new();
+
+//how many logs to allow
+const MAX_LOG_LINES: usize = 100;
 
 pub fn bind_control_port() -> std::io::Result<u16> {
     let listener = TcpListener::bind("127.0.0.1:0")?;
@@ -26,6 +32,14 @@ fn accept_control_connection() -> std::io::Result<TcpStream> {
     let (stream, _) = listener.accept()?; //blocking accept
     
     Ok(stream)
+}
+
+pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into<String>) {
+    let mut logs = logs.lock().unwrap();
+    logs.push_back(msg.into());
+    if logs.len() > MAX_LOG_LINES {
+        logs.pop_front();
+    }
 }
 
 pub fn start(app: &mut ScuttleGUI) {
@@ -53,31 +67,27 @@ pub fn start(app: &mut ScuttleGUI) {
         .expect("Failed to accept control connection");
 
     let stdout = child.stdout.take().unwrap();
-    let stderr = child.stderr.take().unwrap();
+    //let stderr = child.stderr.take().unwrap();
 
     // Read stdout
-    let logs = app.logs.clone();
+    let logs = app.logs.clone(); //have to clone the <Arc<Mutex>> because &app is not threadsafe
     thread::spawn(move || {
         let reader = BufReader::new(stdout);
         for line in reader.lines().flatten() {
-            logs.lock().unwrap().push(line);
+            append_log_threadsafe(&logs, line)
         }
     });
 
-    // Read stderr
-    let logs_err = app.logs.clone();
-    thread::spawn(move || {
-        let reader = BufReader::new(stderr);
-        for line in reader.lines().flatten() {
-            logs_err.lock().unwrap().push(format!("ERR: {}", line));
-        }
-    });
+    // // Read stderr
+    // let logs_err = app.logs.clone();
+    // thread::spawn(move || {
+    //     let reader = BufReader::new(stderr);
+    //     for line in reader.lines().flatten() {
+    //         logs_err.lock().unwrap().push(format!("ERR: {}", line));
+    //     }
+    // });
 
-    app.child = Some(child);
-    app.control_stream = Some(control_stream);
-    app.server_running = true;
-
-    app.logs.lock().unwrap().push("-- Server started".into());
+    app.mark_server_started(child, control_stream);
 }
 
 pub fn stop(app: &mut ScuttleGUI) {
@@ -85,9 +95,5 @@ pub fn stop(app: &mut ScuttleGUI) {
         let _ = stream.write_all(b"STOP\n");
     }
 
-    app.child = None;
-    app.control_stream = None;
-    app.server_running = false;
-
-    app.logs.lock().unwrap().push("-- Server stopped".into());
+    app.mark_server_stopped();
 }
