@@ -57,7 +57,7 @@ impl ScuttleGUI {
         self.control_stream = Some(stream);
         self.server_running = true;
 
-        self.append_log("[INFO] Server started");
+        //self.append_log("[INFO] Server started");
     }
 
     /// Marks the backend server as stopped, clearing the process handle,
@@ -67,7 +67,7 @@ impl ScuttleGUI {
         self.control_stream = None;
         self.server_running = false;
 
-        self.append_log("[INFO] Server stopped");
+        //self.append_log("[INFO] Server stopped");
     }
 }
 

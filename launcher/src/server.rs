@@ -1,11 +1,12 @@
 use std::process::{Command, Stdio};
 use std::thread;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader};
 use std::net::{TcpStream, TcpListener};
 use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
 use std::collections::VecDeque;
-
+use std::io::Write;
+use chrono::Local;
 
 use crate::app::ScuttleGUI;
 
@@ -53,8 +54,12 @@ fn accept_control_connection() -> std::io::Result<TcpStream> {
 /// - `logs`: Arc<Mutex<VecDeque<String>>> - shared thread-safe log storage
 /// - `msg`: Message string to append
 pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into<String>) {
+    let now = Local::now();
+    let timestamped_msg = format!("[{}] {}", now.format("%Y-%m-%d %H:%M:%S"), msg.into());
+
     let mut logs = logs.lock().unwrap();
-    logs.push_back(msg.into());
+    logs.push_back(timestamped_msg);
+
     if logs.len() > MAX_LOG_LINES {
         logs.pop_front();
     }

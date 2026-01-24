@@ -165,8 +165,6 @@ def main():
     if args.control_port is not None:
         wait_for_stop_command(shutdown_event=shutdown_event, control_port=args.control_port)
 
-    log(f"CONTROL_PORT={args.control_port}")
-
     log("========================\n🚀 Scuttle Booting Up!", send_webhook=send_webhook)
 
     try:
