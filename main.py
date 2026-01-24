@@ -101,12 +101,16 @@ def main():
         install_ffmpeg(verbose=verbose)
 
         print("\n✅ Environment setup complete.")
+
+        #this is for installation through CLI
+        '''
         print("👉 To activate the virtual environment, run:\n")
         if IS_WINDOWS:
             print(r"    venv\Scripts\activate")
         else:
             print("    source venv/bin/activate")
         print("\nThen re-run this script (python main.py) to start Scuttle.")
+        '''
         return
 
     #------------------------------- Begin main code -------------------------------#

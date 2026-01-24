@@ -65,6 +65,23 @@ pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into
     }
 }
 
+fn run_setup(app: &mut ScuttleGUI) -> std::io::Result<()> {
+    let status = Command::new("python") //system python
+        .current_dir(&app.root_dir)
+        .arg("main.py")
+        .arg("--setup")
+        .status()?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Setup failed",
+        ))
+    }
+}
+
 /// Starts the Python backend script as a child process and sets up
 /// the control communication channel and stdout logging.
 ///
@@ -72,24 +89,45 @@ pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into
 /// - `app`: mutable reference to `ScuttleGUI`, used to store
 ///          the child process handle and TCP stream.
 pub fn start(app: &mut ScuttleGUI) {
-    let project_root = std::env::current_dir()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .to_path_buf(); //points to scuttle/ root directory
+    //append_log_threadsafe(&app.logs.clone(), format!("root_dir: {:?}", &app.root_dir)); //debugging
+    append_log_threadsafe(&app.logs.clone(), format!("webhook_url: {:?}", app.webhook_url)); //debugging
+    append_log_threadsafe(&app.logs.clone(), format!("webhook_dirty: {:?}", app.webhook_dirty)); //debugging
 
-    let port = app.control_port;
+    let venv_dir = app.root_dir.join("venv");
 
-    let mut child = Command::new("python")
+    if !venv_dir.exists() {
+        if let Err(_) = run_setup(app) {
+            return; //abort startup if setup fails
+        }
+    }
+
+    //determine venv/ python
+    let python = app
+        .root_dir
+        .join("venv")
+        .join("Scripts")
+        .join("python.exe");
+
+    let mut cmd = Command::new(python);
+    cmd.current_dir(&app.root_dir)
         .arg("-u")
-        .arg("main.py")
-        .arg("--control-port")
-        .arg(port.to_string())
-        .current_dir(&project_root)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("Failed to start main script");
+        .arg("main.py");
+
+    //gui communication channel
+    let port = app.control_port;
+    cmd.arg("--control-port")
+        .arg(port.to_string());
+
+    //new webhook settings
+    if app.webhook_dirty {
+        app.webhook_dirty = false;
+        cmd.arg("--set-webhook")
+            .arg(&app.webhook_url);        
+    }
+
+    //pipe output
+    cmd.stdout(Stdio::piped());
+    let mut child = cmd.spawn().expect("Failed to start main script");
 
     //blocking accept
     let control_stream = accept_control_connection()
