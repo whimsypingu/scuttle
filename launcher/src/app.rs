@@ -24,14 +24,6 @@ pub struct ScuttleGUI {
 }
 
 impl ScuttleGUI {
-    /// Append a log message in a thread-safe manner.
-    ///
-    /// # Parameters
-    /// - `msg`: The log message to append.
-    pub fn append_log(&self, msg: impl Into<String>) {
-        server::append_log_threadsafe(&self.logs, msg);
-    }
-
     /// Returns a snapshot of the current logs.
     /// Useful for rendering the GUI without holding the lock too long.
     ///
@@ -56,8 +48,6 @@ impl ScuttleGUI {
         self.child = Some(child);
         self.control_stream = Some(stream);
         self.server_running = true;
-
-        //self.append_log("[INFO] Server started");
     }
 
     /// Marks the backend server as stopped, clearing the process handle,
@@ -66,8 +56,6 @@ impl ScuttleGUI {
         self.child = None;
         self.control_stream = None;
         self.server_running = false;
-
-        //self.append_log("[INFO] Server stopped");
     }
 }
 
