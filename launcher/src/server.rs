@@ -9,12 +9,18 @@ use std::collections::VecDeque;
 
 use crate::app::ScuttleGUI;
 
-//singleton for rust gui tcp port
+/// singleton for rust gui tcp port
 static CONTROL_LISTENER: OnceLock<TcpListener> = OnceLock::new();
 
-//how many logs to allow
+/// how many logs to allow
 const MAX_LOG_LINES: usize = 100;
 
+/// Binds a TCP listener to a free port on localhost (127.0.0.1)
+/// and stores it in the `CONTROL_LISTENER` singleton.
+///
+/// # Returns
+/// - `Ok(port)` with the allocated port number if binding succeeds.
+/// - `Err` if binding fails or the listener is already bound.
 pub fn bind_control_port() -> std::io::Result<u16> {
     let listener = TcpListener::bind("127.0.0.1:0")?;
     let port = listener.local_addr()?.port();
@@ -27,6 +33,12 @@ pub fn bind_control_port() -> std::io::Result<u16> {
     Ok(port)
 }
 
+/// Accepts an incoming TCP connection on the `CONTROL_LISTENER`.
+/// This is a blocking call until a client connects.
+///
+/// # Returns
+/// - `Ok(TcpStream)` representing the connected client.
+/// - `Err` if accepting the connection fails.
 fn accept_control_connection() -> std::io::Result<TcpStream> {
     let listener = CONTROL_LISTENER.get().unwrap();
     let (stream, _) = listener.accept()?; //blocking accept
@@ -34,6 +46,12 @@ fn accept_control_connection() -> std::io::Result<TcpStream> {
     Ok(stream)
 }
 
+/// Appends a log message to a thread-safe queue, ensuring
+/// the number of stored logs does not exceed `MAX_LOG_LINES`.
+///
+/// # Parameters
+/// - `logs`: Arc<Mutex<VecDeque<String>>> - shared thread-safe log storage
+/// - `msg`: Message string to append
 pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into<String>) {
     let mut logs = logs.lock().unwrap();
     logs.push_back(msg.into());
@@ -42,6 +60,12 @@ pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into
     }
 }
 
+/// Starts the Python backend script as a child process and sets up
+/// the control communication channel and stdout logging.
+///
+/// # Parameters
+/// - `app`: mutable reference to `ScuttleGUI`, used to store
+///          the child process handle and TCP stream.
 pub fn start(app: &mut ScuttleGUI) {
     let project_root = std::env::current_dir()
         .unwrap()
@@ -80,6 +104,11 @@ pub fn start(app: &mut ScuttleGUI) {
     app.mark_server_started(child, control_stream);
 }
 
+/// Stops the Python backend by sending a STOP command over the
+/// control TCP stream and updates GUI state.
+///
+/// # Parameters
+/// - `app`: mutable reference to `ScuttleGUI`
 pub fn stop(app: &mut ScuttleGUI) {
     if let Some(stream) = &mut app.control_stream {
         let _ = stream.write_all(b"STOP\n");

@@ -6,6 +6,12 @@ use std::collections::VecDeque;
 
 use crate::server;
 
+/// `ScuttleGUI` is the main application state for the Rust GUI
+/// that interacts with a Python backend server.
+/// 
+/// Fields are separated into:
+/// 1. **Immutable during runtime:** control port and log storage.
+/// 2. **Mutable during runtime:** server state, child process handle, control stream.
 pub struct ScuttleGUI {
     //these shouldn't change during program execution
     pub control_port: u16, //declared as an ephemeral port once at start
@@ -18,10 +24,19 @@ pub struct ScuttleGUI {
 }
 
 impl ScuttleGUI {
+    /// Append a log message in a thread-safe manner.
+    ///
+    /// # Parameters
+    /// - `msg`: The log message to append.
     pub fn append_log(&self, msg: impl Into<String>) {
         server::append_log_threadsafe(&self.logs, msg);
     }
 
+    /// Returns a snapshot of the current logs.
+    /// Useful for rendering the GUI without holding the lock too long.
+    ///
+    /// # Returns
+    /// A `VecDeque<String>` containing cloned log lines.
     pub fn snapshot_logs(&self) -> VecDeque<String> {
         self.logs
             .lock()
@@ -31,6 +46,12 @@ impl ScuttleGUI {
             .collect()
     }
 
+    /// Marks the backend server as started, storing the child process
+    /// and control stream, and updating the `server_running` flag.
+    ///
+    /// # Parameters
+    /// - `child`: Handle to the spawned Python process.
+    /// - `stream`: TCP stream for controlling the backend.
     pub fn mark_server_started(&mut self, child: Child, stream: TcpStream) {
         self.child = Some(child);
         self.control_stream = Some(stream);
@@ -39,6 +60,8 @@ impl ScuttleGUI {
         self.append_log("[INFO] Server started");
     }
 
+    /// Marks the backend server as stopped, clearing the process handle,
+    /// control stream, and updating the `server_running` flag.
     pub fn mark_server_stopped(&mut self) {
         self.child = None;
         self.control_stream = None;
@@ -50,6 +73,8 @@ impl ScuttleGUI {
 
 
 impl Default for ScuttleGUI {
+    /// Creates a default `ScuttleGUI` instance.
+    /// Binds a control port and initializes log storage.
     fn default() -> Self {
         let port = server::bind_control_port()
             .expect("Failed to bind control port");
@@ -66,6 +91,8 @@ impl Default for ScuttleGUI {
 }
 
 impl eframe::App for ScuttleGUI {
+    /// Main GUI update loop.
+    /// Handles rendering panels, buttons, and log output.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("header_panel").show(ctx, |ui| {
             //status
