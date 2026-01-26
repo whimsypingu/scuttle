@@ -19,6 +19,7 @@ pub struct ScuttleGUI {
     pub control_port: u16, //declared as an ephemeral port once at start
     pub logs: Arc<Mutex<VecDeque<String>>>, //all logs for the rust gui
     pub root_dir: PathBuf, //path to executable parent directory (main project directory)
+    pub egui_ctx: Option<egui::Context>, //used as reference to trigger a repaint
 
     //these can change as the program executes
     pub server_running: bool, 
@@ -109,6 +110,7 @@ impl Default for ScuttleGUI {
             control_port,
             logs: Arc::new(Mutex::new(VecDeque::new())),
             root_dir,
+            egui_ctx: None,
 
             child: None,
             control_stream: None,
@@ -124,6 +126,11 @@ impl eframe::App for ScuttleGUI {
     /// Main GUI update loop.
     /// Handles rendering panels, buttons, and log output.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        //capture context once
+        if self.egui_ctx.is_none() {
+            self.egui_ctx = Some(ctx.clone());
+        }
+
         egui::TopBottomPanel::top("header_panel").show(ctx, |ui| {
             //status
             ui.horizontal(|ui| {
@@ -183,7 +190,7 @@ impl eframe::App for ScuttleGUI {
         });
 
         // Smooth UI refresh
-        ctx.request_repaint();
+        //ctx.request_repaint();
     }
 
     //safe thread exit on program close without turning off the server

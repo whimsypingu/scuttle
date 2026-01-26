@@ -137,10 +137,12 @@ pub fn start(app: &mut ScuttleGUI) {
 
     // Read stdout
     let logs = app.logs.clone(); //have to clone the <Arc<Mutex>> because &app is not threadsafe
+    let ctx = app.egui_ctx.as_ref().unwrap().clone();
     thread::spawn(move || {
         let reader = BufReader::new(stdout);
         for line in reader.lines().flatten() {
-            append_log_threadsafe(&logs, line)
+            append_log_threadsafe(&logs, line);
+            ctx.request_repaint(); //trigger ui redraw
         }
     });
 
