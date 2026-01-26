@@ -8,6 +8,9 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
 
+def get_webhook_url():
+    return os.getenv("DISCORD_WEBHOOK_URL")
+
 def post_webhook_json(webhook_url=None, payload={"content": "Hello World"}, timeout=10):
     """
     Send a JSON payload to a Discord webhook URL.
@@ -22,8 +25,7 @@ def post_webhook_json(webhook_url=None, payload={"content": "Hello World"}, time
     """
     if webhook_url is None:
         try:
-            load_dotenv(override=True)
-            webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+            webhook_url = get_webhook_url()
         except:
             raise ValueError("Webhook URL not found")
 

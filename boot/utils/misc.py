@@ -55,6 +55,8 @@ def update_env(key, value):
     with ENV_FILE.open("w") as f:
         f.writelines(lines)
 
+    os.environ[key] = value
+
 
 def vprint(message, verbose=False):
     if verbose:
