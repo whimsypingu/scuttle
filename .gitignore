@@ -8,3 +8,5 @@ downloads/
 backend/data/
 frontend/assets/banner.svg
 tools/
+launcher/target/
+launcher/Cargo.lock

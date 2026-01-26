@@ -15,8 +15,8 @@ What it does:
 import os
 import time
 import argparse
+import threading
 from datetime import datetime, timedelta
-from queue import Empty
 
 from boot.utils.misc import IS_WINDOWS, update_env
 
@@ -72,6 +72,14 @@ def main():
             "  - Install ffmpeg dependency into venv"
         )
     )
+    parser.add_argument(
+        "-p", "--control-port",
+        type=int,
+        metavar="PORT",
+        help=(
+            "(Internal) Port to connect to Rust GUI."
+        )
+    )
     args = parser.parse_args()
 
     #parse the arguments and do setup
@@ -93,20 +101,23 @@ def main():
         install_ffmpeg(verbose=verbose)
 
         print("\n✅ Environment setup complete.")
+
+        #this is for installation through CLI
+        '''
         print("👉 To activate the virtual environment, run:\n")
         if IS_WINDOWS:
             print(r"    venv\Scripts\activate")
         else:
             print("    source venv/bin/activate")
         print("\nThen re-run this script (python main.py) to start Scuttle.")
+        '''
         return
-
 
     #------------------------------- Begin main code -------------------------------#
     from dotenv import load_dotenv
 
     from boot.awake import prevent_sleep, allow_sleep
-    from boot.utils import terminate_process, drain_queue
+    from boot.utils import wait_for_stop_command, terminate_process, drain_queue
 
     from boot.notify import post_webhook_json
     from boot.uvicorn import start_uvicorn, wait_for_uvicorn
@@ -143,7 +154,6 @@ def main():
         if send_webhook:
             post_webhook_json(DISCORD_WEBHOOK_URL, {"content": message})
 
-
     #------------------------------- Keep system awake -------------------------------#
     load_dotenv(override=True) #prepare .env variables
     keep_awake_proc = prevent_sleep(verbose=verbose)
@@ -154,10 +164,15 @@ def main():
     IDLE_TIMEOUT = timedelta(hours=3) #restart timeout
     POLL_INTERVAL = 60 #seconds
 
+    #shutting down from Rust GUI control server
+    shutdown_event = threading.Event() #for shutting down safely
+    if args.control_port is not None:
+        wait_for_stop_command(shutdown_event=shutdown_event, control_port=args.control_port)
+
     log("========================\n🚀 Scuttle Booting Up!", send_webhook=send_webhook)
 
     try:
-        while True:
+        while not shutdown_event.is_set():
             #------------------------------- Start server -------------------------------#
             log("🚀 Starting Uvicorn server...")
             server_proc, server_queue = start_uvicorn(verbose=verbose)
@@ -182,7 +197,7 @@ def main():
 
         
             #------------------------------- Monitor loop -------------------------------#
-            while True:
+            while not shutdown_event.is_set():
                 #read server logs non-blockingly
                 lines = drain_queue(server_queue)
                 if lines:
@@ -214,17 +229,19 @@ def main():
                     continue
                 
 
-                time.sleep(POLL_INTERVAL)
+                shutdown_event.wait(timeout=POLL_INTERVAL)
+                #time.sleep(POLL_INTERVAL)
 
 
             #------------------------------- Cleanup before restart -------------------------------#
             terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
             terminate_process(server_proc, "Server", verbose=verbose)
 
-            num_restarts += 1
-            last_activity = datetime.now()
+            if not shutdown_event.is_set():
+                num_restarts += 1
+                last_activity = datetime.now()
 
-            log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=send_webhook)
+                log(f"\n🔄 Restart cycle #{num_restarts} complete\n", send_webhook=send_webhook)
     
     except KeyboardInterrupt:
 
@@ -232,6 +249,7 @@ def main():
         terminate_process(tunnel_proc, "Tunnel", verbose=verbose)
         terminate_process(server_proc, "Server", verbose=verbose)
 
+        shutdown_event.set()
         log("\n⏹ KeyboardInterrupt received, shutting down Scuttle...", send_webhook=send_webhook)
      
     finally:
@@ -241,7 +259,7 @@ def main():
 
         #cleanup keep-awake process
         allow_sleep(keep_awake_proc, verbose=verbose)
-        log("💤 System allowed to sleep again.")
+        log("💤 System allowed to sleep again.", send_webhook=send_webhook)
 
 if __name__ == "__main__":
     main()
