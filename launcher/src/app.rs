@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::env;
 
 use crate::server;
+use crate::customui;
 
 /// `ScuttleGUI` is the main application state for the Rust GUI
 /// that interacts with a Python backend server.
@@ -129,6 +130,8 @@ impl eframe::App for ScuttleGUI {
         //capture context once
         if self.egui_ctx.is_none() {
             self.egui_ctx = Some(ctx.clone());
+
+            customui::apply_theme(ctx);
         }
 
         egui::TopBottomPanel::top("header_panel").show(ctx, |ui| {
@@ -184,7 +187,7 @@ impl eframe::App for ScuttleGUI {
                 .stick_to_bottom(true)
                 .show(ui, |ui| {
                     for log in self.snapshot_logs() {
-                        ui.label(log);
+                        customui::render_log_line(ui, &log);
                     }
                 });
         });
