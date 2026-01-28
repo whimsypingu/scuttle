@@ -119,15 +119,15 @@ def main():
     from boot.awake import prevent_sleep, allow_sleep
     from boot.utils import wait_for_stop_command, terminate_process, drain_queue
 
-    from boot.notify import post_webhook_json
+    from boot.notify import get_webhook_url, post_webhook_json
     from boot.uvicorn import start_uvicorn, wait_for_uvicorn
     from boot.tunnel.cloudflared import start_cloudflared, get_cloudflared_url
 
 
     #load in environment variables
-    load_dotenv()
+    load_dotenv(override=True)
     send_webhook = True
-    DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+    DISCORD_WEBHOOK_URL = get_webhook_url()
     if not DISCORD_WEBHOOK_URL:
         print(
             "[INFO] No Discord webhook set.\n"
@@ -155,7 +155,6 @@ def main():
             post_webhook_json(DISCORD_WEBHOOK_URL, {"content": message})
 
     #------------------------------- Keep system awake -------------------------------#
-    load_dotenv(override=True) #prepare .env variables
     keep_awake_proc = prevent_sleep(verbose=verbose)
 
     num_restarts = 0

@@ -1,9 +1,12 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use eframe::egui;
 use egui::ViewportBuilder;
 use egui::viewport::IconData;
 
 mod app;
 mod server;
+mod customui;
 
 fn load_icon() -> IconData {
     let bytes = include_bytes!("../../frontend/assets/big_favicon.png");
@@ -33,8 +36,6 @@ fn main() -> eframe::Result<()> {
         "Scuttle", 
         options,
         Box::new(|_cc| {
-            //cc.egui_ctx.set_visuals(eframe::egui::Visuals::dark());
-
             Box::new(app::ScuttleGUI::default()) //no semicolon here
         }),
     )

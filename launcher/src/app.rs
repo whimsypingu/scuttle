@@ -1,5 +1,6 @@
 use eframe::egui;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::process::Child;
 use std::net::TcpStream;
 use std::collections::VecDeque;
@@ -7,6 +8,7 @@ use std::path::PathBuf;
 use std::env;
 
 use crate::server;
+use crate::customui;
 
 /// `ScuttleGUI` is the main application state for the Rust GUI
 /// that interacts with a Python backend server.
@@ -22,11 +24,17 @@ pub struct ScuttleGUI {
     pub egui_ctx: Option<egui::Context>, //used as reference to trigger a repaint
 
     //these can change as the program executes
+    pub is_installed: Arc<AtomicBool>,
+    pub is_installing: Arc<AtomicBool>,
+
     pub server_running: bool, 
     pub child: Option<Child>, //hold this reference for force kills if needed?
     pub control_stream: Option<TcpStream>,
 
+    pub show_settings: bool,
+
     pub webhook_url: String, //current discord webhook URL
+    pub webhook_saved: String, //last applied value
     pub webhook_dirty: bool,
 }
 
@@ -59,10 +67,12 @@ impl ScuttleGUI {
     /// # Parameters
     /// - `child`: Handle to the spawned Python process.
     /// - `stream`: TCP stream for controlling the backend.
-    pub fn mark_server_started(&mut self, child: Child, stream: TcpStream) {
+    pub fn mark_server_started(&mut self, child: Child, stream: TcpStream, webhook_saved: String) {
         self.child = Some(child);
         self.control_stream = Some(stream);
         self.server_running = true;
+
+        self.webhook_saved = webhook_saved;
 
         //self.append_log("[INFO] Server started");
     }
@@ -87,24 +97,43 @@ impl Default for ScuttleGUI {
             .expect("Failed to bind control port");
 
         //determine root directory of project where .exe file should be
-        let root_dir: PathBuf = env::current_exe()
-            .expect("Failed to get executable path")
-            .parent() //launcher/
-            .expect("Exe has no parent")
-            .parent() //scuttle/
-            .expect("No root directory")
-            .parent()
-            .expect("debug")
-            .parent() //debugging
-            .expect("debug")
-            .to_path_buf();
+        let exe_path = env::current_exe().expect("Failed to get executable path");
+        let exe_dir = exe_path.parent().expect("Executable has no parent");
+
+        let root_dir = if cfg!(debug_assertions) {
+            //debug mode: climb to find project root from /launcher/target/debug/launcher.exe (4x)
+            exe_dir.parent().unwrap().parent().unwrap().parent().unwrap().to_path_buf()
+        } else {
+            //release mode: exe sitting next to /main.py
+            exe_dir.to_path_buf()
+        };
 
         //load webhook from .env if it exists
+        //frankly unreal that for whatever reason dogshit dotenvy and turbo int windows cant handle a path correclty and implode
         let env_path = root_dir.join(".env");
+        let mut webhook_url = String::new();
+
         if env_path.exists() {
-            let _ = dotenvy::from_path(&env_path); //load using std::env::set_var()
+            if let Ok(content) = std::fs::read_to_string(&env_path) {
+                //find the line that starts with our key
+                if let Some(line) = content.lines().find(|l| l.trim().starts_with("DISCORD_WEBHOOK_URL=")) {
+                    //split by '=' and take the second half
+                    if let Some((_, value)) = line.split_once('=') {
+                        //.trim() removes spaces and the \r
+                        //.trim_matches removes potential quotes if Python added them
+                        webhook_url = value.trim()
+                            .trim_matches(|c| c == '"' || c == '\'')
+                            .to_string();
+                    }
+                }
+            }
         }
-        let webhook_url = env::var("DISCORD_WEBHOOK_URL").unwrap_or_default();
+        if webhook_url.is_empty() {
+            webhook_url = std::env::var("DISCORD_WEBHOOK_URL").unwrap_or_default();
+        }
+
+        //shows settings by default only if webhook url is blank
+        let show_settings = webhook_url.trim().is_empty();
 
         Self {
             control_port,
@@ -112,10 +141,16 @@ impl Default for ScuttleGUI {
             root_dir,
             egui_ctx: None,
 
+            is_installed: Arc::new(AtomicBool::new(false)),
+            is_installing: Arc::new(AtomicBool::new(false)),
+
             child: None,
             control_stream: None,
             server_running: false,
 
+            show_settings,
+
+            webhook_saved: webhook_url.clone(),
             webhook_url,
             webhook_dirty: false,
         }
@@ -129,64 +164,197 @@ impl eframe::App for ScuttleGUI {
         //capture context once
         if self.egui_ctx.is_none() {
             self.egui_ctx = Some(ctx.clone());
+
+            customui::apply_theme(ctx);
+
+            //setup
+            server::setup_exists(self); //simple setup check via /venv/ existence, consider tmp file
+            if !self.is_installed.load(Ordering::SeqCst) {
+                server::run_setup(self);
+            }
         }
 
-        egui::TopBottomPanel::top("header_panel").show(ctx, |ui| {
-            //status
-            ui.horizontal(|ui| {
-                let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
+        egui::TopBottomPanel::top("header_panel")
+            .frame(egui::Frame::none()
+                .inner_margin(egui::Margin::symmetric(20.0, 14.0))
+                .fill(egui::Color32::from_rgb(210, 210, 210))
+            ).show(ctx, |ui| {
+                ui.add_space(6.0);
 
-                let button = ui.add_sized(
-                    [120.0, 32.0],
-                    egui::Button::new(button_label),
-                );
+                //server status
+                ui.horizontal(|ui| {
 
-                if button.clicked() {
-                    if self.server_running {
-                        server::stop(self);
-                    } else {
-                        server::start(self);
-                    }
-                }
-            });
+                    ui.add_enabled_ui(self.is_installed.load(Ordering::SeqCst), |ui| {
+                        ui.scope(|ui| {
+                            customui::apply_start_stop_button(ui.style_mut());
 
-            ui.add_space(4.0); //spacing to the bottom of the header
-        });
+                            let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
+        
+                            let button = ui.add_sized(
+                                [120.0, 32.0],
+                                egui::Button::new(button_label),
+                            ).on_hover_cursor(egui::CursorIcon::PointingHand);
 
-        egui::TopBottomPanel::bottom("footer_panel").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.label("Bottom text here");
-            });
-        });
+                            if button.clicked() {
+                                if self.server_running { server::stop(self); } 
+                                else { server::start(self); }
+                            }
+                        });
+                    });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            //webhook area
-            ui.add_space(8.0);
-            ui.horizontal(|ui| {
-                ui.label("Webhook:");
+                    // ui.scope(|ui| {
+                    //     customui::apply_start_stop_button(ui.style_mut());
 
-                let webhook_input = ui.add(
-                    egui::TextEdit::singleline(&mut self.webhook_url)
-                        .hint_text("https://discord.com/api/webhooks/...")
-                        .desired_width(400.0),
-                );
+                    //     let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
+    
+                    //     let button = ui.add_sized(
+                    //         [120.0, 32.0],
+                    //         egui::Button::new(button_label),
+                    //     ).on_hover_cursor(egui::CursorIcon::PointingHand);
 
-                //mark dirty if user changed it
-                if webhook_input.changed() {
-                    self.webhook_dirty = true;
-                }
-            });
+                    //     if button.clicked() {
+                    //         if self.server_running { server::stop(self); } 
+                    //         else { server::start(self); }
+                    //     }
+                    // });
 
-            //logs
-            ui.add_space(8.0);
-            egui::ScrollArea::vertical()
-                .auto_shrink([false; 2])
-                .stick_to_bottom(true)
-                .show(ui, |ui| {
-                    for log in self.snapshot_logs() {
-                        ui.label(log);
-                    }
+                    ui.add_space(14.0);
+
+                    //settings button
+                    ui.scope(|ui| {
+                        customui::apply_settings_button(ui.style_mut());
+
+                        let settings_button = ui.add_sized(
+                            [32.0, 32.0],
+                            egui::Button::new(egui::RichText::new("⚙").size(20.0))
+                                .frame(false),
+                        ).on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                        if settings_button.clicked() {
+                            self.show_settings = !self.show_settings;
+                        }
+                    });
                 });
+
+                if self.show_settings {
+
+                    ui.add_space(14.0);
+
+                    //row for webhook url setting
+                    ui.horizontal(|ui| {
+                        let row_height = 20.0;
+
+                        //label
+                        ui.add_sized([0.0, row_height], egui::Label::new(
+                            egui::RichText::new("Webhook:").text_style(egui::TextStyle::Name("Webhook".into()))
+                        ));
+
+                        ui.add_space(6.0);
+
+                        //text field
+                        let webhook_input = ui.add_sized(
+                            [400.0, row_height],
+                            egui::TextEdit::singleline(&mut self.webhook_url)
+                                .hint_text("https://discord.com/api/webhooks/...")
+                                .font(egui::TextStyle::Name("Webhook".into()))
+                                .vertical_align(egui::Align::Center)
+                        );
+
+                        //figure out some CCursor shit to make it highlight on focus automatically for easier copy paste
+
+                        if webhook_input.changed() {
+                            self.webhook_dirty = self.webhook_url != self.webhook_saved;
+                        }
+
+                        ui.add_space(8.0);
+
+                        //revert Button
+                        ui.add_enabled_ui(self.webhook_dirty, |ui| {
+                            ui.scope(|ui| {
+                                customui::apply_settings_button(ui.style_mut());
+
+                                let revert_button = ui.add_sized(
+                                    [0.0, row_height],
+                                    egui::Button::new(egui::RichText::new("↺"))
+                                        .frame(false),
+                                ).on_hover_cursor(egui::CursorIcon::PointingHand);
+                                
+                                if revert_button.clicked() {
+                                    self.webhook_url = self.webhook_saved.clone();
+                                    self.webhook_dirty = false;
+                                }
+                            });
+                        });
+                    });
+
+                } else {
+                    ui.add_space(2.0);
+                }
+            });
+
+        egui::TopBottomPanel::bottom("footer_panel")
+            .frame(egui::Frame::none()
+                .inner_margin(egui::Margin::symmetric(20.0, 14.0))
+                .fill(egui::Color32::from_rgb(210, 210, 210))
+            )
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+
+                    //left side hyperlink
+                    let github_link = egui::Button::new(egui::RichText::new("</>"))
+                        .frame(false);
+                    
+                    if ui.add(github_link).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
+                        ui.ctx().open_url(egui::OpenUrl::new_tab("https://github.com/whimsypingu/scuttle"));
+                    }
+
+                    //Solid Status (No CPU drain)
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+
+                        let (text, color) = if self.is_installing.load(Ordering::SeqCst) {
+                            ("Installing", egui::Color32::from_rgb(245, 166, 35)) //yellow
+                        } else if !self.is_installed.load(Ordering::SeqCst) {
+                            ("Setup Required — Exit and Restart", egui::Color32::from_rgb(180, 40, 40)) //red
+                        } else if self.server_running {
+                            ("Running", egui::Color32::from_rgb(40, 180, 40)) //green                      
+                        } else {
+                            ("Offline", egui::Color32::from_rgb(180, 40, 40)) //red
+                        };
+
+                        // Allocate space for the dot
+                        let (rect, _) = ui.allocate_exact_size(egui::vec2(10.0, 10.0), egui::Sense::hover());
+                        
+                        // Draw a smooth anti-aliased circle
+                        ui.painter().circle_filled(rect.center(), 6.0, color);
+                        
+                        ui.add_space(8.0);
+                        ui.label(text);
+                    });
+                });
+            });
+
+        egui::CentralPanel::default()
+            .frame(egui::Frame::none()
+                .inner_margin(egui::Margin::symmetric(20.0, 20.0))
+                .fill(egui::Color32::from_rgb(230, 230, 230))
+            )
+            .show(ctx, |ui| {
+            
+                egui::Frame::none()
+                    .fill(egui::Color32::from_rgb(250, 250, 250))
+                    .rounding(egui::Rounding::same(6.0))
+                    .inner_margin(egui::Margin::same(8.0))
+                    .show(ui, |ui| {
+                        //logs
+                        egui::ScrollArea::vertical()
+                            .auto_shrink([false; 2])
+                            .stick_to_bottom(true)
+                            .show(ui, |ui| {
+                                for log in self.snapshot_logs() {
+                                    customui::render_log_line(ui, &log);
+                                }
+                            });
+                    });
         });
 
         // Smooth UI refresh
