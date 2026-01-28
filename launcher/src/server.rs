@@ -4,6 +4,7 @@ use std::io::{BufRead, BufReader};
 use std::net::{TcpStream, TcpListener};
 use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::VecDeque;
 use std::io::Write;
 use chrono::Local;
@@ -65,21 +66,45 @@ pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into
     }
 }
 
-fn run_setup(app: &mut ScuttleGUI) -> std::io::Result<()> {
-    let status = Command::new("python") //system python
-        .current_dir(&app.root_dir)
+pub fn setup_exists(app: &mut ScuttleGUI) {
+    let venv_dir = app.root_dir.join("venv");
+    if venv_dir.exists() {
+        app.is_installed = true;
+    } else {
+        app.is_installed = false;
+    }
+}
+
+pub fn run_setup(app: &mut ScuttleGUI) {
+    let logs = app.logs.clone();
+    let ctx = app.egui_ctx.as_ref().unwrap().clone();
+
+    app.is_installing.store(true, Ordering::SeqCst);
+    let is_installing_flag = app.is_installing.clone();
+
+    let mut cmd = Command::new("python");
+    cmd.current_dir(&app.root_dir)
         .arg("main.py")
         .arg("--setup")
-        .status()?;
+        .stdout(Stdio::piped());
 
-    if status.success() {
-        Ok(())
-    } else {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Setup failed",
-        ))
-    }
+    let mut child = match cmd.spawn() {
+        Ok(child) => child,
+        Err(e) => {
+            append_log_threadsafe(&logs, format!("Failed to launch Python: {}", e));
+            app.is_installing.store(false, Ordering::SeqCst);
+            ctx.request_repaint();
+            return;
+        }
+    };
+
+    //watcher
+    thread::spawn(move || {
+        let _ = child.wait();
+
+        is_installing_flag.store(false, Ordering::SeqCst);
+        ctx.request_repaint();
+    });
 }
 
 /// Starts the Python backend script as a child process and sets up
@@ -93,20 +118,12 @@ pub fn start(app: &mut ScuttleGUI) {
     //append_log_threadsafe(&app.logs.clone(), format!("webhook_url: {:?}", app.webhook_url)); //debugging
     //append_log_threadsafe(&app.logs.clone(), format!("webhook_dirty: {:?}", app.webhook_dirty)); //debugging
 
-    let venv_dir = app.root_dir.join("venv");
-
-    if !venv_dir.exists() {
-        if let Err(_) = run_setup(app) {
-            return; //abort startup if setup fails
-        }
-    }
-
     //determine venv/ python
-    let python = app
-        .root_dir
-        .join("venv")
-        .join("Scripts")
-        .join("python.exe");
+    let python = if cfg!(windows) {
+        app.root_dir.join("venv").join("Scripts").join("python.exe")
+    } else {
+        app.root_dir.join("venv").join("bin").join("python")
+    };
 
     let mut cmd = Command::new(python);
     cmd.current_dir(&app.root_dir)
@@ -127,18 +144,34 @@ pub fn start(app: &mut ScuttleGUI) {
     }
 
     //pipe output
+    let logs = app.logs.clone(); //have to clone the <Arc<Mutex>> because &app is not threadsafe
+    let ctx = app.egui_ctx.as_ref().unwrap().clone();
+
     cmd.stdout(Stdio::piped());
-    let mut child = cmd.spawn().expect("Failed to start main script");
+    let mut child = match cmd.spawn() {
+        Ok(child) => child,
+        Err(e) => {
+            append_log_threadsafe(&logs, format!("Failed to spawn Python: {}", e));
+            ctx.request_repaint();
+            return; //exit function early
+        }
+    };
 
     //blocking accept
     let control_stream = accept_control_connection()
         .expect("Failed to accept control connection");
 
-    let stdout = child.stdout.take().unwrap();
+    let stdout = match child.stdout.take() {
+        Some(s) => s,
+        None => {
+            append_log_threadsafe(&logs, "Failed to capture stdout".to_string());
+            ctx.request_repaint();
+            let _ = child.kill();
+            return;
+        }
+    };
 
     // Read stdout
-    let logs = app.logs.clone(); //have to clone the <Arc<Mutex>> because &app is not threadsafe
-    let ctx = app.egui_ctx.as_ref().unwrap().clone();
     thread::spawn(move || {
         let reader = BufReader::new(stdout);
         for line in reader.lines().flatten() {

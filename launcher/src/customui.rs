@@ -30,6 +30,8 @@ pub fn apply_theme(ctx: &egui::Context) {
     });
 }
 
+
+//start and stop button styling
 pub fn apply_start_stop_button(style: &mut egui::Style) {
     let visuals = &mut style.visuals;
 
@@ -50,6 +52,7 @@ pub fn apply_start_stop_button(style: &mut egui::Style) {
     visuals.widgets.active.fg_stroke = egui::Stroke::new(1.0, egui::Color32::BLACK);
 }
 
+//settings button styling
 pub fn apply_settings_button(style: &mut egui::Style) {
     let visuals = &mut style.visuals;
 

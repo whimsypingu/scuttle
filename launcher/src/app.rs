@@ -1,5 +1,6 @@
 use eframe::egui;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::process::Child;
 use std::net::TcpStream;
 use std::collections::VecDeque;
@@ -23,6 +24,9 @@ pub struct ScuttleGUI {
     pub egui_ctx: Option<egui::Context>, //used as reference to trigger a repaint
 
     //these can change as the program executes
+    pub is_installed: bool,
+    pub is_installing: Arc<AtomicBool>,
+
     pub server_running: bool, 
     pub child: Option<Child>, //hold this reference for force kills if needed?
     pub control_stream: Option<TcpStream>,
@@ -93,17 +97,28 @@ impl Default for ScuttleGUI {
             .expect("Failed to bind control port");
 
         //determine root directory of project where .exe file should be
-        let root_dir: PathBuf = env::current_exe()
-            .expect("Failed to get executable path")
-            .parent() //launcher/
-            .expect("Exe has no parent")
-            .parent() //scuttle/
-            .expect("No root directory")
-            .parent()
-            .expect("debug")
-            .parent() //debugging
-            .expect("debug")
-            .to_path_buf();
+        let exe_path = env::current_exe().expect("Failed to get executable path");
+        let exe_dir = exe_path.parent().expect("Executable has no parent");
+
+        let root_dir = if cfg!(debug_assertions) {
+            //debug mode: climb to find project root from /launcher/target/debug/launcher.exe (4x)
+            exe_dir.parent().unwrap().parent().unwrap().parent().unwrap().to_path_buf()
+        } else {
+            //release mode: exe sitting next to /main.py
+            exe_dir.to_path_buf()
+        };
+
+        // let root_dir: PathBuf = env::current_exe()
+        //     .expect("Failed to get executable path")
+        //     .parent() //launcher/
+        //     .expect("Exe has no parent")
+        //     .parent() //scuttle/
+        //     .expect("No root directory")
+        //     .parent()
+        //     .expect("debug")
+        //     .parent() //debugging
+        //     .expect("debug")
+        //     .to_path_buf();
 
         //load webhook from .env if it exists
         let env_path = root_dir.join(".env");
@@ -117,6 +132,9 @@ impl Default for ScuttleGUI {
             logs: Arc::new(Mutex::new(VecDeque::new())),
             root_dir,
             egui_ctx: None,
+
+            is_installed: false,
+            is_installing: Arc::new(AtomicBool::new(false)),
 
             child: None,
             control_stream: None,
@@ -140,6 +158,13 @@ impl eframe::App for ScuttleGUI {
             self.egui_ctx = Some(ctx.clone());
 
             customui::apply_theme(ctx);
+
+            //setup
+            server::setup_exists(self);
+            println!("DEBUG: is_installed = {}", self.is_installed);
+            if !self.is_installed {
+                server::run_setup(self);
+            }
         }
 
         egui::TopBottomPanel::top("header_panel")
@@ -152,21 +177,39 @@ impl eframe::App for ScuttleGUI {
                 //server status
                 ui.horizontal(|ui| {
 
-                    ui.scope(|ui| {
-                        customui::apply_start_stop_button(ui.style_mut());
+                    ui.add_enabled_ui(self.is_installed, |ui| {
+                        ui.scope(|ui| {
+                            customui::apply_start_stop_button(ui.style_mut());
 
-                        let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
-    
-                        let button = ui.add_sized(
-                            [120.0, 32.0],
-                            egui::Button::new(button_label),
-                        ).on_hover_cursor(egui::CursorIcon::PointingHand);
+                            let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
+        
+                            let button = ui.add_sized(
+                                [120.0, 32.0],
+                                egui::Button::new(button_label),
+                            ).on_hover_cursor(egui::CursorIcon::PointingHand);
 
-                        if button.clicked() {
-                            if self.server_running { server::stop(self); } 
-                            else { server::start(self); }
-                        }
+                            if button.clicked() {
+                                if self.server_running { server::stop(self); } 
+                                else { server::start(self); }
+                            }
+                        });
                     });
+
+                    // ui.scope(|ui| {
+                    //     customui::apply_start_stop_button(ui.style_mut());
+
+                    //     let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
+    
+                    //     let button = ui.add_sized(
+                    //         [120.0, 32.0],
+                    //         egui::Button::new(button_label),
+                    //     ).on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                    //     if button.clicked() {
+                    //         if self.server_running { server::stop(self); } 
+                    //         else { server::start(self); }
+                    //     }
+                    // });
 
                     ui.add_space(14.0);
 
