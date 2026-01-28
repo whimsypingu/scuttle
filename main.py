@@ -155,7 +155,6 @@ def main():
             post_webhook_json(DISCORD_WEBHOOK_URL, {"content": message})
 
     #------------------------------- Keep system awake -------------------------------#
-    load_dotenv(override=True) #prepare .env variables
     keep_awake_proc = prevent_sleep(verbose=verbose)
 
     num_restarts = 0
