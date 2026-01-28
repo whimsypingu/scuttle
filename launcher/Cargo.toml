@@ -6,7 +6,6 @@ edition = "2024"
 [dependencies]
 eframe = "0.27"
 chrono = "0.4"
-nix = "0.27"
 image = "0.24"
 dotenvy = "0.15"
 winapi = { version = "0.3", features = ["winuser", "windef", "wincon"] }
