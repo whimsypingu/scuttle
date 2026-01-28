@@ -142,152 +142,164 @@ impl eframe::App for ScuttleGUI {
             customui::apply_theme(ctx);
         }
 
-        egui::TopBottomPanel::top("header_panel").show(ctx, |ui| {
-            ui.add_space(6.0);
-            //status
-            ui.horizontal(|ui| {
-                let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
-
-                let button = ui.add_sized(
-                    [120.0, 32.0],
-                    egui::Button::new(button_label),
-                );
-
-                if button.clicked() {
-                    if self.server_running {
-                        server::stop(self);
-                    } else {
-                        server::start(self);
-                    }
-                }
-
-                ui.add_space(14.0);
-
-                //settings button
-                let label = egui::Label::new(egui::RichText::new("⚙").size(20.0))
-                    .sense(egui::Sense::click()); // <--- Makes the label interactable
-
-                let settings_label = ui.add(label)
-                    .on_hover_cursor(egui::CursorIcon::PointingHand); // Change the cursor
-
-                if settings_label.clicked() {
-                    self.show_settings = !self.show_settings;
-                }
-            });
-
-            if self.show_settings {
-
-            ui.add_space(10.0);
-
-            ui.horizontal(|ui| {
-                let row_height = 20.0;
-
-                // 1. Label - use the 'zero-width' trick from before
-                ui.add_sized([0.0, row_height], egui::Label::new(
-                    egui::RichText::new("Webhook:").text_style(egui::TextStyle::Name("Webhook".into()))
-                ));
-
+        egui::TopBottomPanel::top("header_panel")
+            .frame(egui::Frame::none()
+                .inner_margin(egui::Margin::symmetric(20.0, 14.0))
+                .fill(egui::Color32::from_rgb(210, 210, 210))
+            ).show(ctx, |ui| {
                 ui.add_space(6.0);
 
-                // 2. TextEdit - Use desired_width instead of a Frame
-                let webhook_input = ui.add_sized(
-                    [400.0, row_height], // Match row_height exactly
-                    egui::TextEdit::singleline(&mut self.webhook_url)
-                        .hint_text("https://discord.com/api/webhooks/...")
-                        .font(egui::TextStyle::Name("Webhook".into()))
-                );
+                //server status
+                ui.horizontal(|ui| {
 
-                if webhook_input.changed() {
-                    self.webhook_dirty = self.webhook_url != self.webhook_saved;
-                }
+                    ui.scope(|ui| {
+                        customui::apply_start_stop_button(ui.style_mut());
 
-                ui.add_space(8.0);
+                        let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
+    
+                        let button = ui.add_sized(
+                            [120.0, 32.0],
+                            egui::Button::new(button_label),
+                        ).on_hover_cursor(egui::CursorIcon::PointingHand);
 
-                // 3. Revert Button
-                ui.add_enabled_ui(self.webhook_dirty, |ui| {
-                    if ui.add_sized([60.0, row_height], egui::Button::new("Revert")).clicked() {
-                        self.webhook_url = self.webhook_saved.clone();
-                        self.webhook_dirty = false;
-                    }
+                        if button.clicked() {
+                            if self.server_running { server::stop(self); } 
+                            else { server::start(self); }
+                        }
+                    });
+
+                    ui.add_space(14.0);
+
+                    //settings button
+                    ui.scope(|ui| {
+                        customui::apply_settings_button(ui.style_mut());
+
+                        let settings_button = ui.add_sized(
+                            [32.0, 32.0],
+                            egui::Button::new(egui::RichText::new("⚙").size(20.0))
+                                .frame(false),
+                        ).on_hover_cursor(egui::CursorIcon::PointingHand);
+
+                        if settings_button.clicked() {
+                            self.show_settings = !self.show_settings;
+                        }
+                    });
                 });
-            });
 
-            // //webhook area
-            // ui.horizontal(|ui| {
-            //     let row_height = 32.0;
-            //     let inner_height = 20.0;
+                if self.show_settings {
 
-            //     ui.add_sized(
-            //         [0.0, row_height],
-            //         egui::Label::new(
-            //             egui::RichText::new("Webhook:")
-            //                 .text_style(egui::TextStyle::Name("Webhook".into())),
-            //         ),
-            //     );
+                    ui.add_space(14.0);
 
-            //     egui::Frame::none()
-            //         .inner_margin(egui::Margin {
-            //             top: (row_height - inner_height) / 2.0,
-            //             bottom: (row_height - inner_height) / 2.0,
-            //             left: 4.0,
-            //             right: 4.0,
-            //         })
-            //         .show(ui, |ui| {
-            //             let webhook_input = ui.add_sized(
-            //                 [400.0, inner_height],
-            //                 egui::TextEdit::singleline(&mut self.webhook_url)
-            //                     .hint_text("https://discord.com/api/webhooks/...")
-            //                     .font(egui::TextStyle::Name("Webhook".into())),
-            //             );
+                    //row for webhook url setting
+                    ui.horizontal(|ui| {
+                        let row_height = 20.0;
 
-            //             if webhook_input.changed() {
-            //                 self.webhook_dirty = self.webhook_url != self.webhook_saved;
-            //             }
-            //         });
+                        //label
+                        ui.add_sized([0.0, row_height], egui::Label::new(
+                            egui::RichText::new("Webhook:").text_style(egui::TextStyle::Name("Webhook".into()))
+                        ));
 
-            //     //undo changes to webhook text
-            //     let revert = ui.add_enabled(
-            //         self.webhook_dirty,
-            //         egui::Button::new(
-            //             egui::RichText::new("Revert").size(14.0)
-            //         ).min_size(egui::vec2(40.0, inner_height)),
-            //     );
+                        ui.add_space(6.0);
 
-            //     if revert.clicked() {
-            //         self.webhook_url = self.webhook_saved.clone();
-            //         self.webhook_dirty = false;
-            //     }
-            // });
+                        //text field
+                        let webhook_input = ui.add_sized(
+                            [400.0, row_height],
+                            egui::TextEdit::singleline(&mut self.webhook_url)
+                                .hint_text("https://discord.com/api/webhooks/...")
+                                .font(egui::TextStyle::Name("Webhook".into()))
+                                .vertical_align(egui::Align::Center)
+                        );
 
-            }
-            ui.add_space(6.0);
+                        //figure out some CCursor shit to make it highlight on focus automatically for easier copy paste
 
-        });
+                        if webhook_input.changed() {
+                            self.webhook_dirty = self.webhook_url != self.webhook_saved;
+                        }
 
-        egui::TopBottomPanel::bottom("footer_panel").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.label("Bottom text here");
-            });
-        });
+                        ui.add_space(8.0);
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.add_space(8.0);
+                        //revert Button
+                        ui.add_enabled_ui(self.webhook_dirty, |ui| {
+                            ui.scope(|ui| {
+                                customui::apply_settings_button(ui.style_mut());
 
-            egui::Frame::none()
-                .fill(ui.visuals().extreme_bg_color)
-                .rounding(egui::Rounding::same(6.0))
-                .inner_margin(egui::Margin::same(8.0))
-                .show(ui, |ui| {
-                    //logs
-                    egui::ScrollArea::vertical()
-                        .auto_shrink([false; 2])
-                        .stick_to_bottom(true)
-                        .show(ui, |ui| {
-                            for log in self.snapshot_logs() {
-                                customui::render_log_line(ui, &log);
-                            }
+                                let revert_button = ui.add_sized(
+                                    [0.0, row_height],
+                                    egui::Button::new(egui::RichText::new("↺"))
+                                        .frame(false),
+                                ).on_hover_cursor(egui::CursorIcon::PointingHand);
+                                
+                                if revert_button.clicked() {
+                                    self.webhook_url = self.webhook_saved.clone();
+                                    self.webhook_dirty = false;
+                                }
+                            });
                         });
+                    });
+
+                } else {
+                    ui.add_space(2.0);
+                }
+            });
+
+        egui::TopBottomPanel::bottom("footer_panel")
+            .frame(egui::Frame::none()
+                .inner_margin(egui::Margin::symmetric(20.0, 14.0))
+                .fill(egui::Color32::from_rgb(210, 210, 210))
+            )
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+
+                    //left side hyperlink
+                    let github_link = egui::Button::new(egui::RichText::new("</>"))
+                        .frame(false);
+                    
+                    if ui.add(github_link).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
+                        ui.ctx().open_url(egui::OpenUrl::new_tab("https://github.com/whimsypingu/scuttle"));
+                    }
+
+                    //Solid Status (No CPU drain)
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        let color = if self.server_running {
+                            egui::Color32::from_rgb(40, 180, 40) // Forest Green
+                        } else {
+                            egui::Color32::from_rgb(180, 40, 40) // Soft Red
+                        };
+
+                        // Allocate space for the dot
+                        let (rect, _) = ui.allocate_exact_size(egui::vec2(10.0, 10.0), egui::Sense::hover());
+                        
+                        // Draw a smooth anti-aliased circle
+                        ui.painter().circle_filled(rect.center(), 6.0, color);
+                        
+                        ui.add_space(8.0);
+                        ui.label(if self.server_running { "Running" } else { "Offline" });
+                    });
                 });
+            });
+
+        egui::CentralPanel::default()
+            .frame(egui::Frame::none()
+                .inner_margin(egui::Margin::symmetric(20.0, 20.0))
+                .fill(egui::Color32::from_rgb(230, 230, 230))
+            )
+            .show(ctx, |ui| {
+            
+                egui::Frame::none()
+                    .fill(egui::Color32::from_rgb(250, 250, 250))
+                    .rounding(egui::Rounding::same(6.0))
+                    .inner_margin(egui::Margin::same(8.0))
+                    .show(ui, |ui| {
+                        //logs
+                        egui::ScrollArea::vertical()
+                            .auto_shrink([false; 2])
+                            .stick_to_bottom(true)
+                            .show(ui, |ui| {
+                                for log in self.snapshot_logs() {
+                                    customui::render_log_line(ui, &log);
+                                }
+                            });
+                    });
         });
 
         // Smooth UI refresh
