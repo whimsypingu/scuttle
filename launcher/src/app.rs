@@ -27,7 +27,10 @@ pub struct ScuttleGUI {
     pub child: Option<Child>, //hold this reference for force kills if needed?
     pub control_stream: Option<TcpStream>,
 
+    pub show_settings: bool,
+
     pub webhook_url: String, //current discord webhook URL
+    pub webhook_saved: String, //last applied value
     pub webhook_dirty: bool,
 }
 
@@ -60,10 +63,12 @@ impl ScuttleGUI {
     /// # Parameters
     /// - `child`: Handle to the spawned Python process.
     /// - `stream`: TCP stream for controlling the backend.
-    pub fn mark_server_started(&mut self, child: Child, stream: TcpStream) {
+    pub fn mark_server_started(&mut self, child: Child, stream: TcpStream, webhook_saved: String) {
         self.child = Some(child);
         self.control_stream = Some(stream);
         self.server_running = true;
+
+        self.webhook_saved = webhook_saved;
 
         //self.append_log("[INFO] Server started");
     }
@@ -117,6 +122,9 @@ impl Default for ScuttleGUI {
             control_stream: None,
             server_running: false,
 
+            show_settings: false,
+
+            webhook_saved: webhook_url.clone(),
             webhook_url,
             webhook_dirty: false,
         }
@@ -135,6 +143,7 @@ impl eframe::App for ScuttleGUI {
         }
 
         egui::TopBottomPanel::top("header_panel").show(ctx, |ui| {
+            ui.add_space(6.0);
             //status
             ui.horizontal(|ui| {
                 let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
@@ -151,9 +160,108 @@ impl eframe::App for ScuttleGUI {
                         server::start(self);
                     }
                 }
+
+                ui.add_space(14.0);
+
+                //settings button
+                let label = egui::Label::new(egui::RichText::new("⚙").size(20.0))
+                    .sense(egui::Sense::click()); // <--- Makes the label interactable
+
+                let settings_label = ui.add(label)
+                    .on_hover_cursor(egui::CursorIcon::PointingHand); // Change the cursor
+
+                if settings_label.clicked() {
+                    self.show_settings = !self.show_settings;
+                }
             });
 
-            ui.add_space(4.0); //spacing to the bottom of the header
+            if self.show_settings {
+
+            ui.add_space(10.0);
+
+            ui.horizontal(|ui| {
+                let row_height = 20.0;
+
+                // 1. Label - use the 'zero-width' trick from before
+                ui.add_sized([0.0, row_height], egui::Label::new(
+                    egui::RichText::new("Webhook:").text_style(egui::TextStyle::Name("Webhook".into()))
+                ));
+
+                ui.add_space(6.0);
+
+                // 2. TextEdit - Use desired_width instead of a Frame
+                let webhook_input = ui.add_sized(
+                    [400.0, row_height], // Match row_height exactly
+                    egui::TextEdit::singleline(&mut self.webhook_url)
+                        .hint_text("https://discord.com/api/webhooks/...")
+                        .font(egui::TextStyle::Name("Webhook".into()))
+                );
+
+                if webhook_input.changed() {
+                    self.webhook_dirty = self.webhook_url != self.webhook_saved;
+                }
+
+                ui.add_space(8.0);
+
+                // 3. Revert Button
+                ui.add_enabled_ui(self.webhook_dirty, |ui| {
+                    if ui.add_sized([60.0, row_height], egui::Button::new("Revert")).clicked() {
+                        self.webhook_url = self.webhook_saved.clone();
+                        self.webhook_dirty = false;
+                    }
+                });
+            });
+
+            // //webhook area
+            // ui.horizontal(|ui| {
+            //     let row_height = 32.0;
+            //     let inner_height = 20.0;
+
+            //     ui.add_sized(
+            //         [0.0, row_height],
+            //         egui::Label::new(
+            //             egui::RichText::new("Webhook:")
+            //                 .text_style(egui::TextStyle::Name("Webhook".into())),
+            //         ),
+            //     );
+
+            //     egui::Frame::none()
+            //         .inner_margin(egui::Margin {
+            //             top: (row_height - inner_height) / 2.0,
+            //             bottom: (row_height - inner_height) / 2.0,
+            //             left: 4.0,
+            //             right: 4.0,
+            //         })
+            //         .show(ui, |ui| {
+            //             let webhook_input = ui.add_sized(
+            //                 [400.0, inner_height],
+            //                 egui::TextEdit::singleline(&mut self.webhook_url)
+            //                     .hint_text("https://discord.com/api/webhooks/...")
+            //                     .font(egui::TextStyle::Name("Webhook".into())),
+            //             );
+
+            //             if webhook_input.changed() {
+            //                 self.webhook_dirty = self.webhook_url != self.webhook_saved;
+            //             }
+            //         });
+
+            //     //undo changes to webhook text
+            //     let revert = ui.add_enabled(
+            //         self.webhook_dirty,
+            //         egui::Button::new(
+            //             egui::RichText::new("Revert").size(14.0)
+            //         ).min_size(egui::vec2(40.0, inner_height)),
+            //     );
+
+            //     if revert.clicked() {
+            //         self.webhook_url = self.webhook_saved.clone();
+            //         self.webhook_dirty = false;
+            //     }
+            // });
+
+            }
+            ui.add_space(6.0);
+
         });
 
         egui::TopBottomPanel::bottom("footer_panel").show(ctx, |ui| {
@@ -163,32 +271,22 @@ impl eframe::App for ScuttleGUI {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            //webhook area
             ui.add_space(8.0);
-            ui.horizontal(|ui| {
-                ui.label("Webhook:");
 
-                let webhook_input = ui.add(
-                    egui::TextEdit::singleline(&mut self.webhook_url)
-                        .hint_text("https://discord.com/api/webhooks/...")
-                        .desired_width(400.0),
-                );
-
-                //mark dirty if user changed it
-                if webhook_input.changed() {
-                    self.webhook_dirty = true;
-                }
-            });
-
-            //logs
-            ui.add_space(8.0);
-            egui::ScrollArea::vertical()
-                .auto_shrink([false; 2])
-                .stick_to_bottom(true)
+            egui::Frame::none()
+                .fill(ui.visuals().extreme_bg_color)
+                .rounding(egui::Rounding::same(6.0))
+                .inner_margin(egui::Margin::same(8.0))
                 .show(ui, |ui| {
-                    for log in self.snapshot_logs() {
-                        customui::render_log_line(ui, &log);
-                    }
+                    //logs
+                    egui::ScrollArea::vertical()
+                        .auto_shrink([false; 2])
+                        .stick_to_bottom(true)
+                        .show(ui, |ui| {
+                            for log in self.snapshot_logs() {
+                                customui::render_log_line(ui, &log);
+                            }
+                        });
                 });
         });
 

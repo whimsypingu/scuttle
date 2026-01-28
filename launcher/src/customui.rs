@@ -32,9 +32,14 @@ pub fn apply_theme(ctx: &egui::Context) {
 
     // Spacing & layout
     ctx.style_mut(|style| {
-        style.spacing.item_spacing = egui::vec2(10.0, 8.0);
+        style.spacing.item_spacing = egui::vec2(0.0, 8.0);
         style.spacing.window_margin = egui::Margin::same(12.0);
-        style.spacing.button_padding = egui::vec2(10.0, 6.0);
+        style.spacing.button_padding = egui::vec2(6.0, 0.0);
+
+        style.text_styles.insert(
+            egui::TextStyle::Name("Webhook".into()),
+            egui::FontId::new(14.0, egui::FontFamily::Proportional),
+        );
     });
 }
 

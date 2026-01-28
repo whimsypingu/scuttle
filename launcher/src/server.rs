@@ -90,8 +90,8 @@ fn run_setup(app: &mut ScuttleGUI) -> std::io::Result<()> {
 ///          the child process handle and TCP stream.
 pub fn start(app: &mut ScuttleGUI) {
     //append_log_threadsafe(&app.logs.clone(), format!("root_dir: {:?}", &app.root_dir)); //debugging
-    append_log_threadsafe(&app.logs.clone(), format!("webhook_url: {:?}", app.webhook_url)); //debugging
-    append_log_threadsafe(&app.logs.clone(), format!("webhook_dirty: {:?}", app.webhook_dirty)); //debugging
+    //append_log_threadsafe(&app.logs.clone(), format!("webhook_url: {:?}", app.webhook_url)); //debugging
+    //append_log_threadsafe(&app.logs.clone(), format!("webhook_dirty: {:?}", app.webhook_dirty)); //debugging
 
     let venv_dir = app.root_dir.join("venv");
 
@@ -119,6 +119,7 @@ pub fn start(app: &mut ScuttleGUI) {
         .arg(port.to_string());
 
     //new webhook settings
+    let save_url = app.webhook_url.clone();
     if app.webhook_dirty {
         app.webhook_dirty = false;
         cmd.arg("--set-webhook")
@@ -146,7 +147,7 @@ pub fn start(app: &mut ScuttleGUI) {
         }
     });
 
-    app.mark_server_started(child, control_stream);
+    app.mark_server_started(child, control_stream, save_url);
 }
 
 /// Stops the Python backend by sending a STOP command over the
