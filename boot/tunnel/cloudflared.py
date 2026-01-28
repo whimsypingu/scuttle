@@ -210,6 +210,7 @@ def get_cloudflared_url(stdout_queue, timeout=60, verbose=False):
 
 
 ################################################
+'''
 if __name__ == "__main__":
     import os
     from boot.utils.threads import terminate_process
@@ -237,3 +238,4 @@ if __name__ == "__main__":
         print("\nKeyboardInterrupt received, stopping cloudflared...")
         
         terminate_process(proc)
+'''
