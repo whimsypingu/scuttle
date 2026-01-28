@@ -7,5 +7,4 @@ edition = "2024"
 eframe = "0.27"
 chrono = "0.4"
 image = "0.24"
-dotenvy = "0.15"
 winapi = { version = "0.3", features = ["winuser", "windef", "wincon"] }

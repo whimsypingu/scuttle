@@ -108,24 +108,31 @@ impl Default for ScuttleGUI {
             exe_dir.to_path_buf()
         };
 
-        // let root_dir: PathBuf = env::current_exe()
-        //     .expect("Failed to get executable path")
-        //     .parent() //launcher/
-        //     .expect("Exe has no parent")
-        //     .parent() //scuttle/
-        //     .expect("No root directory")
-        //     .parent()
-        //     .expect("debug")
-        //     .parent() //debugging
-        //     .expect("debug")
-        //     .to_path_buf();
-
         //load webhook from .env if it exists
+        //frankly unreal that for whatever reason dogshit dotenvy and turbo int windows cant handle a path correclty and implode
         let env_path = root_dir.join(".env");
+        let mut webhook_url = String::new();
+
         if env_path.exists() {
-            let _ = dotenvy::from_path(&env_path); //load using std::env::set_var()
+            if let Ok(content) = std::fs::read_to_string(&env_path) {
+                //find the line that starts with our key
+                if let Some(line) = content.lines().find(|l| l.trim().starts_with("DISCORD_WEBHOOK_URL=")) {
+                    //split by '=' and take the second half
+                    if let Some((_, value)) = line.split_once('=') {
+                        //.trim() removes spaces and the \r
+                        //.trim_matches removes potential quotes if Python added them
+                        webhook_url = value.trim()
+                            .trim_matches(|c| c == '"' || c == '\'')
+                            .to_string();
+                    }
+                }
+            }
         }
-        let webhook_url = env::var("DISCORD_WEBHOOK_URL").unwrap_or_default();
+        if webhook_url.is_empty() {
+            webhook_url = std::env::var("DISCORD_WEBHOOK_URL").unwrap_or_default();
+        }
+
+        //shows settings by default only if webhook url is blank
         let show_settings = webhook_url.trim().is_empty();
 
         Self {
