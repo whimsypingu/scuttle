@@ -312,7 +312,7 @@ impl eframe::App for ScuttleGUI {
                             ("Running", egui::Color32::from_rgb(40, 180, 40)) //green                      
                         } else {
                             ("Offline", egui::Color32::from_rgb(180, 40, 40)) //red
-                        }
+                        };
 
                         // Allocate space for the dot
                         let (rect, _) = ui.allocate_exact_size(egui::vec2(10.0, 10.0), egui::Sense::hover());
