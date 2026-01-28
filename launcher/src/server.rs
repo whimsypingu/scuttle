@@ -4,7 +4,7 @@ use std::io::{BufRead, BufReader};
 use std::net::{TcpStream, TcpListener};
 use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::Ordering;
 use std::collections::VecDeque;
 use std::io::Write;
 use chrono::Local;
@@ -68,19 +68,19 @@ pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into
 
 pub fn setup_exists(app: &mut ScuttleGUI) {
     let venv_dir = app.root_dir.join("venv");
-    if venv_dir.exists() {
-        app.is_installed = true;
-    } else {
-        app.is_installed = false;
-    }
+    app.is_installed.store(venv_dir.exists(), Ordering::SeqCst); //this is a very simple implementation of checking setup
 }
 
 pub fn run_setup(app: &mut ScuttleGUI) {
     let logs = app.logs.clone();
     let ctx = app.egui_ctx.as_ref().unwrap().clone();
 
-    app.is_installing.store(true, Ordering::SeqCst);
+    //atomic bools to edit across threads
+    let is_installed_flag = app.is_installed.clone();
     let is_installing_flag = app.is_installing.clone();
+    is_installing_flag.store(true, Ordering::SeqCst);
+
+    ctx.request_repaint();
 
     let mut cmd = Command::new("python");
     cmd.current_dir(&app.root_dir)
@@ -89,7 +89,11 @@ pub fn run_setup(app: &mut ScuttleGUI) {
         .stdout(Stdio::piped());
 
     let mut child = match cmd.spawn() {
-        Ok(child) => child,
+        Ok(child) => {
+            append_log_threadsafe(&logs, "Starting setup...");
+            append_log_threadsafe(&logs, "Please don't close this window.");
+            child
+        }
         Err(e) => {
             append_log_threadsafe(&logs, format!("Failed to launch Python: {}", e));
             app.is_installing.store(false, Ordering::SeqCst);
@@ -100,7 +104,20 @@ pub fn run_setup(app: &mut ScuttleGUI) {
 
     //watcher
     thread::spawn(move || {
-        let _ = child.wait();
+        match child.wait() {
+            Ok(status) if status.success() => {
+                append_log_threadsafe(&logs, format!("Successfully installed dependencies. [{}]", status));
+                is_installed_flag.store(true, Ordering::SeqCst);
+            }
+            Ok(status) => {
+                append_log_threadsafe(&logs, format!("Failed to setup. [{}]", status));
+                is_installed_flag.store(false, Ordering::SeqCst);
+            }
+            Err(e) => {
+                append_log_threadsafe(&logs, format!("Failed to setup: {}", e));
+                is_installed_flag.store(false, Ordering::SeqCst);
+            }
+        }
 
         is_installing_flag.store(false, Ordering::SeqCst);
         ctx.request_repaint();

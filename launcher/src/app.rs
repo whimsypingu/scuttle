@@ -24,7 +24,7 @@ pub struct ScuttleGUI {
     pub egui_ctx: Option<egui::Context>, //used as reference to trigger a repaint
 
     //these can change as the program executes
-    pub is_installed: bool,
+    pub is_installed: Arc<AtomicBool>,
     pub is_installing: Arc<AtomicBool>,
 
     pub server_running: bool, 
@@ -126,6 +126,7 @@ impl Default for ScuttleGUI {
             let _ = dotenvy::from_path(&env_path); //load using std::env::set_var()
         }
         let webhook_url = env::var("DISCORD_WEBHOOK_URL").unwrap_or_default();
+        let show_settings = webhook_url.trim().is_empty();
 
         Self {
             control_port,
@@ -133,14 +134,14 @@ impl Default for ScuttleGUI {
             root_dir,
             egui_ctx: None,
 
-            is_installed: false,
+            is_installed: Arc::new(AtomicBool::new(false)),
             is_installing: Arc::new(AtomicBool::new(false)),
 
             child: None,
             control_stream: None,
             server_running: false,
 
-            show_settings: false,
+            show_settings,
 
             webhook_saved: webhook_url.clone(),
             webhook_url,
@@ -160,9 +161,8 @@ impl eframe::App for ScuttleGUI {
             customui::apply_theme(ctx);
 
             //setup
-            server::setup_exists(self);
-            println!("DEBUG: is_installed = {}", self.is_installed);
-            if !self.is_installed {
+            server::setup_exists(self); //simple setup check via /venv/ existence, consider tmp file
+            if !self.is_installed.load(Ordering::SeqCst) {
                 server::run_setup(self);
             }
         }
@@ -177,7 +177,7 @@ impl eframe::App for ScuttleGUI {
                 //server status
                 ui.horizontal(|ui| {
 
-                    ui.add_enabled_ui(self.is_installed, |ui| {
+                    ui.add_enabled_ui(self.is_installed.load(Ordering::SeqCst), |ui| {
                         ui.scope(|ui| {
                             customui::apply_start_stop_button(ui.style_mut());
 
@@ -303,11 +303,16 @@ impl eframe::App for ScuttleGUI {
 
                     //Solid Status (No CPU drain)
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        let color = if self.server_running {
-                            egui::Color32::from_rgb(40, 180, 40) // Forest Green
+
+                        let (text, color) = if self.is_installing.load(Ordering::SeqCst) {
+                            ("Installing", egui::Color32::from_rgb(245, 166, 35)) //yellow
+                        } else if !self.is_installed.load(Ordering::SeqCst) {
+                            ("Setup Required — Exit and Restart", egui::Color32::from_rgb(180, 40, 40)) //red
+                        } else if self.server_running {
+                            ("Running", egui::Color32::from_rgb(40, 180, 40)) //green                      
                         } else {
-                            egui::Color32::from_rgb(180, 40, 40) // Soft Red
-                        };
+                            ("Offline", egui::Color32::from_rgb(180, 40, 40)) //red
+                        }
 
                         // Allocate space for the dot
                         let (rect, _) = ui.allocate_exact_size(egui::vec2(10.0, 10.0), egui::Sense::hover());
@@ -316,7 +321,7 @@ impl eframe::App for ScuttleGUI {
                         ui.painter().circle_filled(rect.center(), 6.0, color);
                         
                         ui.add_space(8.0);
-                        ui.label(if self.server_running { "Running" } else { "Offline" });
+                        ui.label(text);
                     });
                 });
             });
