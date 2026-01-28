@@ -55,7 +55,7 @@ def update_env(key, value):
     with ENV_FILE.open("w") as f:
         f.writelines(lines)
 
-    os.environ[key] = value
+    os.environ[key] = str(value) #just in case Path
 
 
 def vprint(message, verbose=False):
