@@ -92,9 +92,12 @@ def main():
     if args.setup:
         from boot.setup import ensure_venv
         from boot.tunnel.cloudflared import download_cloudflared
+        from boot.runtime.deno import download_deno
         from boot.install_ffmpeg import install_ffmpeg
 
         download_cloudflared(verbose=verbose)
+
+        download_deno(verbose=verbose)
 
         python_bin = ensure_venv(verbose=args.verbose)
 
