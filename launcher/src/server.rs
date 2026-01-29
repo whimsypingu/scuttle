@@ -9,6 +9,9 @@ use std::collections::VecDeque;
 use std::io::Write;
 use chrono::Local;
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
 use crate::app::ScuttleGUI;
 
 /// singleton for rust gui tcp port
@@ -16,6 +19,10 @@ static CONTROL_LISTENER: OnceLock<TcpListener> = OnceLock::new();
 
 /// how many logs to allow
 const MAX_LOG_LINES: usize = 100;
+
+/// Flag for 'No Window' in Windows API
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 
 /// Binds a TCP listener to a free port on localhost (127.0.0.1)
 /// and stores it in the `CONTROL_LISTENER` singleton.
@@ -85,8 +92,13 @@ pub fn run_setup(app: &mut ScuttleGUI) {
     let mut cmd = Command::new("python");
     cmd.current_dir(&app.root_dir)
         .arg("main.py")
-        .arg("--setup")
-        .stdout(Stdio::piped());
+        .arg("--setup");
+    //.stdout(Stdio::piped());
+
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
 
     let mut child = match cmd.spawn() {
         Ok(child) => {
@@ -146,6 +158,11 @@ pub fn start(app: &mut ScuttleGUI) {
     cmd.current_dir(&app.root_dir)
         .arg("-u")
         .arg("main.py");
+
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
 
     //gui communication channel
     let port = app.control_port;
