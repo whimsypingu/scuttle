@@ -50,7 +50,7 @@ class YouTubeClient:
         
         #handle jsruntime, should be set in env variables as deno
         env_runtime = js_runtime or os.environ.get("JSRUNTIME_BIN_PATH")
-        self.js_runtime = Path(env_runtime if env_runtime else None)
+        self.js_runtime = Path(env_runtime) if env_runtime else None
 
         #system check, not needed if python version >= 3.8
         if sys.platform == "win32": 
@@ -292,7 +292,7 @@ class YouTubeClient:
             "--fragment-retries", "3", #network robustness for missing packets
             "--retry-sleep", "linear=1::5",
             "-o", str(temp_path), #ytdlp requires temporary format
-            "--extractor-args", "youtube:player_client=default,-android-sdkless",
+            "--extractor-args", "youtube:player_client=default,-android_sdkless",
             "--js-runtimes", f"deno:{self.js_runtime.as_posix()}", #jsruntime
             "--print", f"after_move:%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s", #complete print after download
             url
