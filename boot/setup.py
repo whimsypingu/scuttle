@@ -34,8 +34,34 @@ def ensure_venv(verbose=False):
     return python_bin
 
 
+def upgrade_ytdlp(python_bin, verbose=False):
+    """
+    Specifically handles nightly/pre-release installation of yt-dlp
+    """
+    vprint("Checking for yt-dlp nightly updates...", verbose)
+
+    #use -U to force upgrade and --pre for nightly builds
+    #[default] ensures core dependencies are included
+    cmd = [
+        python_bin, "-m", "pip", "install",
+        "-U", "--pre",
+        "yt-dlp[default]"
+    ]
+
+    try:
+        run(cmd, check=True)
+        vprint("yt-dlp nightly is up to date.", verbose)
+    except Exception as e:
+        vprint(f"Failed to upgrade yt-dlp: {e}", verbose)
+
+
 def setup_all(verbose=False):
-    python_bin = ensure_venv(verbose=True)
+    python_bin = ensure_venv(verbose=verbose)
+
+    upgrade_ytdlp(python_bin=python_bin, verbose=verbose)
+
+    return python_bin
+
 
 
 
