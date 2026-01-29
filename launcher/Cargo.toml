@@ -8,3 +8,10 @@ eframe = "0.27"
 chrono = "0.4"
 image = "0.24"
 winapi = { version = "0.3", features = ["winuser", "windef", "wincon"] }
+
+[build-dependencies]
+winresource = "0.1"
+
+[[bin]]
+name = "scuttle"
+path = "src/main.rs"
