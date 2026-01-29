@@ -1,11 +1,10 @@
 #backend/core/audio/youtube_client.py
 
 import asyncio
-import json
 from pathlib import Path
-import subprocess
 import sys
 import time
+import os
 from typing import Callable, List, Optional
 
 from backend.core.audio.postprocess import compress_audio, extract_duration, trim_silence, apply_loudnorm
@@ -14,7 +13,6 @@ from backend.core.lib.utils import get_audio_path
 from backend.core.events.event_bus import EventBus
 from backend.core.models.event import Event
 from backend.core.models.track import Track
-from backend.exceptions import SearchFailedError
 
 from backend.core.models.enums import YouTubeClientAction as YTCA
 
@@ -31,7 +29,9 @@ class YouTubeClient:
         dl_format_filter: Optional[str] = None,
         dl_format: Optional[str] = None,
         dl_quality: Optional[str] = None,
-        dl_user_agent: Optional[str] = None
+        dl_user_agent: Optional[str] = None,
+
+        js_runtime: Optional[Path] = None
     ):
         self.name = name
         self.base_dir = base_dir
@@ -48,6 +48,10 @@ class YouTubeClient:
 
         self.dl_temp_format = "%(ext)s"
         
+        #handle jsruntime, should be set in env variables as deno
+        env_runtime = js_runtime or os.environ.get("JSRUNTIME_BIN_PATH")
+        self.js_runtime = Path(env_runtime if env_runtime else None)
+
         #system check, not needed if python version >= 3.8
         if sys.platform == "win32": 
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -288,6 +292,8 @@ class YouTubeClient:
             "--fragment-retries", "3", #network robustness for missing packets
             "--retry-sleep", "linear=1::5",
             "-o", str(temp_path), #ytdlp requires temporary format
+            "--extractor-args", "youtube:player_client=default,-android-sdkless",
+            "--js-runtimes", f"deno:{self.js_runtime.as_posix()}", #jsruntime
             "--print", f"after_move:%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s", #complete print after download
             url
         ]

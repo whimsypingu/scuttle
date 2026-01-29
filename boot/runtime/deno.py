@@ -107,7 +107,7 @@ def download_deno(target_path=None, verbose=False):
         vprint(f"Saved deno binary to {target_path}", verbose)
 
         #save to .env file
-        update_env("JSRUNTIME_BIN_PATH", target_path)
+        update_env("JSRUNTIME_BIN_PATH", target_path.as_posix())
 
         return target_path
 
@@ -116,14 +116,12 @@ def download_deno(target_path=None, verbose=False):
 
 
 
-
-
-
-
 ################################################
+'''
 if __name__ == "__main__":
 
     x = _get_deno_name()
     print(x)
 
     download_deno(verbose=True)
+'''
