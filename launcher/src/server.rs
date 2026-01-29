@@ -73,6 +73,28 @@ pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into
     }
 }
 
+pub fn detect_and_set_python(app: &mut ScuttleGUI) {
+    let commands = ["python", "py", "python3"];
+    for cmd in commands {
+        if let Ok(mut child) = std::process::Command::new(cmd)
+            .arg("--version")
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn() 
+        {
+            let _ = child.kill();
+
+            //command exists, return
+            app.python_cmd = cmd.to_string();
+            return;
+        }
+    }
+    //if nothing found, just default to "python"
+    let logs = app.logs.clone();
+    append_log_threadsafe(&logs, "Warning: 'python/py/python3' not detected in PATH, defaulting to 'python'");
+    app.python_cmd = "python".to_string();
+}
+
 pub fn setup_exists(app: &mut ScuttleGUI) {
     let venv_dir = app.root_dir.join("venv");
     app.is_installed.store(venv_dir.exists(), Ordering::SeqCst); //this is a very simple implementation of checking setup
@@ -89,7 +111,7 @@ pub fn run_setup(app: &mut ScuttleGUI) {
 
     ctx.request_repaint();
 
-    let mut cmd = Command::new("python");
+    let mut cmd = Command::new(&app.python_cmd);
     cmd.current_dir(&app.root_dir)
         .arg("main.py")
         .arg("--setup");
