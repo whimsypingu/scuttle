@@ -9,6 +9,9 @@ use std::collections::VecDeque;
 use std::io::Write;
 use chrono::Local;
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
 use crate::app::ScuttleGUI;
 
 /// singleton for rust gui tcp port
@@ -16,6 +19,10 @@ static CONTROL_LISTENER: OnceLock<TcpListener> = OnceLock::new();
 
 /// how many logs to allow
 const MAX_LOG_LINES: usize = 100;
+
+/// Flag for 'No Window' in Windows API
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 
 /// Binds a TCP listener to a free port on localhost (127.0.0.1)
 /// and stores it in the `CONTROL_LISTENER` singleton.
@@ -85,9 +92,19 @@ pub fn run_setup(app: &mut ScuttleGUI) {
     let mut cmd = Command::new("python");
     cmd.current_dir(&app.root_dir)
         .arg("main.py")
-        .arg("--setup")
-        .stdout(Stdio::piped());
+        .arg("--setup");
 
+    //debug mode
+    if app.verbose {
+        cmd.arg("-v");
+    }
+
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    cmd.stdout(Stdio::piped());    
     let mut child = match cmd.spawn() {
         Ok(child) => {
             append_log_threadsafe(&logs, "Starting setup...");
@@ -102,8 +119,28 @@ pub fn run_setup(app: &mut ScuttleGUI) {
         }
     };
 
+    //capture stdout
+    let stdout = match child.stdout.take() {
+        Some(s) => s,
+        None => {
+            append_log_threadsafe(&logs, "Failed to capture stdout".to_string());
+            ctx.request_repaint();
+            let _ = child.kill();
+            return;
+        }
+    };
+
     //watcher
     thread::spawn(move || {
+
+        //handle Stdout
+        let reader = BufReader::new(stdout);
+        for line in reader.lines().flatten() {
+            append_log_threadsafe(&logs, line);
+            ctx.request_repaint(); //trigger ui redraw
+        }
+
+        //wait for exit
         match child.wait() {
             Ok(status) if status.success() => {
                 append_log_threadsafe(&logs, format!("Successfully installed dependencies. [{}]", status));
@@ -146,6 +183,16 @@ pub fn start(app: &mut ScuttleGUI) {
     cmd.current_dir(&app.root_dir)
         .arg("-u")
         .arg("main.py");
+
+    //debug mode
+    if app.verbose {
+        cmd.arg("-v");
+    }
+
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
 
     //gui communication channel
     let port = app.control_port;

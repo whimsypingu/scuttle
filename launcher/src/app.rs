@@ -36,6 +36,8 @@ pub struct ScuttleGUI {
     pub webhook_url: String, //current discord webhook URL
     pub webhook_saved: String, //last applied value
     pub webhook_dirty: bool,
+
+    pub verbose: bool,
 }
 
 impl ScuttleGUI {
@@ -85,6 +87,57 @@ impl ScuttleGUI {
         self.server_running = false;
 
         //self.append_log("[INFO] Server stopped");
+    }
+
+    
+    //installation screen
+    fn render_install_consent_screen(&mut self, ui: &mut egui::Ui) {
+        ui.vertical_centered(|ui| {
+
+            ui.add_space(40.0);
+            ui.heading(egui::RichText::new("Setup Required").size(24.0).strong());
+
+            ui.add_space(30.0);
+            ui.label(
+                egui::RichText::new("Scuttle needs to install some dependencies to function.")
+                    .color(egui::Color32::from_rgb(100, 100, 100))
+            );
+            ui.label(egui::RichText::new("• venv  • cloudflared  • ffmpeg  • deno  •").italics());        
+
+            ui.add_space(30.0);
+            ui.scope(|ui| {
+                customui::apply_start_stop_button(ui.style_mut());
+
+                let install_button = ui.add_sized(
+                    [160.0, 50.0],
+                    egui::Button::new(egui::RichText::new("Start Installation").size(14.0))
+                );
+
+                if install_button.clicked() {
+                    server::run_setup(self);
+                }
+            });
+        });
+    }
+
+    //log main window
+    fn render_log_window(&mut self, ui: &mut egui::Ui) {
+        egui::Frame::none()
+            .fill(egui::Color32::from_rgb(250, 250, 250))
+            .rounding(egui::Rounding::same(6.0))
+            .inner_margin(egui::Margin::same(8.0))
+            .show(ui, |ui| {
+
+                //logs
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false; 2])
+                    .stick_to_bottom(true)
+                    .show(ui, |ui| {
+                        for log in self.snapshot_logs() {
+                            customui::render_log_line(ui, &log);
+                        }
+                    });
+            });
     }
 }
 
@@ -153,6 +206,8 @@ impl Default for ScuttleGUI {
             webhook_saved: webhook_url.clone(),
             webhook_url,
             webhook_dirty: false,
+
+            verbose: false,
         }
     }
 }
@@ -169,9 +224,16 @@ impl eframe::App for ScuttleGUI {
 
             //setup
             server::setup_exists(self); //simple setup check via /venv/ existence, consider tmp file
-            if !self.is_installed.load(Ordering::SeqCst) {
-                server::run_setup(self);
-            }
+            // if !self.is_installed.load(Ordering::SeqCst) {
+
+            //     ui.vertical_centered(|ui| {
+            //         ui.heading("Setup Required");
+            //         ui.label("Scuttle needs to install some dependencies (venv, cloudflared, ffmpeg, deno) to function.");
+            //         if ui.button("🚀 Start Installation").clicked() {
+            //             server::run_setup(self);
+            //         }
+            //     })
+            // }
         }
 
         egui::TopBottomPanel::top("header_panel")
@@ -202,22 +264,6 @@ impl eframe::App for ScuttleGUI {
                         });
                     });
 
-                    // ui.scope(|ui| {
-                    //     customui::apply_start_stop_button(ui.style_mut());
-
-                    //     let button_label = if self.server_running { "Stop Server" } else { "Start Server" };
-    
-                    //     let button = ui.add_sized(
-                    //         [120.0, 32.0],
-                    //         egui::Button::new(button_label),
-                    //     ).on_hover_cursor(egui::CursorIcon::PointingHand);
-
-                    //     if button.clicked() {
-                    //         if self.server_running { server::stop(self); } 
-                    //         else { server::start(self); }
-                    //     }
-                    // });
-
                     ui.add_space(14.0);
 
                     //settings button
@@ -228,7 +274,9 @@ impl eframe::App for ScuttleGUI {
                             [32.0, 32.0],
                             egui::Button::new(egui::RichText::new("⚙").size(20.0))
                                 .frame(false),
-                        ).on_hover_cursor(egui::CursorIcon::PointingHand);
+                        )
+                        .on_hover_cursor(egui::CursorIcon::PointingHand)
+                        .on_hover_text("Additional settings");
 
                         if settings_button.clicked() {
                             self.show_settings = !self.show_settings;
@@ -236,14 +284,13 @@ impl eframe::App for ScuttleGUI {
                     });
                 });
 
+                //OPTIONAL SETTINGS
                 if self.show_settings {
-
-                    ui.add_space(14.0);
+                    let row_height = 20.0;
 
                     //row for webhook url setting
+                    ui.add_space(14.0);
                     ui.horizontal(|ui| {
-                        let row_height = 20.0;
-
                         //label
                         ui.add_sized([0.0, row_height], egui::Label::new(
                             egui::RichText::new("Webhook:").text_style(egui::TextStyle::Name("Webhook".into()))
@@ -277,7 +324,9 @@ impl eframe::App for ScuttleGUI {
                                     [0.0, row_height],
                                     egui::Button::new(egui::RichText::new("↺"))
                                         .frame(false),
-                                ).on_hover_cursor(egui::CursorIcon::PointingHand);
+                                )
+                                .on_hover_cursor(egui::CursorIcon::PointingHand)
+                                .on_hover_text("Revert last used webhook. Restart server to apply changes.");
                                 
                                 if revert_button.clicked() {
                                     self.webhook_url = self.webhook_saved.clone();
@@ -287,9 +336,37 @@ impl eframe::App for ScuttleGUI {
                         });
                     });
 
-                } else {
-                    ui.add_space(2.0);
+                    //row for verbose settings
+                    ui.add_space(10.0);
+                    ui.horizontal(|ui| {
+                        //label
+                        ui.add_sized([0.0, row_height], egui::Label::new(
+                            egui::RichText::new("Debug Mode:").text_style(egui::TextStyle::Name("Webhook".into()))
+                        ));
+
+                        ui.add_space(6.0);
+
+                        ui.scope(|ui| {
+                            customui::apply_settings_button(ui.style_mut());
+
+                            // Change the text based on the state
+                            let btn_text = if self.verbose { "ON" } else { "OFF" };
+                            
+                            let verbose_button = ui.add_sized(
+                                [40.0, row_height], // Fixed width so the UI doesn't jump when text changes
+                                egui::Button::new(egui::RichText::new(btn_text))
+                                    .frame(true)
+                            ).on_hover_cursor(egui::CursorIcon::PointingHand)
+                            .on_hover_text("Enable to see detailed terminal output and logs. Restart server to apply changes.");
+
+                            if verbose_button.clicked() {
+                                self.verbose = !self.verbose;
+                            }
+                        });
+                    });
                 }
+
+                ui.add_space(2.0);
             });
 
         egui::TopBottomPanel::bottom("footer_panel")
@@ -314,7 +391,7 @@ impl eframe::App for ScuttleGUI {
                         let (text, color) = if self.is_installing.load(Ordering::SeqCst) {
                             ("Installing", egui::Color32::from_rgb(245, 166, 35)) //yellow
                         } else if !self.is_installed.load(Ordering::SeqCst) {
-                            ("Setup Required — Exit and Restart", egui::Color32::from_rgb(180, 40, 40)) //red
+                            ("Setup Required", egui::Color32::from_rgb(180, 40, 40)) //red
                         } else if self.server_running {
                             ("Running", egui::Color32::from_rgb(40, 180, 40)) //green                      
                         } else {
@@ -340,25 +417,12 @@ impl eframe::App for ScuttleGUI {
             )
             .show(ctx, |ui| {
             
-                egui::Frame::none()
-                    .fill(egui::Color32::from_rgb(250, 250, 250))
-                    .rounding(egui::Rounding::same(6.0))
-                    .inner_margin(egui::Margin::same(8.0))
-                    .show(ui, |ui| {
-                        //logs
-                        egui::ScrollArea::vertical()
-                            .auto_shrink([false; 2])
-                            .stick_to_bottom(true)
-                            .show(ui, |ui| {
-                                for log in self.snapshot_logs() {
-                                    customui::render_log_line(ui, &log);
-                                }
-                            });
-                    });
-        });
-
-        // Smooth UI refresh
-        //ctx.request_repaint();
+                if !self.is_installed.load(Ordering::SeqCst) && !self.is_installing.load(Ordering::SeqCst) {
+                    self.render_install_consent_screen(ui);
+                } else {
+                    self.render_log_window(ui);
+                }
+            });
     }
 
     //safe thread exit on program close without turning off the server
@@ -368,3 +432,4 @@ impl eframe::App for ScuttleGUI {
         }
     }
 }
+

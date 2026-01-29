@@ -57,9 +57,11 @@ pub fn apply_settings_button(style: &mut egui::Style) {
     let visuals = &mut style.visuals;
 
     // 1. Inactive State (Resting)
+    visuals.widgets.inactive.weak_bg_fill = egui::Color32::WHITE;
     visuals.widgets.inactive.fg_stroke = egui::Stroke::new(1.0, egui::Color32::from_rgb(40, 40, 40));
 
     // 2. Hovered State (Mouse Over)
+    visuals.widgets.hovered.weak_bg_fill = egui::Color32::WHITE;
     visuals.widgets.hovered.fg_stroke = egui::Stroke::new(1.0, egui::Color32::from_rgb(140, 0, 0));
 
     // 3. Active State (Moment of Click)
