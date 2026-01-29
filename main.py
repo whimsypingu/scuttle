@@ -90,7 +90,7 @@ def main():
         print(f"✅ Webhook updated: {args.set_webhook}")
     
     if args.setup:
-        from boot.setup import ensure_venv
+        from boot.setup import setup_all #includes venv and yt-dlp nightly
         from boot.tunnel.cloudflared import download_cloudflared
         from boot.runtime.deno import download_deno
         from boot.install_ffmpeg import install_ffmpeg
@@ -99,7 +99,7 @@ def main():
 
         download_deno(verbose=verbose)
 
-        python_bin = ensure_venv(verbose=args.verbose)
+        python_bin = setup_all(verbose=args.verbose)
 
         install_ffmpeg(verbose=verbose)
 
@@ -109,7 +109,7 @@ def main():
         '''
         print("👉 To activate the virtual environment, run:\n")
         if IS_WINDOWS:
-            print(r"    venv\Scripts\activate")
+            print(r"    venv/Scripts/activate [backslashes preferred]")
         else:
             print("    source venv/bin/activate")
         print("\nThen re-run this script (python main.py) to start Scuttle.")
