@@ -31,7 +31,8 @@ class YouTubeClient:
         dl_quality: Optional[str] = None,
         dl_user_agent: Optional[str] = None,
 
-        js_runtime: Optional[Path] = None
+        python_bin: Optional[Path] = None,
+        js_runtime_bin: Optional[Path] = None
     ):
         self.name = name
         self.base_dir = base_dir
@@ -48,9 +49,13 @@ class YouTubeClient:
 
         self.dl_temp_format = "%(ext)s"
         
+        #handle python binary from the venv to use yt-dlp
+        exec_bin = python_bin or os.environ.get("PYTHON_BIN_PATH")
+        self.python_bin = Path(exec_bin) if exec_bin else None
+
         #handle jsruntime, should be set in env variables as deno
-        env_runtime = js_runtime or os.environ.get("JSRUNTIME_BIN_PATH")
-        self.js_runtime = Path(env_runtime) if env_runtime else None
+        env_runtime = js_runtime_bin or os.environ.get("JS_RUNTIME_BIN_PATH")
+        self.js_runtime_bin = Path(env_runtime) if env_runtime else None
 
         #system check, not needed if python version >= 3.8
         if sys.platform == "win32": 
@@ -183,7 +188,9 @@ class YouTubeClient:
         #cmd line search
         delim = "\x1f"
         cmd = [
-            "yt-dlp",
+            self.python_bin.as_posix(),
+            "-m",
+            "yt_dlp",
             f'ytsearch{limit}:{q}',
             "--format", self.dl_format_filter, #defeat SABR fragmentation streaming from yt, GitHub issue 12482
             "--user-agent", self.dl_user_agent,
@@ -279,7 +286,9 @@ class YouTubeClient:
         #cmd line download
         delim = "\x1f"
         cmd = [
-            "yt-dlp",
+            self.python_bin.as_posix(),
+            "-m",
+            "yt_dlp",
             "-x", #audio only
             "-f", self.dl_format_filter, #defeat SABR fragmentation potentially
             "--audio-format", self.dl_format,
@@ -293,7 +302,7 @@ class YouTubeClient:
             "--retry-sleep", "linear=1::5",
             "-o", str(temp_path), #ytdlp requires temporary format
             "--extractor-args", "youtube:player_client=default,-android_sdkless",
-            "--js-runtimes", f"deno:{self.js_runtime.as_posix()}", #jsruntime
+            "--js-runtimes", f"deno:{self.js_runtime_bin.as_posix()}", #jsruntime
             "--print", f"after_move:%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s", #complete print after download
             url
         ]

@@ -100,6 +100,7 @@ def main():
         download_deno(verbose=verbose)
 
         python_bin = setup_all(verbose=args.verbose)
+        update_env("PYTHON_BIN_PATH", python_bin) #save the venv binary for yt-dlp usage
 
         install_ffmpeg(verbose=verbose)
 
