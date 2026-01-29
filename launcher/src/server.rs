@@ -93,13 +93,18 @@ pub fn run_setup(app: &mut ScuttleGUI) {
     cmd.current_dir(&app.root_dir)
         .arg("main.py")
         .arg("--setup");
-    //.stdout(Stdio::piped());
+
+    //debug mode
+    if app.verbose {
+        cmd.arg("-v");
+    }
 
     #[cfg(windows)]
     {
         cmd.creation_flags(CREATE_NO_WINDOW);
     }
 
+    cmd.stdout(Stdio::piped());    
     let mut child = match cmd.spawn() {
         Ok(child) => {
             append_log_threadsafe(&logs, "Starting setup...");
@@ -114,8 +119,28 @@ pub fn run_setup(app: &mut ScuttleGUI) {
         }
     };
 
+    //capture stdout
+    let stdout = match child.stdout.take() {
+        Some(s) => s,
+        None => {
+            append_log_threadsafe(&logs, "Failed to capture stdout".to_string());
+            ctx.request_repaint();
+            let _ = child.kill();
+            return;
+        }
+    };
+
     //watcher
     thread::spawn(move || {
+
+        //handle Stdout
+        let reader = BufReader::new(stdout);
+        for line in reader.lines().flatten() {
+            append_log_threadsafe(&logs, line);
+            ctx.request_repaint(); //trigger ui redraw
+        }
+
+        //wait for exit
         match child.wait() {
             Ok(status) if status.success() => {
                 append_log_threadsafe(&logs, format!("Successfully installed dependencies. [{}]", status));
@@ -158,6 +183,11 @@ pub fn start(app: &mut ScuttleGUI) {
     cmd.current_dir(&app.root_dir)
         .arg("-u")
         .arg("main.py");
+
+    //debug mode
+    if app.verbose {
+        cmd.arg("-v");
+    }
 
     #[cfg(windows)]
     {

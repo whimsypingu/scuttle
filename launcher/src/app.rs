@@ -36,6 +36,8 @@ pub struct ScuttleGUI {
     pub webhook_url: String, //current discord webhook URL
     pub webhook_saved: String, //last applied value
     pub webhook_dirty: bool,
+
+    pub verbose: bool,
 }
 
 impl ScuttleGUI {
@@ -153,6 +155,8 @@ impl Default for ScuttleGUI {
             webhook_saved: webhook_url.clone(),
             webhook_url,
             webhook_dirty: false,
+
+            verbose: false,
         }
     }
 }
