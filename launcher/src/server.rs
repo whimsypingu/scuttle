@@ -160,7 +160,7 @@ pub fn detect_and_set_python(app: &mut ScuttleGUI) {
 
             app.python_cmd = path_str;
             if app.verbose {
-                append_log_threadsafe(&logs, format!("Found Python: {}", app.python_cmd));
+                append_log_threadsafe(&logs, format!("✅ Found Python: {}", app.python_cmd));
             }
             return;
         }
@@ -168,7 +168,7 @@ pub fn detect_and_set_python(app: &mut ScuttleGUI) {
 
     //hail mary
     app.python_cmd = "python".to_string();
-    append_log_threadsafe(&logs, "No verified Python path found. Trying default 'python'.".to_string());
+    append_log_threadsafe(&logs, "⚠️ No verified Python path found. Trying default 'python'.".to_string());
 }
 
 /// Checks for the existence of a virtual environment to determine if the backend is "installed".
@@ -236,7 +236,7 @@ pub fn run_setup(app: &mut ScuttleGUI) {
             child
         }
         Err(e) => {
-            append_log_threadsafe(&logs, format!("Failed to launch Python: {}", e));
+            append_log_threadsafe(&logs, format!("⚠️ Failed to launch Python: {}", e));
             is_installing.store(false, Ordering::SeqCst);
             ctx.request_repaint();
             return;
@@ -257,10 +257,10 @@ pub fn run_setup(app: &mut ScuttleGUI) {
         let success = status.map(|s| s.success()).unwrap_or(false);
 
         if success {
-            append_log_threadsafe(&logs, "Setup complete!");
+            append_log_threadsafe(&logs, "✅ Setup complete!");
             is_installed.store(true, Ordering::SeqCst);
         } else {
-            append_log_threadsafe(&logs, "Setup failed.");
+            append_log_threadsafe(&logs, "⚠️ Setup failed.");
         }
 
         is_installing.store(false, Ordering::SeqCst);
@@ -324,7 +324,7 @@ pub fn start(app: &mut ScuttleGUI) {
     let mut child = match cmd.spawn() {
         Ok(child) => child,
         Err(e) => {
-            append_log_threadsafe(&logs, format!("Failed to spawn Python: {}", e));
+            append_log_threadsafe(&logs, format!("⚠️ Failed to spawn Python: {}", e));
             ctx.request_repaint();
             return; //exit function early
         }
