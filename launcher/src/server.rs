@@ -74,6 +74,7 @@ pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into
 }
 
 pub fn detect_and_set_python(app: &mut ScuttleGUI) {
+    let logs = app.logs.clone();
     let commands = ["python", "py", "python3"];
     for cmd in commands {
         if let Ok(mut child) = std::process::Command::new(cmd)
@@ -86,11 +87,14 @@ pub fn detect_and_set_python(app: &mut ScuttleGUI) {
 
             //command exists, return
             app.python_cmd = cmd.to_string();
+
+            if app.verbose {
+                append_log_threadsafe(&logs, format!("Python found in PATH at {}", app.python_cmd));
+            }
             return;
         }
     }
     //if nothing found, just default to "python"
-    let logs = app.logs.clone();
     append_log_threadsafe(&logs, "Warning: 'python/py/python3' not detected in PATH, defaulting to 'python'");
     app.python_cmd = "python".to_string();
 }
