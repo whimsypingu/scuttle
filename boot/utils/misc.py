@@ -22,7 +22,12 @@ REQ_FILE = ROOT_DIR / "requirements.txt"
 ENV_FILE = ROOT_DIR / ".env"
 
 
-def update_env(key, value):
+def vprint(message, verbose=False):
+    if verbose:
+        print(message)
+
+
+def update_env(key, value, verbose=False):
     """
     Update or insert a key=value pair in the .env file. 
     DOES NOT call load_dotenv(override=True) afterwards.
@@ -31,6 +36,7 @@ def update_env(key, value):
     Args:
         key (str): Environment variable name.
         value (str): New value to set.
+        verbose (bool): Debug logs.
     """
     new_line = f"{key}={value}\n"
 
@@ -56,8 +62,4 @@ def update_env(key, value):
         f.writelines(lines)
 
     os.environ[key] = str(value) #just in case Path
-
-
-def vprint(message, verbose=False):
-    if verbose:
-        print(message)
+    vprint(f"Environment variable {key} set to {value}", verbose)

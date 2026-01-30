@@ -107,7 +107,7 @@ def download_deno(target_path=None, verbose=False):
         vprint(f"Saved deno binary to {target_path}", verbose)
 
         #save to .env file
-        update_env("JS_RUNTIME_BIN_PATH", target_path.as_posix())
+        update_env("JS_RUNTIME_BIN_PATH", target_path.as_posix(), verbose=verbose)
 
         return target_path
 

@@ -86,7 +86,7 @@ def main():
     verbose = args.verbose
 
     if args.set_webhook:
-        update_env("DISCORD_WEBHOOK_URL", args.set_webhook)
+        update_env("DISCORD_WEBHOOK_URL", args.set_webhook, verbose=verbose)
         print(f"✅ Webhook updated: {args.set_webhook}")
     
     if args.setup:
@@ -100,7 +100,7 @@ def main():
         download_deno(verbose=verbose)
 
         python_bin = setup_all(verbose=args.verbose)
-        update_env("PYTHON_BIN_PATH", python_bin) #save the venv binary for yt-dlp usage
+        update_env("PYTHON_BIN_PATH", python_bin, verbose=verbose) #save the venv binary for yt-dlp usage
 
         install_ffmpeg(verbose=verbose)
 

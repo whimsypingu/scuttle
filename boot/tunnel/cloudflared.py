@@ -98,7 +98,7 @@ def download_cloudflared(target_path=None, verbose=False):
         vprint(f"Saved cloudflared to {target_path}", verbose)
 
         #save to .env file
-        update_env("TUNNEL_BIN_PATH", target_path.as_posix())
+        update_env("TUNNEL_BIN_PATH", target_path.as_posix(), verbose=verbose)
 
         return target_path
 
