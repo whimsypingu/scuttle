@@ -97,6 +97,7 @@ pub fn monitor_pipe<R: std::io::Read + Send + 'static>(
     logs: Arc<Mutex<VecDeque<String>>>,
     ctx: eframe::egui::Context,
     file_path: Option<String>,
+    show_prefix: bool,
 ) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let reader = BufReader::new(reader);
@@ -104,7 +105,11 @@ pub fn monitor_pipe<R: std::io::Read + Send + 'static>(
         for line_result in reader.split(b'\n') {
             if let Ok(line_bytes) = line_result {
                 let line = String::from_utf8_lossy(&line_bytes);
-                let formatted = format!("[{}] {}", prefix, line);
+                let formatted = if show_prefix {
+                    format!("[{}] {}", prefix, line)
+                } else {
+                    line.to_string()
+                };
 
                 //update ui logs
                 append_log_threadsafe(&logs, formatted.clone());
@@ -248,8 +253,8 @@ pub fn run_setup(app: &mut ScuttleGUI) {
     let stderr = child.stderr.take().expect("Failed to capture stderr");
         
     //start monitoring both streams independently
-    monitor_pipe(stdout, "OUT", logs.clone(), ctx.clone(), debug_file.clone());
-    monitor_pipe(stderr, "ERR", logs.clone(), ctx.clone(), debug_file);
+    monitor_pipe(stdout, "OUT", logs.clone(), ctx.clone(), debug_file.clone(), app.verbose);
+    monitor_pipe(stderr, "ERR", logs.clone(), ctx.clone(), debug_file, true);
 
     //watcher thread to clean up status flags
     thread::spawn(move || {
@@ -335,8 +340,8 @@ pub fn start(app: &mut ScuttleGUI) {
     let stderr = child.stderr.take().expect("Failed to capture stderr");
         
     //start monitoring both streams independently
-    monitor_pipe(stdout, "OUT", logs.clone(), ctx.clone(), debug_file.clone());
-    monitor_pipe(stderr, "ERR", logs.clone(), ctx.clone(), debug_file);
+    monitor_pipe(stdout, "OUT", logs.clone(), ctx.clone(), debug_file.clone(), app.verbose);
+    monitor_pipe(stderr, "ERR", logs.clone(), ctx.clone(), debug_file, true);
     
     //blocking accept
     let control_stream = accept_control_connection()
