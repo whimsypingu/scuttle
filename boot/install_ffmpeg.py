@@ -1,12 +1,11 @@
 import os
-import sys
 import shutil
 import tempfile
+from typing import Optional
 import zipfile
 import urllib.request
 from pathlib import Path
-import subprocess
-from boot.utils.misc import IS_WINDOWS, IS_MAC, IS_LINUX, TOOLS_DIR, vprint, update_env
+from boot.utils.misc import IS_WINDOWS, IS_MAC, IS_LINUX, TOOLS_DIR, vprint, ToolEnvPaths
 
 # FFMPEG_URLS = {
 #     ("Windows", "AMD64"): "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
@@ -14,18 +13,13 @@ from boot.utils.misc import IS_WINDOWS, IS_MAC, IS_LINUX, TOOLS_DIR, vprint, upd
 #     ("Darwin", "arm64"): "https://evermeet.cx/ffmpeg/ffmpeg-6.0.zip",
 # }
 
-def get_ffmpeg_executable_name():
-    return "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
+FFMPEG_BIN_NAME = "ffmpeg.exe" if IS_WINDOWS else "ffmpeg"
+FFPROBE_BIN_NAME = "ffprobe.exe" if IS_WINDOWS else "ffprobe"
 
-#ffmpeg is kind of heavy so prevent repeat downloads
-def has_ffmpeg() -> bool:
+def has_ff_bin(ff_bin: str) -> Optional[Path]:
     #tools folder check
-    local_ffmpeg = TOOLS_DIR / get_ffmpeg_executable_name()
-    if local_ffmpeg.exists():
-        return True
-
-    #dont check system PATH because it might not be stored into env variable
-    return False
+    local_ff_bin = TOOLS_DIR / ff_bin
+    return local_ff_bin.resolve() if local_ff_bin.exists() else None
 
 #fw the emojis HEAVY here actually
 def install_ffmpeg_windows(verbose=False):
@@ -47,22 +41,23 @@ def install_ffmpeg_windows(verbose=False):
         #find ffmpeg and ffprobe and move it into venv
         for root, _, files in os.walk(extract_dir):
             for name in files:
-                if name.lower() in ("ffmpeg.exe", "ffprobe.exe"):
+                if name.lower() in (FFMPEG_BIN_NAME, FFPROBE_BIN_NAME):
                     src = Path(root) / name
                     dest = TOOLS_DIR / name
                     shutil.copy2(src, dest)
 
                     vprint(f"✅ Installed {dest.name} to {TOOLS_DIR}", verbose)
 
-                    #save to env
-                    path_for_env = dest.resolve().as_posix()
-                    if name.lower() == "ffmpeg.exe":
-                        update_env("FFMPEG_BIN_PATH", path_for_env, verbose)
-                    else:
-                        update_env("FFPROBE_BIN_PATH", path_for_env, verbose)
-
     vprint("🎉 ffmpeg and ffprobe installed successfully!", verbose)
-    update_env("FFMPEG_LOCATION", TOOLS_DIR.resolve().as_posix(), verbose)
+
+    return ToolEnvPaths(
+        name="ffmpeg",
+        env_paths={
+            "FFMPEG_LOCATION": TOOLS_DIR,
+            "FFMPEG_BIN_PATH": TOOLS_DIR / FFMPEG_BIN_NAME,
+            "FFPROBE_BIN_PATH": TOOLS_DIR / FFPROBE_BIN_NAME,
+        }
+    )
 
 
 
@@ -81,7 +76,7 @@ def install_ffmpeg_macos(verbose=False):
         shutil.unpack_archive(archive_path, extract_dir)
 
         # Move ffmpeg + ffprobe to venv/bin
-        for name in ("ffmpeg", "ffprobe"):
+        for name in (FFMPEG_BIN_NAME, FFPROBE_BIN_NAME):
             src = next(extract_dir.rglob(name), None)
             if src and src.is_file():
                 dest = TOOLS_DIR / name
@@ -90,12 +85,18 @@ def install_ffmpeg_macos(verbose=False):
 
                 vprint(f"✅ Installed {dest.name} to {TOOLS_DIR}", verbose)
 
-                #save to env
-                path_for_env = dest.resolve().as_posix()
-                update_env(f"{name.upper()}_BIN_PATH", path_for_env, verbose)
-
     vprint("🎉 ffmpeg and ffprobe installed successfully!", verbose)
-    update_env("FFMPEG_LOCATION", TOOLS_DIR.resolve().as_posix(), verbose)
+
+    return ToolEnvPaths(
+        name="ffmpeg",
+        env_paths={
+            "FFMPEG_LOCATION": TOOLS_DIR,
+            "FFMPEG_BIN_PATH": TOOLS_DIR / FFMPEG_BIN_NAME,
+            "FFPROBE_BIN_PATH": TOOLS_DIR / FFPROBE_BIN_NAME,
+        }
+    )
+
+
 
 
 
@@ -114,7 +115,7 @@ def install_ffmpeg_linux(verbose=False):
         shutil.unpack_archive(archive_path, extract_dir)
 
         # find ffmpeg and ffprobe in extracted folder
-        for name in ("ffmpeg", "ffprobe"):
+        for name in (FFMPEG_BIN_NAME, FFPROBE_BIN_NAME):
             src = next(extract_dir.rglob(name), None)
             if src and src.is_file():
                 dest = TOOLS_DIR / name
@@ -123,31 +124,58 @@ def install_ffmpeg_linux(verbose=False):
 
                 vprint(f"✅ Installed {dest.name} to {TOOLS_DIR}", verbose)
 
-                #save to env
-                path_for_env = dest.resolve().as_posix()
-                update_env(f"{name.upper()}_BIN_PATH", path_for_env, verbose)
-
     vprint("🎉 ffmpeg and ffprobe installed successfully on Linux!", verbose)
-    update_env("FFMPEG_LOCATION", TOOLS_DIR.resolve().as_posix(), verbose)
+
+    return ToolEnvPaths(
+        name="ffmpeg",
+        env_paths={
+            "FFMPEG_LOCATION": TOOLS_DIR,
+            "FFMPEG_BIN_PATH": TOOLS_DIR / FFMPEG_BIN_NAME,
+            "FFPROBE_BIN_PATH": TOOLS_DIR / FFPROBE_BIN_NAME,
+        }
+    )
 
 
 
 
 def install_ffmpeg(verbose=False):
-    if not has_ffmpeg():
+    ffmpeg_bin_path = has_ff_bin(FFMPEG_BIN_NAME)
+    ffprobe_bin_path = has_ff_bin(FFPROBE_BIN_NAME)
+
+    #condition of installation, both present and in same folder
+    is_healthy = False
+    if ffmpeg_bin_path and ffprobe_bin_path:
+        if ffmpeg_bin_path.parent == ffprobe_bin_path.parent:
+            is_healthy = True
+
+    #install if ffmpeg or ffprobe not found, or if they are not sharing a parent directory (required by yt-dlp)
+    if not is_healthy:
+        vprint("Installing ffmpeg binaries", verbose)
 
         TOOLS_DIR.mkdir(exist_ok=True)
 
         if IS_WINDOWS:
-            install_ffmpeg_windows(verbose=verbose)
+            return install_ffmpeg_windows(verbose)
         elif IS_MAC:
-            install_ffmpeg_macos(verbose=verbose)
+            return install_ffmpeg_macos(verbose)
         elif IS_LINUX:
-            install_ffmpeg_linux(verbose=verbose)
+            return install_ffmpeg_linux(verbose)
+        
+        #no installation, return nothing
         else:
             vprint("Unsupported OS for automatic ffmpeg install", verbose)
-    else:
-        vprint("ffmpeg already installed", verbose)
+            return ToolEnvPaths(name="ffmpeg", env_paths={})
+        
+    #already healthy, return verified paths
+    vprint("ffmpeg already installed", verbose)
+    return ToolEnvPaths(
+        name="ffmpeg",
+        env_paths={
+            "FFMPEG_LOCATION": ffmpeg_bin_path.parent,
+            "FFMPEG_BIN_PATH": ffmpeg_bin_path,
+            "FFPROBE_BIN_PATH": ffprobe_bin_path,
+        }
+    )
 
 
 

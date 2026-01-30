@@ -1,9 +1,7 @@
-import os
 import subprocess
 import venv
-from pathlib import Path
 
-from boot.utils.misc import IS_WINDOWS, VENV_DIR, REQ_FILE, vprint
+from boot.utils.misc import IS_WINDOWS, VENV_DIR, REQ_FILE, vprint, ToolEnvPaths
 
 def run(cmd, check=True):
     cmd_strs = [str(c) for c in cmd] #typeerror fix on windows
@@ -60,7 +58,12 @@ def setup_all(verbose=False):
 
     upgrade_ytdlp(python_bin=python_bin, verbose=verbose)
 
-    return python_bin
+    return ToolEnvPaths(
+        name="python",
+        env_paths={
+            "PYTHON_BIN": python_bin
+        }
+    )
 
 
 

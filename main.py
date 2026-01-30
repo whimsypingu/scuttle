@@ -95,26 +95,26 @@ def main():
         from boot.runtime.deno import download_deno
         from boot.install_ffmpeg import install_ffmpeg
 
-        download_cloudflared(verbose=verbose)
+        #get the paths and save them to environment variables
+        #this is for venv Python, venv setup, js runtime, tunnel, and ffmpeg
+        tool_installers = [
+            lambda: download_cloudflared(verbose=verbose),
+            lambda: download_deno(verbose=verbose),
+            lambda: setup_all(verbose=verbose),
+            lambda: install_ffmpeg(verbose=verbose)
+        ]
 
-        download_deno(verbose=verbose)
-
-        python_bin = setup_all(verbose=args.verbose)
-        update_env("PYTHON_BIN_PATH", python_bin, verbose=verbose) #save the venv binary for yt-dlp usage
-
-        install_ffmpeg(verbose=verbose)
+        for tool in tool_installers:
+            try:
+                result = tool()
+                
+                #check if valid output and save to environment variables
+                if result:
+                    result.register(verbose=verbose)
+            except Exception as e:
+                print(f"\n❌ Setup failed during a step: {e}")
 
         print("\n✅ Environment setup complete.")
-
-        #this is for installation through CLI
-        '''
-        print("👉 To activate the virtual environment, run:\n")
-        if IS_WINDOWS:
-            print(r"    venv/Scripts/activate [backslashes preferred]")
-        else:
-            print("    source venv/bin/activate")
-        print("\nThen re-run this script (python main.py) to start Scuttle.")
-        '''
         return
 
     #------------------------------- Begin main code -------------------------------#

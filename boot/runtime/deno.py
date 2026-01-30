@@ -4,11 +4,9 @@ import platform
 import urllib.request
 import json
 import io
-import os
 import zipfile
 
-from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, update_env
-
+from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, ToolEnvPaths
 
 def _get_deno_name():
     system = sys.platform
@@ -106,10 +104,12 @@ def download_deno(target_path=None, verbose=False):
 
         vprint(f"Saved deno binary to {target_path}", verbose)
 
-        #save to .env file
-        update_env("JS_RUNTIME_BIN_PATH", target_path.as_posix(), verbose=verbose)
-
-        return target_path
+        return ToolEnvPaths(
+            name="deno",
+            env_paths={
+                "JS_RUNTIME_BIN_PATH": target_path
+            }
+        )
 
     except Exception as e:
         raise RuntimeError(f"Failed to download or extract deno: {e}") from e
