@@ -32,7 +32,8 @@ class YouTubeClient:
         dl_user_agent: Optional[str] = None,
 
         python_bin: Optional[Path] = None,
-        js_runtime_bin: Optional[Path] = None
+        js_runtime_bin: Optional[Path] = None,
+        ffmpeg_location: Optional[Path] = None,
     ):
         self.name = name
         self.base_dir = base_dir
@@ -57,6 +58,10 @@ class YouTubeClient:
         env_runtime = js_runtime_bin or os.environ.get("JS_RUNTIME_BIN_PATH")
         self.js_runtime_bin = Path(env_runtime) if env_runtime else None
 
+        #handle ffmpeg and ffprobe env variables
+        env_ffmpeg = ffmpeg_location or os.environ.get("FFMPEG_LOCATION")
+        self.ffmpeg_location = Path(env_ffmpeg) if env_ffmpeg else None
+
         #system check, not needed if python version >= 3.8
         if sys.platform == "win32": 
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -78,7 +83,7 @@ class YouTubeClient:
             Tuple[int, str, str]: (returncode, stdout, stderr)
                 - returncode: The exit code of the subprocess.
                 - stdout: Standard output decoded as a UTF-8 string.
-                - stderr: Standard error decoded as a UTF-8 string.
+                - stderr: Standard error decoded as a UTF-8  string.
 
         Raises:
             RuntimeError: If the subprocess does not complete within `timeout` seconds.
@@ -155,7 +160,7 @@ class YouTubeClient:
         """
         Update yt-dlp
         """
-        cmd = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "-U", "yt-dlp"]
+        cmd = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "-U", "--pre", "yt-dlp[default]"]
         print(f"Running command: {' '.join(cmd)}")
 
         try:
@@ -303,6 +308,7 @@ class YouTubeClient:
             "-o", str(temp_path), #ytdlp requires temporary format
             "--extractor-args", "youtube:player_client=default,-android_sdkless",
             "--js-runtimes", f"deno:{self.js_runtime_bin.as_posix()}", #jsruntime
+            "--ffmpeg-location", f"{self.ffmpeg_location.as_posix()}", #explicitly provide ffmpeg location
             "--print", f"after_move:%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s", #complete print after download
             url
         ]
