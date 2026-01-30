@@ -74,31 +74,38 @@ pub fn append_log_threadsafe(logs: &Arc<Mutex<VecDeque<String>>>, msg: impl Into
 }
 
 pub fn detect_and_set_python(app: &mut ScuttleGUI) {
+    //python-launcher crate has some kind of deprecated dependency on termcolor.?
     let logs = app.logs.clone();
-    let commands = ["python", "py", "python3"];
-    for cmd in commands {
-        if let Ok(mut child) = std::process::Command::new(cmd)
-            .arg("--version")
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn() 
-        {
-            let _ = child.kill();
+    
+    // 1. Check for 'where python', which lists all absolute paths
+    let output = std::process::Command::new("where")
+        .arg("python")
+        .output();
 
-            //command exists, return
-            app.python_cmd = cmd.to_string();
-
-            if app.verbose {
-                append_log_threadsafe(&logs, format!("Python found in PATH at {}", app.python_cmd));
+    if let Ok(out) = output {
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        
+        for path in stdout.lines() {
+            let trimmed = path.trim();
+            // 2. Filter out the Microsoft Store "fake" python shim
+            if !trimmed.contains("WindowsApps") && trimmed.ends_with("python.exe") {
+                app.python_cmd = trimmed.to_string();
+                if app.verbose {
+                    append_log_threadsafe(&logs, format!("✅ Python found: {}", app.python_cmd));
+                }
+                return; 
             }
-            return;
         }
     }
-    //if nothing found, just default to "python"
-    append_log_threadsafe(&logs, "Warning: 'python/py/python3' not detected in PATH, defaulting to 'python'");
-    app.python_cmd = "python".to_string();
-}
 
+    // 3. Fallback: If 'where' fails, try the 'py' launcher which is usually safe
+    if std::process::Command::new("py").arg("--version").spawn().is_ok() {
+        app.python_cmd = "py".to_string();
+    } else {
+        app.python_cmd = "python".to_string(); // Final hail mary
+        append_log_threadsafe(&logs, "No verified Python path found. Using default.");
+    }
+}
 pub fn setup_exists(app: &mut ScuttleGUI) {
     let venv_dir = app.root_dir.join("venv");
     app.is_installed.store(venv_dir.exists(), Ordering::SeqCst); //this is a very simple implementation of checking setup
@@ -123,14 +130,18 @@ pub fn run_setup(app: &mut ScuttleGUI) {
     //debug mode
     if app.verbose {
         cmd.arg("-v");
+        append_log_threadsafe(&logs, format!("Executing: {} main.py --setup", app.python_cmd));    
     }
 
     #[cfg(windows)]
     {
         cmd.creation_flags(CREATE_NO_WINDOW);
+        cmd.env("PYTHONIOENCODING", "utf-8"); //forces python stdout/stderr to be UTF-8
     }
 
-    cmd.stdout(Stdio::piped());    
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
     let mut child = match cmd.spawn() {
         Ok(child) => {
             append_log_threadsafe(&logs, "Starting setup...");
@@ -155,36 +166,113 @@ pub fn run_setup(app: &mut ScuttleGUI) {
             return;
         }
     };
+    let stderr = child.stderr.take().expect("Failed to capture stderr");
+        
 
-    //watcher
+    // --- WATCHER THREAD ---
+    // inside run_setup...
+    let log_file_name = "setup_debug.txt".to_string(); // Owned string
+
     thread::spawn(move || {
+        let logs_err = logs.clone();
+        let ctx_err = ctx.clone();
+        let log_name_for_err = log_file_name.clone(); // Clone for the sub-thread
+        let log_name_for_out = log_file_name.clone(); // Clone for the main loop
 
-        //handle Stdout
+        // --- Stderr Thread ---
+        let stderr_handle = thread::spawn(move || {
+            let reader = BufReader::new(stderr);
+            //manual loop over the bytes to avoid errors with emojis from the python stdout
+            for line_result in reader.split(b'\n') {
+                match line_result {
+                    Ok(line_bytes) => {
+                        let line = String::from_utf8_lossy(&line_bytes).to_string();
+
+                        let formatted = format!("[ERR] {}", line);
+                        append_log_threadsafe(&logs_err, formatted.clone());
+
+                        //log to file
+                        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(&log_name_for_err) {
+                            let _ = writeln!(file, "{}", formatted);
+                        }
+                        ctx_err.request_repaint();
+                    }
+                    Err(e) => {
+                        append_log_threadsafe(&logs_err, format!("[IO ERROR]: {}", e));
+                    }
+                }
+            }
+        });
+
+        // --- Stdout Loop ---
         let reader = BufReader::new(stdout);
-        for line in reader.lines().flatten() {
-            append_log_threadsafe(&logs, line);
-            ctx.request_repaint(); //trigger ui redraw
+        for line_result in reader.split(b'\n') {
+            match line_result {
+                Ok(line_bytes) => {
+                    let line = String::from_utf8_lossy(&line_bytes).to_string();
+
+                    let formatted = format!("[OUT] {}", line);
+                    append_log_threadsafe(&logs, formatted.clone());
+
+                    //log to file
+                    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(&log_name_for_out) {
+                        let _ = writeln!(file, "{}", formatted);
+                    }
+                    ctx.request_repaint();
+                }
+                Err(e) => {
+                    append_log_threadsafe(&logs, format!("[IO ERROR]: {}", e));
+                }
+            }
         }
 
-        //wait for exit
+        let _ = stderr_handle.join();
+
+        // --- Status Check ---
+        // Use your is_installed_flag here to fix the "unused variable" warning!
         match child.wait() {
             Ok(status) if status.success() => {
-                append_log_threadsafe(&logs, format!("Successfully installed dependencies. [{}]", status));
+                append_log_threadsafe(&logs, "✅ Setup success!");
                 is_installed_flag.store(true, Ordering::SeqCst);
             }
-            Ok(status) => {
-                append_log_threadsafe(&logs, format!("Failed to setup. [{}]", status));
-                is_installed_flag.store(false, Ordering::SeqCst);
-            }
-            Err(e) => {
-                append_log_threadsafe(&logs, format!("Failed to setup: {}", e));
+            _ => {
+                append_log_threadsafe(&logs, "❌ Setup failed.");
                 is_installed_flag.store(false, Ordering::SeqCst);
             }
         }
-
+        
         is_installing_flag.store(false, Ordering::SeqCst);
         ctx.request_repaint();
     });
+
+    //watcher
+    // thread::spawn(move || {
+    //     //handle Stdout
+    //     let reader = BufReader::new(stdout);
+    //     for line in reader.lines().flatten() {
+    //         append_log_threadsafe(&logs, line);
+    //         ctx.request_repaint(); //trigger ui redraw
+    //     }
+
+    //     //wait for exit
+    //     match child.wait() {
+    //         Ok(status) if status.success() => {
+    //             append_log_threadsafe(&logs, format!("Successfully installed dependencies. [{}]", status));
+    //             is_installed_flag.store(true, Ordering::SeqCst);
+    //         }
+    //         Ok(status) => {
+    //             append_log_threadsafe(&logs, format!("Failed to setup. [{}]", status));
+    //             is_installed_flag.store(false, Ordering::SeqCst);
+    //         }
+    //         Err(e) => {
+    //             append_log_threadsafe(&logs, format!("Failed to setup: {}", e));
+    //             is_installed_flag.store(false, Ordering::SeqCst);
+    //         }
+    //     }
+
+    //     is_installing_flag.store(false, Ordering::SeqCst);
+    //     ctx.request_repaint();
+    // });
 }
 
 /// Starts the Python backend script as a child process and sets up
