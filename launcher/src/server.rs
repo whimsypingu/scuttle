@@ -140,37 +140,35 @@ pub fn monitor_pipe<R: std::io::Read + Send + 'static>(
 /// # Arguments
 /// * `app` - A mutable reference to the `ScuttleGUI` state to update the `python_cmd`.
 pub fn detect_and_set_python(app: &mut ScuttleGUI) {
-    //python-launcher crate has some kind of deprecated dependency on termcolor.?
+    //python-launcher crate has some kind of deprecated dependency on termcolor(?) so try the which crate
     let logs = app.logs.clone();
     
-    // 1. Check for 'where python', which lists all absolute paths
-    let output = std::process::Command::new("where")
-        .arg("python")
-        .output();
+    let candidates = if cfg!(windows) {
+        vec!["python.exe", "python", "py"]
+    } else {
+        vec!["python3", "python"]
+    };
 
-    if let Ok(out) = output {
-        let stdout = String::from_utf8_lossy(&out.stdout);
-        
-        for path in stdout.lines() {
-            let trimmed = path.trim();
-            // 2. Filter out the Microsoft Store "fake" python shim
-            if !trimmed.contains("WindowsApps") && trimmed.ends_with("python.exe") {
-                app.python_cmd = trimmed.to_string();
-                if app.verbose {
-                    append_log_threadsafe(&logs, format!("✅ Python found: {}", app.python_cmd));
-                }
-                return; 
+    for cmd in candidates {
+        if let Ok(path) = which::which(cmd) {
+            let path_str = path.to_string_lossy().to_string();
+
+            //windows shim filter
+            if cfg!(windows) && path_str.contains("WindowsApps") {
+                continue;
             }
+
+            app.python_cmd = path_str;
+            if app.verbose {
+                append_log_threadsafe(&logs, format!("Found Python: {}", app.python_cmd));
+            }
+            return;
         }
     }
 
-    // 3. Fallback: If 'where' fails, try the 'py' launcher which is usually safe
-    if std::process::Command::new("py").arg("--version").spawn().is_ok() {
-        app.python_cmd = "py".to_string();
-    } else {
-        app.python_cmd = "python".to_string(); // Final hail mary
-        append_log_threadsafe(&logs, "No verified Python path found. Using default.");
-    }
+    //hail mary
+    app.python_cmd = "python".to_string();
+    append_log_threadsafe(&logs, "No verified Python path found. Trying default 'python'.".to_string());
 }
 
 /// Checks for the existence of a virtual environment to determine if the backend is "installed".
