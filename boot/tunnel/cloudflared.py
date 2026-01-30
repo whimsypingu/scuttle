@@ -144,7 +144,9 @@ def start_cloudflared(bin_path=None, url="localhost:8000", verbose=False):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1
+        bufsize=1,
+        encoding="utf-8", #force utf8 encoding (windows sometimes does cp1252 -- https://stackoverflow.com/questions/27092833/unicodeencodeerror-charmap-codec-cant-encode-characters)
+        errors="replace", #if decoding fails, insert a placeholder
     )
 
     #start background reader thread to drain output

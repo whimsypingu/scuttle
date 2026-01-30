@@ -32,6 +32,8 @@ def start_uvicorn(host="0.0.0.0", port=8000, verbose=False):
         stderr=subprocess.STDOUT,
         text=True, #text mode
         bufsize=1, #line buffer
+        encoding="utf-8", #force utf8 encoding (windows sometimes does cp1252 -- https://stackoverflow.com/questions/27092833/unicodeencodeerror-charmap-codec-cant-encode-characters)
+        errors="replace", #if decoding fails, insert a placeholder
     )
 
     vprint(f"[uvicorn] Started with PID {proc.pid}", verbose)
