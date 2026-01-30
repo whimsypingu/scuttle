@@ -61,7 +61,7 @@ def setup_all(verbose=False):
     return ToolEnvPaths(
         name="python",
         env_paths={
-            "PYTHON_BIN": python_bin
+            "PYTHON_BIN_PATH": python_bin
         }
     )
 
