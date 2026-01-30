@@ -7,7 +7,7 @@ import time
 import os
 from typing import Callable, List, Optional
 
-from backend.core.audio.postprocess import compress_audio, extract_duration, trim_silence, apply_loudnorm
+from backend.core.audio.processor import AudioProcessor 
 
 from backend.core.lib.utils import get_audio_path
 from backend.core.events.event_bus import EventBus
@@ -31,9 +31,11 @@ class YouTubeClient:
         dl_quality: Optional[str] = None,
         dl_user_agent: Optional[str] = None,
 
-        python_bin: Optional[Path] = None,
-        js_runtime_bin: Optional[Path] = None,
-        ffmpeg_location: Optional[Path] = None,
+        python_bin: Optional[str] = None,
+        js_runtime_bin: Optional[str] = None,
+        ffmpeg_location: Optional[str] = None,
+
+        post_processor: Optional[AudioProcessor] = None,
     ):
         self.name = name
         self.base_dir = base_dir
@@ -51,16 +53,16 @@ class YouTubeClient:
         self.dl_temp_format = "%(ext)s"
         
         #handle python binary from the venv to use yt-dlp
-        exec_bin = python_bin or os.environ.get("PYTHON_BIN_PATH")
-        self.python_bin = Path(exec_bin) if exec_bin else None
+        self.python_bin = python_bin or os.getenv("PYTHON_BIN_PATH")
 
         #handle jsruntime, should be set in env variables as deno
-        env_runtime = js_runtime_bin or os.environ.get("JS_RUNTIME_BIN_PATH")
-        self.js_runtime_bin = Path(env_runtime) if env_runtime else None
+        self.js_runtime_bin = js_runtime_bin or os.getenv("JS_RUNTIME_BIN_PATH")
 
         #handle ffmpeg and ffprobe env variables
-        env_ffmpeg = ffmpeg_location or os.environ.get("FFMPEG_LOCATION")
-        self.ffmpeg_location = Path(env_ffmpeg) if env_ffmpeg else None
+        self.ffmpeg_location = ffmpeg_location or os.getenv("FFMPEG_LOCATION")
+
+        #post processing
+        self.post_processor = post_processor #handles finding ffmpeg and ffprobe on its own
 
         #system check, not needed if python version >= 3.8
         if sys.platform == "win32": 
@@ -193,7 +195,7 @@ class YouTubeClient:
         #cmd line search
         delim = "\x1f"
         cmd = [
-            self.python_bin.as_posix(),
+            self.python_bin,
             "-m",
             "yt_dlp",
             f'ytsearch{limit}:{q}',
@@ -291,7 +293,7 @@ class YouTubeClient:
         #cmd line download
         delim = "\x1f"
         cmd = [
-            self.python_bin.as_posix(),
+            self.python_bin,
             "-m",
             "yt_dlp",
             "-x", #audio only
@@ -307,8 +309,8 @@ class YouTubeClient:
             "--retry-sleep", "linear=1::5",
             "-o", str(temp_path), #ytdlp requires temporary format
             "--extractor-args", "youtube:player_client=default,-android_sdkless",
-            "--js-runtimes", f"deno:{self.js_runtime_bin.as_posix()}", #jsruntime
-            "--ffmpeg-location", f"{self.ffmpeg_location.as_posix()}", #explicitly provide ffmpeg location
+            "--js-runtimes", f"deno:{self.js_runtime_bin}", #jsruntime
+            "--ffmpeg-location", self.ffmpeg_location, #explicitly provide ffmpeg location
             "--print", f"after_move:%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s", #complete print after download
             url
         ]
@@ -347,15 +349,20 @@ class YouTubeClient:
                     if v not in (None, "") and hasattr(track, k):
                         setattr(track, k, v)
 
-            #postprocess audio file
-            trim_silence(output_path)
-            apply_loudnorm(output_path)
+            if self.post_processor:
+                #postprocess audio file
+                self.post_processor.trim_silence(output_path)
+                self.post_processor.apply_loudnorm(output_path)
+                # trim_silence(output_path)
+                # apply_loudnorm(output_path)
 
-            done_path = compress_audio(output_path, "webm")
+                done_path = self.post_processor.compress(output_path, "webm")
+                # done_path = compress_audio(output_path, "webm")
 
-            #override raw duration with trimmed duration
-            trimmed_duration = extract_duration(done_path)
-            setattr(track, "duration", trimmed_duration)
+                #override raw duration with trimmed duration
+                trimmed_duration = self.post_processor.get_duration(done_path)
+                # trimmed_duration = extract_duration(done_path)
+                setattr(track, "duration", trimmed_duration)
 
             await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
             return track
