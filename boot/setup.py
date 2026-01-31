@@ -3,10 +3,22 @@ import venv
 
 from boot.utils.misc import IS_WINDOWS, VENV_DIR, REQ_FILE, vprint, ToolEnvPaths
 
-def run(cmd, check=True):
+def run(cmd, check=True, verbose=False):
     cmd_strs = [str(c) for c in cmd] #typeerror fix on windows
-    print(">", " ".join(cmd_strs))
-    subprocess.run(cmd, check=check) #check status code
+
+    vprint(">", " ".join(cmd_strs), verbose)
+
+    # stdout/stderr set to None means it prints to the terminal/GUI as normal.
+    # Setting them to DEVNULL hides them completely.
+    stdout_dest = None if verbose else subprocess.DEVNULL
+    stderr_dest = None if verbose else subprocess.DEVNULL
+    
+    subprocess.run(
+        cmd, 
+        check=check,
+        stdout=stdout_dest,
+        stderr=stderr_dest
+    )
 
 def ensure_venv(verbose=False):
     if not VENV_DIR.exists():
@@ -23,11 +35,13 @@ def ensure_venv(verbose=False):
         python_bin = VENV_DIR / "bin" / "python"
 
     #upgrade pip
-    run([python_bin, "--version"])
-    run([python_bin, "-m", "pip", "install", "--upgrade", "pip"])
-    run([python_bin, "-m", "pip", "install", "--upgrade", "-r", REQ_FILE])
+    run([python_bin, "--version"], verbose=verbose)
+    run([python_bin, "-m", "pip", "install", "--upgrade", "pip"], verbose=verbose)
+    run([python_bin, "-m", "pip", "install", "--upgrade", "-r", REQ_FILE], verbose=verbose)
 
-    run([python_bin, "-m", "pip", "list"])
+    #only show full package list if in verbose mode
+    if verbose:
+        run([python_bin, "-m", "pip", "list"], verbose=verbose)
 
     return python_bin
 
@@ -47,7 +61,7 @@ def upgrade_ytdlp(python_bin, verbose=False):
     ]
 
     try:
-        run(cmd, check=True)
+        run(cmd, check=True, verbose=verbose)
         vprint("yt-dlp nightly is up to date.", verbose)
     except Exception as e:
         vprint(f"Failed to upgrade yt-dlp: {e}", verbose)

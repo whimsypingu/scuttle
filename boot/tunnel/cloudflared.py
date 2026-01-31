@@ -9,7 +9,7 @@ import urllib.request
 import json
 import os
 
-from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, update_env, ToolEnvPaths
+from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, ToolEnvPaths
 from boot.utils.threads import drain_output
 
 

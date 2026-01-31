@@ -18,11 +18,10 @@ import argparse
 import threading
 from datetime import datetime, timedelta
 
-from boot.utils.misc import IS_WINDOWS, update_env
+from boot.utils.misc import update_env
 
 
 def main():
-
     #------------------------------- Parse arguments -------------------------------#
     parser = argparse.ArgumentParser(
         description=(
@@ -85,10 +84,6 @@ def main():
     #parse the arguments and do setup
     verbose = args.verbose
 
-    if args.set_webhook:
-        update_env("DISCORD_WEBHOOK_URL", args.set_webhook, verbose=verbose)
-        print(f"✅ Webhook updated: {args.set_webhook}")
-    
     if args.setup:
         from boot.setup import setup_all #includes venv and yt-dlp nightly
         from boot.tunnel.cloudflared import download_cloudflared
@@ -111,12 +106,18 @@ def main():
                 #check if valid output and save to environment variables
                 if result:
                     result.register(verbose=verbose)
+                    print(f"✅ {result.name}")
             except Exception as e:
-                print(f"\n❌ Setup failed during a step: {e}")
+                print(f"❌ Setup failed during a step: {e}")
 
-        print("\n✅ Environment setup complete.")
+        print("✅ Environment setup complete.")
         return
 
+    if args.set_webhook:
+        #switch this to a boot/utils/misc.py/ToolEnvPaths style dataclass pattern
+        update_env("DISCORD_WEBHOOK_URL", args.set_webhook, verbose=verbose) 
+        print(f"✅ Webhook updated: {args.set_webhook}")
+    
     #------------------------------- Begin main code -------------------------------#
     from dotenv import load_dotenv
 
@@ -133,11 +134,7 @@ def main():
     send_webhook = True
     DISCORD_WEBHOOK_URL = get_webhook_url()
     if not DISCORD_WEBHOOK_URL:
-        print(
-            "[INFO] No Discord webhook set.\n"
-            "Notifications will be disabled.\n"
-            "Set a webhook with 'python main.py --set-webhook [URL]'."
-        )
+        print("⚠️ No Discord webhook set. (Server settings » Integrations » Webhooks)")
         send_webhook = False
 
     TUNNEL_BIN_PATH = os.getenv("TUNNEL_BIN_PATH")
