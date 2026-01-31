@@ -224,9 +224,10 @@ impl eframe::App for ScuttleGUI {
 
             customui::apply_theme(ctx);
 
-            //setup
-            server::detect_and_set_python(self);
-            server::setup_exists(self); //simple setup check via /venv/ existence, consider tmp file
+            //simple setup check via /venv/ existence, consider tmp file
+            if !server::setup_exists(self) {
+                server::detect_and_set_python(self);
+            }
         }
 
         egui::TopBottomPanel::top("header_panel")

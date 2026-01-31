@@ -147,7 +147,7 @@ pub fn monitor_pipe<R: std::io::Read + Send + 'static>(
 pub fn detect_and_set_python(app: &mut ScuttleGUI) {
     //python-launcher crate has some kind of deprecated dependency on termcolor(?) so try the which crate
     let logs = app.logs.clone();
-    
+
     let candidates = if cfg!(windows) {
         vec!["python.exe", "python", "py"]
     } else {
@@ -164,16 +164,14 @@ pub fn detect_and_set_python(app: &mut ScuttleGUI) {
             }
 
             app.python_cmd = path_str;
-            if app.verbose {
-                append_log_threadsafe(&logs, format!("✅ Found Python: {}", app.python_cmd));
-            }
+            append_log_threadsafe(&logs, format!("✅ Found Python: {}", app.python_cmd));
             return;
         }
     }
 
     //hail mary
     app.python_cmd = "python".to_string();
-    append_log_threadsafe(&logs, "⚠️ No verified Python path found. Trying default 'python'.".to_string());
+    append_log_threadsafe(&logs, "No verified Python path found. Trying default 'python'.".to_string());
 }
 
 /// Checks for the existence of a virtual environment to determine if the backend is "installed".
@@ -183,9 +181,13 @@ pub fn detect_and_set_python(app: &mut ScuttleGUI) {
 ///
 /// # Arguments
 /// * `app` - A mutable reference to the `ScuttleGUI` state.
-pub fn setup_exists(app: &mut ScuttleGUI) {
+pub fn setup_exists(app: &mut ScuttleGUI) -> bool {
     let venv_dir = app.root_dir.join("venv");
-    app.is_installed.store(venv_dir.exists(), Ordering::SeqCst); //this is a very simple implementation of checking setup
+    let exists = venv_dir.exists();
+
+    app.is_installed.store(exists, Ordering::SeqCst); //this is a very simple implementation of checking setup
+
+    exists
 }
 
 /// Executes the backend setup process as a child process.
