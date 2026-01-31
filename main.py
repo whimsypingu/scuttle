@@ -85,7 +85,7 @@ def main():
     verbose = args.verbose
 
     if args.setup:
-        from boot.setup import setup_all #includes venv and yt-dlp nightly
+        from boot.setup import setup_all, create_setup_sentinel_file #includes venv and yt-dlp nightly
         from boot.tunnel.cloudflared import download_cloudflared
         from boot.runtime.deno import download_deno
         from boot.install_ffmpeg import install_ffmpeg
@@ -102,15 +102,23 @@ def main():
         for tool in tool_installers:
             try:
                 result = tool()
+                if not result:
+                    raise ValueError("Tool returned an empty result.")
                 
                 #check if valid output and save to environment variables
-                if result:
-                    result.register(verbose=verbose)
-                    print(f"✅ {result.name}")
+                result.register(verbose=verbose)
+                print(f"✅ {result.name}")
+
             except Exception as e:
                 print(f"❌ Setup failed during a step: {e}")
+                return #fail fast
 
-        print("✅ Environment setup complete.")
+        try: 
+            create_setup_sentinel_file(verbose=verbose)
+            print("✅ Environment setup complete.")
+        except Exception as e:
+            print(f"❌ Failed to finalize setup: {e}")
+
         return
 
     if args.set_webhook:
@@ -134,7 +142,7 @@ def main():
     send_webhook = True
     DISCORD_WEBHOOK_URL = get_webhook_url()
     if not DISCORD_WEBHOOK_URL:
-        print("⚠️ No Discord webhook set. (Server settings » Integrations » Webhooks)")
+        print("[!!] No Discord webhook set. (Server settings » Integrations » Webhooks)")
         send_webhook = False
 
     TUNNEL_BIN_PATH = os.getenv("TUNNEL_BIN_PATH")

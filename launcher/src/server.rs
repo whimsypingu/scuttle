@@ -171,22 +171,21 @@ pub fn detect_and_set_python(app: &mut ScuttleGUI) {
 
     //hail mary
     app.python_cmd = "python".to_string();
-    append_log_threadsafe(&logs, "No verified Python path found. Trying default 'python'.".to_string());
+    append_log_threadsafe(&logs, "[!!] No verified Python path found. Trying default 'python'.".to_string());
 }
 
-/// Checks for the existence of a virtual environment to determine if the backend is "installed".
+/// Checks for the existence of a sentinel file to determine if the backend is "installed".
 ///
-/// This is a lightweight check that looks for a `venv` directory within the application's 
+/// This is a lightweight check that looks for a `.setup_done` file within the application's 
 /// root directory. It updates the `is_installed` atomic boolean accordingly.
 ///
 /// # Arguments
 /// * `app` - A mutable reference to the `ScuttleGUI` state.
 pub fn setup_exists(app: &mut ScuttleGUI) -> bool {
-    let venv_dir = app.root_dir.join("venv");
-    let exists = venv_dir.exists();
+    let sentinel_file = app.root_dir.join(".setup_done"); //see boot/setup.py/create_setup_sentinel_file
+    let exists = sentinel_file.exists();
 
-    app.is_installed.store(exists, Ordering::SeqCst); //this is a very simple implementation of checking setup
-
+    app.is_installed.store(exists, Ordering::SeqCst); 
     exists
 }
 

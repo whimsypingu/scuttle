@@ -1,7 +1,7 @@
 import subprocess
 import venv
 
-from boot.utils.misc import IS_WINDOWS, VENV_DIR, REQ_FILE, vprint, ToolEnvPaths
+from boot.utils.misc import IS_WINDOWS, ROOT_DIR, VENV_DIR, REQ_FILE, vprint, ToolEnvPaths
 
 def run(cmd, check=True, verbose=False):
     cmd_strs = [str(c) for c in cmd] #typeerror fix on windows
@@ -68,6 +68,9 @@ def upgrade_ytdlp(python_bin, verbose=False):
 
 
 def setup_all(verbose=False):
+    """
+    Sets up the venv/ and ytdlp, and returns the Path to the python binary in the venv/
+    """
     python_bin = ensure_venv(verbose=verbose)
 
     upgrade_ytdlp(python_bin=python_bin, verbose=verbose)
@@ -79,6 +82,14 @@ def setup_all(verbose=False):
         }
     )
 
+
+def create_setup_sentinel_file(verbose=False):
+    """
+    Attempts 'touch'ing a sentinel file to mark that setup is complete
+    """
+    sentinel_path = ROOT_DIR / ".setup_done"
+    sentinel_path.touch(exist_ok=True)
+    vprint(f"Touched file: {sentinel_path}", verbose)
 
 
 
