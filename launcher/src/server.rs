@@ -214,6 +214,7 @@ pub fn run_setup(app: &mut ScuttleGUI) {
 
     let mut cmd = Command::new(&app.python_cmd);
     cmd.current_dir(&app.root_dir)
+        .arg("-u") //unbuffered
         .arg("main.py")
         .arg("--setup");
 
