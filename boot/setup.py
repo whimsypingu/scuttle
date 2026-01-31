@@ -6,7 +6,7 @@ from boot.utils.misc import IS_WINDOWS, VENV_DIR, REQ_FILE, vprint, ToolEnvPaths
 def run(cmd, check=True, verbose=False):
     cmd_strs = [str(c) for c in cmd] #typeerror fix on windows
 
-    vprint(">", " ".join(cmd_strs), verbose)
+    vprint(f"> {' '.join(cmd_strs)}", verbose)
 
     # stdout/stderr set to None means it prints to the terminal/GUI as normal.
     # Setting them to DEVNULL hides them completely.
