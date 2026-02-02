@@ -1,6 +1,6 @@
 from pathlib import Path
 from fastapi import Request, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from typing import Union
 
 from backend.core.lib.utils import is_downloaded, get_audio_path, get_audio_size
@@ -9,6 +9,28 @@ import backend.globals as G
 
 import mimetypes
 
+
+def stream_audio(req: Request, id: str) -> FileResponse:
+    #checks for status
+    if not id:
+        raise HTTPException(status_code=404, detail="No track id provided.")
+    
+    if not is_downloaded(id=id):
+        raise HTTPException(status_code=404, detail="Track not downloaded.")
+
+    file_path = get_audio_path(id=id)
+
+    #according to gemini, the anyio call in fileresponse is actually faster than the one in streamingresponse
+    #https://github.com/Kludex/starlette/blob/main/starlette/responses.py#L293
+    #no need to reinvent the wheel anyway, fileresponse already handles all the range requests and shit.
+    return FileResponse(
+        path=file_path,
+        content_disposition_type="inline"
+    )
+
+
+#keep this version in case i add some kind of transcoding in the future
+'''
 def stream_audio(req: Request, id: str, full: False) -> StreamingResponse:
     #checks for status
     if not id:
@@ -89,3 +111,4 @@ def stream_audio(req: Request, id: str, full: False) -> StreamingResponse:
             status_code=200, 
             headers=headers
         )
+'''
