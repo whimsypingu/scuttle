@@ -33,7 +33,8 @@ async def get_audio_stream(id: str, req: Request, full: bool = False):
             await download_queue.push(job)
         
         raise HTTPException(status_code=503, detail="Track is downloading, try again shortly")
-    return stream_audio(req=req, id=id, full=full)
+    return stream_audio(req=req, id=id)
+    #return stream_audio(req=req, id=id, full=full)
 
 
 @router.post("/toggle_like")
