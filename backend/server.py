@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.core.database.cleanup import cleanup_download_folder
 from backend.core.worker.download import DownloadWorker
+from backend.core.audio.processor import AudioProcessor
 from backend.core.youtube.client import YouTubeClient
 from backend.core.database.audio_database import AudioDatabase
 
@@ -50,7 +51,8 @@ async def lifespan(app: FastAPI):
     print(await db.search(""))
 
     # ytdlp
-    yt = YouTubeClient(name=G.YOUTUBE_CLIENT_NAME, base_dir=G.DOWNLOAD_DIR, event_bus=event_bus)
+    pp = AudioProcessor()
+    yt = YouTubeClient(name=G.YOUTUBE_CLIENT_NAME, base_dir=G.DOWNLOAD_DIR, event_bus=event_bus, post_processor=pp)
 
     # Initialize backend components early if needed for handlers
     play_queue = PlayQueue(name=G.PLAY_QUEUE_NAME, event_bus=event_bus)

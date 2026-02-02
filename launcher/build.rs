@@ -8,7 +8,7 @@ fn main() {
         res.set_icon("../frontend/assets/favicon.ico"); 
         
         res.set("ProductName", "Scuttle");
-        res.set("FileDescription", "YouTube Downloader");
+        res.set("FileDescription", "Scuttle");
         res.compile().unwrap();
     }
 }

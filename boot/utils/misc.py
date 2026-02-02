@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 import sys
 
+from dataclasses import dataclass, field
+from typing import Dict
 
 IS_WINDOWS = os.name == "nt"
 IS_MAC = sys.platform == "darwin"
@@ -9,7 +11,7 @@ IS_LINUX = sys.platform.startswith("linux")
 
 SYS_PLATFORM = sys.platform
 
-ROOT_DIR = Path(__file__).parent.parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent #consider climbing the directory to find main.py, but not really necessary
 TOOLS_DIR = ROOT_DIR / "tools"
 
 BACKEND_DIR = ROOT_DIR / "backend"
@@ -22,7 +24,12 @@ REQ_FILE = ROOT_DIR / "requirements.txt"
 ENV_FILE = ROOT_DIR / ".env"
 
 
-def update_env(key, value):
+def vprint(message, verbose=False):
+    if verbose:
+        print(message)
+
+
+def update_env(key, value, verbose=False):
     """
     Update or insert a key=value pair in the .env file. 
     DOES NOT call load_dotenv(override=True) afterwards.
@@ -31,6 +38,7 @@ def update_env(key, value):
     Args:
         key (str): Environment variable name.
         value (str): New value to set.
+        verbose (bool): Debug logs.
     """
     new_line = f"{key}={value}\n"
 
@@ -56,8 +64,17 @@ def update_env(key, value):
         f.writelines(lines)
 
     os.environ[key] = str(value) #just in case Path
+    vprint(f"Environment variable {key} set to {value}", verbose)
 
 
-def vprint(message, verbose=False):
-    if verbose:
-        print(message)
+#use this to store the output of downloading a tool, to then use for updating the environment
+@dataclass
+class ToolEnvPaths:
+    name: str
+    env_paths: Dict[str, Path] = field(default_factory=dict)
+
+    def register(self, verbose=False):
+        """Iterates through paths and updates the environment for each"""
+        for key, path in self.env_paths.items():
+            update_env(key, path.as_posix(), verbose=verbose)
+

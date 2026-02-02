@@ -9,7 +9,7 @@ import urllib.request
 import json
 import os
 
-from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, update_env
+from boot.utils.misc import IS_WINDOWS, TOOLS_DIR, vprint, ToolEnvPaths
 from boot.utils.threads import drain_output
 
 
@@ -68,6 +68,7 @@ def download_cloudflared(target_path=None, verbose=False):
     cf_metadata = _get_cloudflared_name()
     asset_name = cf_metadata["asset_name"]
     url = cf_metadata["url"]
+    binary_name = "cloudflared.exe" if IS_WINDOWS else "cloudflared" #hard-coded executable here hopefully it stays this way
 
     #download
     vprint(f"Downloading cloudflared from {url} ...", verbose)
@@ -75,7 +76,7 @@ def download_cloudflared(target_path=None, verbose=False):
     #prepare directory and download in chunks to a temp file before swapping
     if target_path is None:
         TOOLS_DIR.mkdir(parents=True, exist_ok=True)
-        target_path = TOOLS_DIR / asset_name
+        target_path = TOOLS_DIR / binary_name #previously asset_name, but we only need one cloudflared version
 
     temp_path = target_path.with_suffix(target_path.suffix + ".part") if target_path.suffix else target_path.with_suffix(".part")
     try:
@@ -97,10 +98,12 @@ def download_cloudflared(target_path=None, verbose=False):
 
         vprint(f"Saved cloudflared to {target_path}", verbose)
 
-        #save to .env file
-        update_env("TUNNEL_BIN_PATH", target_path.as_posix())
-
-        return target_path
+        return ToolEnvPaths(
+            name="cloudflared",
+            env_paths={
+                "TUNNEL_BIN_PATH": target_path
+            }
+        )
 
     except Exception as e:
         #cleanup partial file if anything went wrong
@@ -144,7 +147,9 @@ def start_cloudflared(bin_path=None, url="localhost:8000", verbose=False):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1
+        bufsize=1,
+        encoding="utf-8", #force utf8 encoding (windows sometimes does cp1252 -- https://stackoverflow.com/questions/27092833/unicodeencodeerror-charmap-codec-cant-encode-characters)
+        errors="replace", #if decoding fails, insert a placeholder
     )
 
     #start background reader thread to drain output

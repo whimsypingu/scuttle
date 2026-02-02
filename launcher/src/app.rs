@@ -18,6 +18,7 @@ use crate::customui;
 /// 2. **Mutable during runtime:** server state, child process handle, control stream.
 pub struct ScuttleGUI {
     //these shouldn't change during program execution
+    pub python_cmd: String, //python, py, or python3 to install successfully on start
     pub control_port: u16, //declared as an ephemeral port once at start
     pub logs: Arc<Mutex<VecDeque<String>>>, //all logs for the rust gui
     pub root_dir: PathBuf, //path to executable parent directory (main project directory)
@@ -189,6 +190,7 @@ impl Default for ScuttleGUI {
         let show_settings = webhook_url.trim().is_empty();
 
         Self {
+            python_cmd: "python".to_string(),
             control_port,
             logs: Arc::new(Mutex::new(VecDeque::new())),
             root_dir,
@@ -222,18 +224,10 @@ impl eframe::App for ScuttleGUI {
 
             customui::apply_theme(ctx);
 
-            //setup
-            server::setup_exists(self); //simple setup check via /venv/ existence, consider tmp file
-            // if !self.is_installed.load(Ordering::SeqCst) {
-
-            //     ui.vertical_centered(|ui| {
-            //         ui.heading("Setup Required");
-            //         ui.label("Scuttle needs to install some dependencies (venv, cloudflared, ffmpeg, deno) to function.");
-            //         if ui.button("🚀 Start Installation").clicked() {
-            //             server::run_setup(self);
-            //         }
-            //     })
-            // }
+            //simple setup check via /venv/ existence, consider tmp file
+            if !server::setup_exists(self) {
+                server::detect_and_set_python(self);
+            }
         }
 
         egui::TopBottomPanel::top("header_panel")
