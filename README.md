@@ -8,7 +8,7 @@ Scuttle is a responsive web-based audio archival tool for managing and playing y
 - Self-host your audio library and stream to any device with a browser
 - Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
 
-This requires Python 3.8+ to install. Setting up will install binaries for ffmpeg and cloudflared. You can run Scuttle by downloading this as a zip, and running ```scuttle.bat``` on Windows (No support for one-click setup on Linux or Mac yet). For manual setup see [installation](#installation) and [usage](#usage) for more details. No support for automatic updates yet.
+This requires Python 3.8+ to install. Setting up will install binaries for ffmpeg (which includes ffprobe), cloudflared, and deno. You can run Scuttle by downloading this as a zip, and running ```scuttle.exe``` on Windows (No support for one-click setup on Linux or Mac yet, but you can compile the rust binary to make the executable). For manual setup see [installation](#installation) and [usage](#usage) for more details. No support for automatic updates yet.
 
 ### Table of Contents
 - [Installation](#installation)
@@ -38,16 +38,19 @@ cd scuttle
 python main.py --help
 ```
 
-For Windows, the ```scuttle.bat``` file can be double-clicked to perform all setup.
+For Windows, the ```scuttle.exe``` file can be double-clicked to perform all setup, and provide a GUI for usage.
 No one-click installer for Linux or Mac yet.
 
 
 ### 2. Setup the environment
 Run the setup script to prepare the python environment. This will:
-* Create a Python virtual environment (```/venv```)
+* Create a Python virtual environment (```/venv/```)
 * Install all required python library dependencies (please see ```/requirements.txt``` in [dependencies](#dependencies))
-* Download a ```cloudflared``` executable for tunneling from [the official open source repository](https://github.com/cloudflare/cloudflared/releases/latest/)
-* Install ffmpeg into the virtual python environment if necessary (Only for Windows right now)
+* Download a `cloudflared` executable for tunneling from [the official open source repository](https://github.com/cloudflare/cloudflared/releases/latest/)
+* Download a `ffmpeg` and `ffprobe` executable for audio transformations.
+* Download a `deno` executable, which is a requirement for yt-dlp to function.
+* Prepare a `.env` file.
+* Successful on seeing a `.setup_done` sentinel file, don't delete this.
 
 ```bash
 python main.py --setup
@@ -83,11 +86,11 @@ Scuttle can provide the tunneled link to a Discord channel using a webhook URL, 
 python main.py --set-webhook [URL]
 ```
 
-💡 While the server is running, your device will stay awake to maintain the connection, though the display may turn off to conserve battery. Note that closing a laptop may turn off the server (at least, it did for me once).
+💡 While the server is running, your device will stay awake to maintain the connection, though the display may turn off to conserve battery.
 
 
 ### 2. Shut down the server
-Press ```Ctrl+C``` in the terminal to shut off the server and allow your device to sleep normally again.
+Press `Ctrl+C` in the terminal to shut off the server and allow your device to sleep normally again.
 
 
 ## Architecture
@@ -117,7 +120,7 @@ flowchart LR
 ## Dependencies
 This project requires Python 3.8+ and the following Python packages:
 
-- **yt-dlp** – Download and manage audio/video content.  
+- **yt-dlp** – Download and manage audio/video content. Defaults to the nightly release version for better uptime for download functionality. 
 - **FastAPI** – Web framework for building the backend API.  
 - **uvicorn[standard]** – ASGI server to run the FastAPI app.  
 - **websockets** – Real-time communication support.  
@@ -138,7 +141,7 @@ scuttle/
 ├─ boot/                # Setup scripts
 ├─ frontend/            # Web UI assets and logic
 ├─ tests/               # Um ignore this
-├─ tools/               # Tunnel binary
+├─ tools/               # Binaries for tunneling, ffmpeg, and JS runtime
 ├─ venv/                # Virtual environment (created by setup)
 ├─ .env                 # Environment variables (auto-generated)
 ├─ main.py              # Entry point for the application
@@ -150,7 +153,8 @@ scuttle/
 ## Known Issues
 There are some known bugs that haven't been bothered to be fixed yet.
 * Cleaning out unused downloads (Done, but only on restart)
-* yt-dlp updating in case of failure
+* Mobile UI occasionally shows the queue tab kind of lifted.
+* yt-dlp updating in case of failure (this might work now).
 * yt-dlp download options and timeout failure cleanup/notification on frontend.
 * Clearing DNS cache (Occasionally breaks cloudflared. If tunnel can't be resolved, clear the cache in command line and retry)
 * Potential breakage of floating point indexing of database after many re-orders - just re-normalize indices per playlist every now and then. Have to find an optimal time to do this though, and the willpower to write the code.
@@ -181,7 +185,7 @@ Scuttle is still in active development. Here are some planned features and impro
 
 These are not guaranteed but they reflect the current development priorities and ideas for future releases.
 
-Current work (January 2026) on improved search functionality is being done at [this Google Colab notebook](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing). 
+Current work (February 2026) on improved search functionality is being done at [this Google Colab notebook](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing). 
 
 
 ## License
