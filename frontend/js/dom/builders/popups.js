@@ -129,6 +129,20 @@ export function buildEditTrackPopup(playlists, track) {
     // ]
     console.log("TRACK DATA", track);
 
+    let linkHTML = "";
+    if (track.id.startsWith("YT___")) {
+        const url = `https://www.youtube.com/watch?v=${track.id.replace("YT___", "")}`;
+
+        linkHTML = `
+            <div class="link-container">
+                <i class="fa fa-youtube-play"></i> 
+                <a href="${url}" target=_blank" class="link-track">
+                    View on YouTube
+                </a>
+            </div>
+        `;
+    }
+
     const playlistsHTML = playlists.length > 0
         ? playlists.map(pl => `
             <label class="playlist-option ${pl.checked ? 'checked' : ''}" data-id="${pl.id}">
@@ -159,6 +173,8 @@ export function buildEditTrackPopup(playlists, track) {
                 <input type="text" class="menu-input js-track-title" value="${track.title}" placeholder="Title..." />
             
                 <input type="text" class="menu-input js-track-artist" value="${track.artist}" placeholder="Artist..." />
+
+                ${linkHTML}
             </div>
 
             <div class="spacing-block">
