@@ -22,6 +22,24 @@
     border-color: var(--text-2);
 }
 
+.link-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+}
+.link-container i {
+    color: var(--text-2);
+}
+.link-container a {
+    color: var(--text-3);
+}
+.link-container a:hover,
+.link-container a:active {
+    color: red;
+}
+
 @media (max-width: 768px) {
     .menu-input {
         height: var(--mobile-button-m);
