@@ -185,7 +185,7 @@ Scuttle is still in active development. Here are some planned features and impro
 
 These are not guaranteed but they reflect the current development priorities and ideas for future releases.
 
-Current work (February 2026) on improved search functionality is being done at [this Google Colab notebook](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing). 
+Current work (February 2026) on improved search functionality is being done at [this Google Colab notebook for Discogs-based seeding](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing) and at [this Google Colab notebook for Anna's Archive top 10000 Spotify songs from July 2025 seeding](https://colab.research.google.com/drive/14DFgnXGVu2MIdiBNPluC8kf8e_F70lv9?usp=sharing). 
 
 
 ## License
