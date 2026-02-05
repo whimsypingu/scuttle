@@ -16,25 +16,10 @@ class SearchMixin:
         """
         async with self._lock:
             if not q:
-                query = '''
-                    SELECT
-                        t.id,
-                        COALESCE(t.title_display, t.title) AS title,
-                        COALESCE(
-                            GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
-                            "Unknown Artist"
-                        ) AS artist,
-                        COALESCE(t.duration, 0.0) AS duration
-                    FROM titles t
-                    INNER JOIN downloads d ON t.id = d.id
-                    LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
-                    LEFT JOIN artists a ON ta.artist_rowid = a.rowid
-                    GROUP BY t.id
-                    ORDER BY d.downloaded_at DESC;
-                '''
-                params = ()
+                content = []
 
-            else:            
+            else:
+                limit = 30
                 query = '''
                     SELECT
                         t.id,
@@ -43,31 +28,37 @@ class SearchMixin:
                             GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
                             "Unknown Artist"
                         ) AS artist,
-                        COALESCE(t.duration, 0.0) AS duration
-                    FROM titles t
-                    JOIN catalog_fts fts ON fts.rowid = t.rowid
-                    LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
-                    LEFT JOIN artists a ON ta.artist_rowid = a.rowid
-                    WHERE catalog_fts MATCH ?
-                    GROUP BY t.id
-                    ORDER BY rank;
+                        t.duration,
+
+                        sub.score * t.pref_weight * MAX(a.pref_weight) AS final_rank
+                    FROM (
+                        SELECT
+                            rowid,
+                            bm25(catalog_fts, 1.0, 1.5) AS score
+                        FROM catalog_fts
+                        WHERE catalog_fts MATCH ?
+                        LIMIT ?
+                    ) AS sub
+                    JOIN titles t ON t.rowid = sub.rowid
+                    JOIN title_artists ta ON ta.title_rowid = t.rowid
+                    JOIN artists a ON a.rowid = ta.artist_rowid
+                    GROUP BY sub.rowid
+                    ORDER BY final_rank ASC;
                 '''
                 tokens = q.split()
                 fts_query = " ".join(f"{t}*" for t in tokens)
-                params = (fts_query,)
+                params = (fts_query, limit)
 
-            rows = await self._fetchall(query, params)
-            content = [
-                Track(
-                    id=row["id"], 
-                    title=row["title"],
-                    artist=row["artist"],
-                    duration=row["duration"]
-                )
-                for row in rows
-            ]
-
-            print(f"FAILING HERE: {content}")
+                rows = await self._fetchall(query, params)
+                content = [
+                    Track(
+                        id=row["id"], 
+                        title=row["title"],
+                        artist=row["artist"],
+                        duration=row["duration"]
+                    )
+                    for row in rows
+                ]
 
             await self._emit_event(action=ADA.SEARCH, payload={"content": content})
     
