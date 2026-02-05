@@ -61,7 +61,7 @@ async def deep_search(req: Request, q: Optional[str] = Query(None)):
 
     for track in results:
         print("ATTEMPTING LOG TRACK:", track)
-        await db.log_track(track)
+        await db.register_track(track)
 
     content = [track.to_json() for track in results]
     return JSONResponse(content={"content": content}, status_code=200)

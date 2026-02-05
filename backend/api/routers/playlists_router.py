@@ -282,6 +282,6 @@ async def delete_track(body: DeleteTrackRequest, req: Request) -> Response:
 
     db: AudioDatabase = req.app.state.db
 
-    await db.unlog_download(track_id)
+    await db.unregister_download(track_id)
 
     return JSONResponse(content={"status": "deleted"}, status_code=200)

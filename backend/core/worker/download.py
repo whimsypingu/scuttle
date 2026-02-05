@@ -47,8 +47,8 @@ class DownloadWorker:
 
                 #client should return the classic Track metadata with {id, title, artist, dur} 
                 if track:
-                    await self.audio_database.log_track(track)
-                    await self.audio_database.log_download(track.id)
+                    await self.audio_database.register_track(track)
+                    await self.audio_database.register_download(track.id)
 
                     #put into a playlist right away? in the case of importing a playlist then yes
                     if job.get_updates():
