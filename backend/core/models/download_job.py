@@ -41,10 +41,13 @@ class DownloadJob:
         self.queue_last = queue_last
 
     def get_type(self) -> str:
-        if self.id:
-            return "id"
         if self.query:
             return "query"
+        elif self.id:
+            if self.id.startswith("YT___"):
+                return "yt_id"
+            elif self.id.startswith("SEED___"):
+                return "seed_id"
         return "unknown"
     
     def get_id(self) -> str | None:

@@ -260,7 +260,13 @@ async def edit_track(body: EditTrackRequest, req: Request) -> Response:
     db: AudioDatabase = req.app.state.db
 
     await db.update_track_playlists(track_id=track_id, playlist_updates=playlist_updates)
-    await db.set_custom_metadata(track_id, title, artist)
+
+    #TODO: fix artist display
+    metadata = {
+        "title_display": title
+    }
+    await db.set_metadata(id=track_id, metadata=metadata)
+    #await db.set_custom_metadata(track_id, title, artist)
 
     return JSONResponse(content={"status": "updated"}, status_code=200)
 

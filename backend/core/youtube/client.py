@@ -42,7 +42,7 @@ class YouTubeClient:
 
         self._event_bus = event_bus
 
-        self.id_src = "YT___" #source for id's, so that it'll be like YT___#######...
+        self.YT_PREFIX = "YT___" #source for id's, so that it'll be like YT___#######...
 
         self.dl_format_filter = dl_format_filter or "bestaudio/best"
         self.dl_format = dl_format or "wav"
@@ -231,7 +231,7 @@ class YouTubeClient:
                     continue
 
                 id, title, artist, duration = parts
-                true_id = f"{self.id_src}{id}"
+                true_id = f"{self.YT_PREFIX}{id}"
 
                 track = Track(
                     id=true_id,
@@ -274,9 +274,36 @@ class YouTubeClient:
         _retry: bool = True
     ) -> bool:
         """
-        Downloads a track given a Youtube ID using ytdlp and returns a Track object.
-        If custom_track is provided, its fields override the downloaded metadata.
-        Internal flag _retry to attempt again if yt-dlp is updated.
+        Downloads a specific YouTube video as an audio file and returns a Track object.
+
+        This method orchestrates the full download pipeline: fetching audio via yt-dlp,
+        parsing metadata from the stream, applying post-processing (silence trimming, 
+        loudness normalization, compression), and calculating the final duration.
+
+        Args:
+            id (str): The YouTube video ID (e.g., "dQw4w9WgXcQ") or a prefixed ID.
+            timeout (int): Maximum seconds allowed for the yt-dlp subprocess to run. 
+                Defaults to 60.
+            custom_metadata (Optional[dict]): A dictionary of fields to manually 
+                override the metadata fetched from YouTube. 
+                Supported keys typically include:
+                - 'title': Manual song title.
+                - 'artist': Manual artist/uploader name.
+                - Any other attribute present on the 'Track' class.
+                Values that are None or empty strings will be ignored.
+                Duration is overwritten by the post-processing output value.
+            _retry (bool): Internal safety flag. If True and the download fails, 
+                the method will attempt to self-update yt-dlp and try exactly 
+                one more time. Defaults to True.
+
+        Returns:
+            Track: An instance of the Track class populated with metadata and 
+                the path to the processed audio.
+
+        Raises:
+            RuntimeError: If yt-dlp exits with a non-zero code or the subprocess times out.
+            ValueError: If the metadata returned by yt-dlp cannot be parsed.
+            Exception: Re-raises any error encountered if the retry attempt also fails.
         """
         #send task start notification
         await self._emit_event(action=YTCA.START, payload={})
@@ -285,8 +312,8 @@ class YouTubeClient:
         output_path = get_audio_path(id=id, base_dir=self.base_dir, audio_format=self.dl_format)
         temp_path = get_audio_path(id=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
 
-        if id.startswith(self.id_src):
-            id = id[len(self.id_src):]
+        if id.startswith(self.YT_PREFIX):
+            id = id[len(self.YT_PREFIX):]
 
         url = f"https://www.youtube.com/watch?v={id}"
 
@@ -335,7 +362,7 @@ class YouTubeClient:
                 raise ValueError(f"[download_by_id] Failed to parse metadata: {e}, Output was: {out}")
 
             #build track object
-            true_id = f"{self.id_src}{id}"
+            true_id = f"{self.YT_PREFIX}{id}"
             track = Track(
                 id=true_id,
                 title=title or "Unknown Title",
@@ -353,15 +380,11 @@ class YouTubeClient:
                 #postprocess audio file
                 self.post_processor.trim_silence(output_path)
                 self.post_processor.apply_loudnorm(output_path)
-                # trim_silence(output_path)
-                # apply_loudnorm(output_path)
 
                 done_path = self.post_processor.compress(output_path, "webm")
-                # done_path = compress_audio(output_path, "webm")
 
                 #override raw duration with trimmed duration
                 trimmed_duration = self.post_processor.get_duration(done_path)
-                # trimmed_duration = extract_duration(done_path)
                 setattr(track, "duration", trimmed_duration)
 
             await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})

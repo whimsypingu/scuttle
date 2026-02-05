@@ -7,7 +7,7 @@ class RegisterMixin:
         Log (insert or update) a track's metadata into the TITLES table.
 
         This method ensures that the database always has up-to-date metadata for
-        a given track. If the track already exists, its metadata is replaced;
+        a given track. If the track already exists (based on its id), its metadata is replaced;
         otherwise, a new row is inserted. The `downloads` and `playlist_titles`
         tables are not affected by this call — it only manages the metadata
         layer.
@@ -31,11 +31,10 @@ class RegisterMixin:
         """
         async with self._lock:
             await self._execute('''
-                INSERT INTO titles (id, title, source, duration)
+                INSERT INTO titles (id, title, duration)
                 VALUES (?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     title = excluded.title,
-                    source = excluded.source,
                     duration = excluded.duration;
             ''', (
                 track.id, 
@@ -166,7 +165,7 @@ class RegisterMixin:
             row = await self._fetchone(f'''
                 SELECT 
                     t.id,
-                    COALESCE(t.custom_title, t.title) AS title,
+                    COALESCE(t.title_display, t.title) AS title,
                     GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
                     t.duration
                 FROM titles t

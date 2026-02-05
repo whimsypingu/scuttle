@@ -21,33 +21,64 @@ class DownloadWorker:
         self.audio_database = audio_database
 
         self.stopped = False
+
+        self.SEED_PREFIX = "SEED___"
+        self.YT_PREFIX = "YT___"
     
     async def run(self):
         while not self.stopped:
             #potentially rename to job and define a custom DownloadJob wrapper for track with fields like requested_by
             job: DownloadJob = await self.download_queue.pop() #thank you to async condition
             track = None #null this out
+            seed_metadata = None
 
             try:
                 print(f"[DEBUG] DownloadWorker handling {job.get_type()} type")
-                match job.get_type():
-                    case "id":
-                        track = await self.youtube_client.download_by_id(
-                            id=job.get_id(), 
-                            custom_metadata=job.get_metadata()
-                        )
+
+                job_query = job.get_query()
+                job_id = job.get_id()
+                job_type = job.get_type()
+                job_metadata = job.get_metadata()
+
+                match job_type:
                     case "query":
                         track = await self.youtube_client.download_by_query(
-                            q=job.get_query(), 
-                            custom_metadata=job.get_metadata()
+                            q=job_query, 
+                            custom_metadata=job_metadata
                         )
+                    case "yt_id":
+                        track = await self.youtube_client.download_by_id(
+                            id=job_id, 
+                            custom_metadata=job_metadata
+                        )
+                    case "seed_id":
+                        seed_metadata = await self.audio_database.get_metadata(job_id)
+                        seed_query = f'{seed_metadata.get("title", "Never Gonna Give You Up")} {seed_metadata.get("artist", "Rick Astley")}'
+                        track = await self.youtube_client.download_by_query(
+                            q=seed_query,
+                            custom_metadata=seed_metadata
+                        )                    
                     case _:
-                        print(f"[WARN] Unknown DownloadJob type: {job.get_type()}")
-                        continue
+                        print(f"[WARN] Unknown DownloadJob id ({job_id}), query ({job_query}), or type ({job_type})")
+
 
                 #client should return the classic Track metadata with {id, title, artist, dur} 
                 if track:
-                    await self.audio_database.register_track(track)
+                    print(f"[DEBUG] DownloadWorker found track: {track}")
+                    #handle slightly differently based on seed id or not
+                    if job_type == "seed_id":
+                        print(f"[DEBUG] DownloadWorker seed_id set_metadata")
+                        await self.audio_database.set_metadata(job_id, metadata={
+                            "new_id": track.id,
+                            "title": track.title,
+                            "title_display": seed_metadata.get("title"),
+                            "duration": track.duration
+                        })
+
+                    else:
+                        print(f"[DEBUG] DownloadWorker NON-seed_id register_track")
+                        await self.audio_database.register_track(track)
+                    
                     await self.audio_database.register_download(track.id)
 
                     #put into a playlist right away? in the case of importing a playlist then yes

@@ -119,6 +119,98 @@ class GetsetMixin:
         
 
 
+    async def get_metadata(self, id: str):
+        """
+        Retrieves a track's metadata given their id.
+
+        Returns:
+            dict:
+                - title
+                - artist
+        """
+        async with self._lock:
+            query = '''
+                SELECT
+                    COALESCE(t.title_display, t.title) AS title,
+                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist
+                FROM titles t
+                LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
+                LEFT JOIN artists a ON ta.artist_rowid = a.rowid
+                WHERE t.id = ?
+                GROUP BY t.id;
+            '''
+            row = await self._fetchone(query, (id,))
+            
+            if not row:
+                print(f"[WARN] No metadata found in database for ID: {id}")
+                return None
+
+            return {
+                "title": row["title"],
+                "artist": row["artist"]
+            }
+
+
+    async def set_metadata(self, id: str, metadata: dict):
+        """
+        Updates a track's metadata usinga dictionary of fields.
+        
+        Supported fields:
+        - 'new_id': Updates the unique track ID (assuming seed entry previously)
+        - 'title': Updates the title
+        - 'title_display': Updates the user-facing title
+        - 'duration': Updates track length
+        """
+        async with self._lock:
+            #db field translations
+            field_map = {
+                "new_id": "id",
+                "title": "title",
+                "title_display": "title_display",
+                "duration": "duration"
+            }
+
+            updates = []
+            params = []
+
+            for key, col in field_map.items():
+                if key in metadata and metadata[key] not in (None, ""):
+                    updates.append(f"{col} = ?")
+                    params.append(metadata[key])
+
+            #execute the update
+            if updates:
+                params.append(id) #for the WHERE clause
+                query = f"UPDATE titles SET {', '.join(updates)} WHERE id = ?;"
+                print(f"[DEBUG] GetsetMixin set_metadata running query: {query} with params: {tuple(params)}")
+                await self._execute(query, tuple(params))
+
+            query = '''
+                SELECT
+                    t.id AS updated_id,
+                    COALESCE(t.title_display, t.title) AS updated_title,
+                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS updated_artist
+                FROM titles t
+                LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
+                LEFT JOIN artists a ON ta.artist_rowid = a.rowid
+                WHERE t.id = ?
+                GROUP BY t.id;
+            '''
+            print(f"[DEBUG] GetsetMixin set_metadata running query: {query} with params: ({metadata.get('new_id', id)},)")
+            row = await self._fetchone(query, (metadata.get("new_id", id),))
+            
+            content = {
+                "id": id,
+                "newId": row["updated_id"],
+                "title": row["updated_title"],
+                "artist": row["updated_artist"]
+            }
+
+            await self._emit_event(action=ADA.SET_METADATA, payload={"content": content})
+
+            return content
+
+
     async def set_custom_metadata(self, id: str, custom_title: Optional[str] = None, custom_artist: Optional[str] = None):
         async with self._lock:
             #some robustness for handling None or "" values

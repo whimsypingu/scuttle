@@ -19,7 +19,7 @@ class DownloadQueue(ObservableQueue[DownloadJob]):
             await self._emit_event(action=DQA.PUSH, payload={"id": job.get_identifier(), "content": self.to_json()})
             self._condition.notify()
 
-            print(f"[DEBUG]: contents of download queue: {self.to_json()}")
+            print(f"[DEBUG]: contents of download queue after PUSH: {self.to_json()}")
 
     async def pop(self):
         #pop first id
@@ -29,7 +29,7 @@ class DownloadQueue(ObservableQueue[DownloadJob]):
             job = self._pop()
             await self._emit_event(action=DQA.POP, payload={"id": job.get_identifier(), "content": self.to_json()})
 
-            print(f"[DEBUG]: contents of download queue: {self.to_json()}")
+            print(f"[DEBUG]: contents of download queue after POP: {self.to_json()}")
             return job
 
     '''
@@ -49,7 +49,7 @@ class DownloadQueue(ObservableQueue[DownloadJob]):
             identifier = item
         else:
             return False
-
+        
         return any(identifier == job.get_identifier() for job in self)
 
             
