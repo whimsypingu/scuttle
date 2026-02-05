@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS titles (
     title TEXT NOT NULL,
     title_display TEXT,
     source TEXT,
-    duration INTEGER,
+    duration REAL DEFAULT 0.0,
     pref REAL DEFAULT 0.0 CHECK (pref >= 0.0 AND pref <= 1.0),
     pref_weight REAL DEFAULT 1.0
 );

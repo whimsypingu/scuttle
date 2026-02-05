@@ -134,8 +134,8 @@ class BaseDatabase:
         pops = [float(row['popularity']) for row in data if row.get('popularity')]
         min_pop = min(pops) if pops else 0
         
-        # Calculate artist frequency for the 'pref' boost
-        # We'll use a simple dict counter to avoid Pandas value_counts()
+        #calculate artist frequency for the 'pref' boost
+        #we'll use a simple dict counter to avoid Pandas value_counts() or explode()
         artist_counts = {}
         for row in data:
             for a_id in str(row.get("artist_ids", "")).split("|"):
@@ -148,48 +148,46 @@ class BaseDatabase:
         print(f"[Seed] Starting seed of {len(data)} tracks...")
 
         with self.cursor() as cursor:
-            # Turbo-charge the insertion
             cursor.execute("PRAGMA synchronous = OFF;")
             cursor.execute("PRAGMA journal_mode = MEMORY;")
 
             for row in data:
-                title = row.get("track_name", "UNKNOWN_TITLE")
-                title_id = row.get("track_id", "UNKNOWN_ID")
-                # Your specific score math
-                popularity = float(row.get("popularity", min_pop))
-                title_score = (popularity - min_pop) / 50.0
+                title = str(row.get("track_name", "UNKNOWN_TITLE"))
+                title_id = f'SEED___{str(row.get("track_id", "UNKNOWN_TITLE"))}'
 
-                # 1. Insert Title
-                # We use ON CONFLICT to avoid errors if the seed runs twice
+                #custom scoring math based on the seeding csv values
+                pref = (float(row.get("popularity", min_pop)) - min_pop) / 50.0
+
+                duration = float(row.get("duration", 0.0))
+
+                #insertion into titles
                 cursor.execute('''
-                    INSERT OR IGNORE INTO titles (id, title, title_display, pref)
-                    VALUES (?, ?, ?, ?)
-                ''', (title_id, title.lower(), title, title_score))
+                    INSERT INTO titles (id, title, title_display, duration, pref)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (title_id, title.lower(), title, duration, pref))
 
-                # 2. Process Artists
+                #process artists
                 names = str(row.get("artist_names", "")).split("|")
                 ids = str(row.get("artist_ids", "")).split("|")
 
                 for a_name, a_id in zip(names, ids):
                     a_name, a_id = a_name.strip(), a_id.strip()
-                    if not a_id: continue
+                    if not a_id or not a_name: continue
 
-                    # Insert Artist
+                    #insert artists and junctions
                     cursor.execute('''
                         INSERT OR IGNORE INTO artists (id, artist, artist_display)
                         VALUES (?, ?, ?)
                     ''', (a_id, a_name.lower(), a_name))
 
-                    # 3. Link via Junction
-                    # No need to SELECT rowid manually; we use a subquery to be faster
                     cursor.execute('''
                         INSERT OR IGNORE INTO title_artists (title_rowid, artist_rowid)
                         SELECT t.rowid, a.rowid
                         FROM titles t, artists a
-                        WHERE t.id = ? AND a.id = ?
+                        WHERE t.rowid = ? AND a.id = ?
                     ''', (title_id, a_id))
 
-            # 4. Global Artist Preference Update
+            #recalculate artist preferences based on frequency
             cursor.execute(f"""
                 UPDATE artists
                 SET pref = (
