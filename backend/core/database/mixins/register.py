@@ -167,10 +167,7 @@ class RegisterMixin:
                 SELECT 
                     t.id,
                     COALESCE(t.custom_title, t.title) AS title,
-                    COALESCE(
-                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '), 
-                        t.source
-                    ) AS artist,
+                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
                     t.duration
                 FROM titles t
                 LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid

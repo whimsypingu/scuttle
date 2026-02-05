@@ -22,7 +22,7 @@ class SearchMixin:
                         COALESCE(t.title_display, t.title) AS title,
                         COALESCE(
                             GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
-                            t.source
+                            "Unknown Artist"
                         ) AS artist,
                         COALESCE(t.duration, 0.0) AS duration
                     FROM titles t
@@ -41,7 +41,7 @@ class SearchMixin:
                         COALESCE(t.title_display, t.title) AS title,
                         COALESCE(
                             GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
-                            t.source
+                            "Unknown Artist"
                         ) AS artist,
                         COALESCE(t.duration, 0.0) AS duration
                     FROM titles t
@@ -66,6 +66,8 @@ class SearchMixin:
                 )
                 for row in rows
             ]
+
+            print(f"FAILING HERE: {content}")
 
             await self._emit_event(action=ADA.SEARCH, payload={"content": content})
     

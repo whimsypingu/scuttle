@@ -7,7 +7,7 @@ import math
 from typing import List, Optional
 
 from backend.core.events.event_bus import EventBus
-from backend.core.lib.utils import run_in_executor
+from backend.core.lib.utils import run_in_executor, normalize_for_search
 from backend.core.models.event import Event
 from backend.core.models.track import Track
 
@@ -157,35 +157,33 @@ class BaseDatabase:
 
                 #custom scoring math based on the seeding csv values
                 pref = (float(row.get("popularity", min_pop)) - min_pop) / 50.0
-
                 duration = float(row.get("duration", 0.0))
 
                 #insertion into titles
                 cursor.execute('''
                     INSERT INTO titles (id, title, title_display, duration, pref)
                     VALUES (?, ?, ?, ?, ?)
-                ''', (title_id, title.lower(), title, duration, pref))
+                ''', (title_id, normalize_for_search(title), title, duration, pref))
 
                 #process artists
                 names = str(row.get("artist_names", "")).split("|")
                 ids = str(row.get("artist_ids", "")).split("|")
 
-                for a_name, a_id in zip(names, ids):
-                    a_name, a_id = a_name.strip(), a_id.strip()
-                    if not a_id or not a_name: continue
+                for artist, artist_id in zip(names, ids):
+                    artist, artist_id = artist.strip(), artist_id.strip()
 
                     #insert artists and junctions
                     cursor.execute('''
                         INSERT OR IGNORE INTO artists (id, artist, artist_display)
                         VALUES (?, ?, ?)
-                    ''', (a_id, a_name.lower(), a_name))
+                    ''', (artist_id, normalize_for_search(artist), artist))
 
                     cursor.execute('''
                         INSERT OR IGNORE INTO title_artists (title_rowid, artist_rowid)
                         SELECT t.rowid, a.rowid
                         FROM titles t, artists a
-                        WHERE t.rowid = ? AND a.id = ?
-                    ''', (title_id, a_id))
+                        WHERE t.id = ? AND a.id = ?
+                    ''', (title_id, artist_id))
 
             #recalculate artist preferences based on frequency
             cursor.execute(f"""

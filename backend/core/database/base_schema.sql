@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS titles (
     id TEXT UNIQUE,
     title TEXT NOT NULL,
     title_display TEXT,
-    source TEXT,
     duration REAL DEFAULT 0.0,
     pref REAL DEFAULT 0.0 CHECK (pref >= 0.0 AND pref <= 1.0),
     pref_weight REAL DEFAULT 1.0
@@ -81,7 +80,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS catalog_fts USING fts5(
     title, 
     artists,
     content='title_artist_search_view',
-    content_rowid='rowid'
+    content_rowid='rowid',
+    tokenize='unicode61 remove_diacritics 1' --see https://sqlite.org/fts5.html section 4.3.1
 );
 
 -- downloads table

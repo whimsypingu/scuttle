@@ -71,3 +71,33 @@ def find_key(obj, key):
             if result is not None:
                 return result
     return None
+
+
+import unicodedata
+import re
+
+_substitutions = {
+    "$": "s",
+    "&": "and",
+    "*": "vzyxv", #random unlikely string
+    "'": "",
+}
+_whitespace_pattern = re.compile(r"\s+")
+_punct_pattern = re.compile(r"[^\w\s]+")
+
+def normalize_for_search(text: str) -> str:
+    if not text:
+        return ""
+
+    #unicode cleanup
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join([c for c in text if not unicodedata.combining(c)])
+    text = text.lower()
+
+    for key, val in _substitutions.items():
+        text = text.replace(key, val)
+
+    #final cleanup
+    text = _punct_pattern.sub(" ", text) # Replace punct with space to avoid merging words
+    text = _whitespace_pattern.sub(" ", text)
+    return text.strip()

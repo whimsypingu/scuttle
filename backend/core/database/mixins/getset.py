@@ -40,10 +40,7 @@ class GetsetMixin:
                 SELECT
                     t.id,
                     COALESCE(t.title_display, t.title) AS title,
-                    COALESCE(
-                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
-                        t.source
-                    ) AS artist,
+                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
                     t.duration
                 FROM titles t
                 INNER JOIN downloads d ON t.id = d.id
@@ -139,10 +136,7 @@ class GetsetMixin:
             row = await self._fetchone(f'''
                 SELECT 
                     COALESCE(t.title_display, t.title) AS title,
-                    COALESCE(
-                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
-                        t.source
-                    ) AS artist
+                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
                 FROM titles t
                 WHERE id = ?;
             ''', (id,))
