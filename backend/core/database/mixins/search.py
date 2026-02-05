@@ -24,7 +24,7 @@ class SearchMixin:
                             GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
                             t.source
                         ) AS artist,
-                        t.duration
+                        COALESCE(t.duration, 0.0) AS duration
                     FROM titles t
                     INNER JOIN downloads d ON t.id = d.id
                     LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
@@ -43,7 +43,7 @@ class SearchMixin:
                             GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
                             t.source
                         ) AS artist,
-                        t.duration
+                        COALESCE(t.duration, 0.0) AS duration
                     FROM titles t
                     JOIN catalog_fts fts ON fts.rowid = t.rowid
                     LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid

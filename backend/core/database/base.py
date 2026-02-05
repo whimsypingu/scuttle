@@ -109,8 +109,7 @@ class BaseDatabase:
             schema_script = f.read()
         
         async with self._lock:
-            # executescript runs multiple statements separated by ;
-            await run_in_executor(None, self._conn.executescript, schema_script)
+            await self._executescript(schema_script)
 
     async def seed(self):
         csv_path = Path(__file__).parent / "seed.csv"
@@ -123,7 +122,6 @@ class BaseDatabase:
         print(f"[{self.name}] Starting data seed...")
         await self._run_seed_logic(csv_path)
 
-    @run_in_executor
     async def _run_seed_logic(self, csv_path: Path):
         if not csv_path.exists():
             print(f"[{self.name}] Couldn't find seed csv path")
@@ -204,7 +202,7 @@ class BaseDatabase:
 
         print("[Seed] Success.")
 
-    def rebuild_search_index(self):
+    async def rebuild_search_index(self):
         """
         Manually synchronizes the FTS5 index with the current state of the
         titles and artists tables. Only necessary when names are changed for titles or artists.

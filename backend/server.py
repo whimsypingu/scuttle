@@ -44,8 +44,7 @@ async def lifespan(app: FastAPI):
 
     # link the db
     db = AudioDatabase(name=G.AUDIO_DATABASE_NAME, filepath=G.DB_FILE, event_bus=event_bus)
-    await db.build()
-    await db.view_all()
+    await db.initialize()
     await cleanup_download_folder(db, G.DOWNLOAD_DIR)
 
     print(await db.search(""))
