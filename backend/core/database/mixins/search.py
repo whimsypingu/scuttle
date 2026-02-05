@@ -24,10 +24,7 @@ class SearchMixin:
                     SELECT
                         t.id,
                         COALESCE(t.title_display, t.title) AS title,
-                        COALESCE(
-                            GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', '),
-                            "Unknown Artist"
-                        ) AS artist,
+                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
                         t.duration,
 
                         sub.score * t.pref_weight * MAX(a.pref_weight) AS final_rank
