@@ -22,9 +22,6 @@ class DownloadWorker:
 
         self.stopped = False
 
-        self.SEED_PREFIX = "SEED___"
-        self.YT_PREFIX = "YT___"
-    
     async def run(self):
         while not self.stopped:
             #potentially rename to job and define a custom DownloadJob wrapper for track with fields like requested_by
@@ -53,6 +50,12 @@ class DownloadWorker:
                         )
                     case "seed_id":
                         seed_metadata = await self.audio_database.get_metadata(job_id)
+
+                        #re-queued under old seed_id, and now it is a completed yt_id. without this, duplicate queueing is possible which causes errors
+                        if not seed_metadata:
+                            continue
+                        
+                        print(f"[DEBUG] seed_metadata: {seed_metadata}")
                         seed_query = f'{seed_metadata.get("title", "Never Gonna Give You Up")} {seed_metadata.get("artist", "Rick Astley")}'
                         track = await self.youtube_client.download_by_query(
                             q=seed_query,
