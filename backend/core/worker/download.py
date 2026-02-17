@@ -27,54 +27,71 @@ class DownloadWorker:
             #potentially rename to job and define a custom DownloadJob wrapper for track with fields like requested_by
             job: DownloadJob = await self.download_queue.pop() #thank you to async condition
             track = None #null this out
-            seed_metadata = None
 
+            #these can get overwritten based on the different kinds of executions that are required, consider refactoring with more variables if it gets confusing
+            job_query = job.get_query()
+            job_id = job.get_id()
+            job_type = job.get_type()
+            job_metadata = job.get_metadata()
+
+            #resolve to downloadable id (yt_id)
             try:
-                print(f"[DEBUG] DownloadWorker handling {job.get_type()} type")
-
-                job_query = job.get_query()
-                job_id = job.get_id()
-                job_type = job.get_type()
-                job_metadata = job.get_metadata()
+                print(f"[DEBUG] DownloadWorker handling {job_type} type")
 
                 match job_type:
                     case "query":
-                        track = await self.youtube_client.download_by_query(
-                            q=job_query, 
-                            custom_metadata=job_metadata
+                        job_id = await self.youtube_client.id_by_query(
+                            q=job_query
                         )
                     case "yt_id":
-                        track = await self.youtube_client.download_by_id(
-                            id=job_id, 
-                            custom_metadata=job_metadata
-                        )
+                        pass
                     case "seed_id":
-                        seed_metadata = await self.audio_database.get_metadata(job_id)
+                        job_metadata = await self.audio_database.get_metadata(job_id)
 
                         #re-queued under old seed_id, and now it is a completed yt_id. without this, duplicate queueing is possible which causes errors
-                        if not seed_metadata:
+                        if not job_metadata:
                             continue
+
+                        print(f"[DEBUG] seed_metadata/job_metadata: {job_metadata}")
                         
-                        print(f"[DEBUG] seed_metadata: {seed_metadata}")
-                        seed_query = f'{seed_metadata.get("title", "Never Gonna Give You Up")} {seed_metadata.get("artist", "Rick Astley")}'
-                        track = await self.youtube_client.download_by_query(
-                            q=seed_query,
-                            custom_metadata=seed_metadata
-                        )                    
+                        job_query = f'{job_metadata.get("title", "Never Gonna Give You Up")} {job_metadata.get("artist", "Rick Astley")}'
+                        job_id = await self.youtube_client.id_by_query(
+                            q=job_query
+                        )
                     case _:
                         print(f"[WARN] Unknown DownloadJob id ({job_id}), query ({job_query}), or type ({job_type})")
+            except Exception as e:
+                print(f"[ERROR] DownloadWorker error ({e}) resolving id while handling DownloadJob: {job}\n{traceback.format_exc()}")
 
+            #attempt download of file
+            try:
+                already_downloaded = await self.audio_database.is_downloaded(job_id)
 
+                #downloaded audio already exists
+                if already_downloaded:
+                    print(f"[DEBUG] file download status: {already_downloaded} file: {job_id}")
+                    continue
+
+                track = await self.youtube_client.download_by_id(
+                    id=job_id,
+                    custom_metadata=job_metadata
+                )
+            except Exception as e:
+                print(f"[ERROR] DownloadWorker error ({e}) downloading file while handling DownloadJob: {job}\n{traceback.format_exc()}")
+
+            #post processing
+            try:
                 #client should return the classic Track metadata with {id, title, artist, dur} 
                 if track:
                     print(f"[DEBUG] DownloadWorker found track: {track}")
-                    #handle slightly differently based on seed id or not
+
+                    #seeded entry downloads require database changes
                     if job_type == "seed_id":
                         print(f"[DEBUG] DownloadWorker seed_id set_metadata")
-                        await self.audio_database.set_metadata(job_id, metadata={
+                        await self.audio_database.set_metadata(job.get_id(), metadata={ #little bit jank here now but this must send the old id first, then the new id in the metadata
                             "new_id": track.id,
                             "title": track.title,
-                            "title_display": seed_metadata.get("title"),
+                            "title_display": job_metadata.get("title"),
                             "duration": track.duration
                         })
 
@@ -96,7 +113,7 @@ class DownloadWorker:
                         await self.play_queue.push(track.id)
 
             except Exception as e:
-                print(f"[ERROR] DownloadWorker error ({e}) handling DownloadJob: {job}\n{traceback.format_exc()}")
+                print(f"[ERROR] DownloadWorker error ({e}) database and/or system processing file while handling DownloadJob: {job}\n{traceback.format_exc()}")
 
     def shutdown(self):
         """Signal the worker to stop."""

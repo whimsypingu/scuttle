@@ -20,7 +20,7 @@ class RegisterMixin:
             track (Track): A Track object containing at least:
                 - id (str): Unique track ID (primary key).
                 - title (str): Track title.
-                - artist (str|None): Track artist.
+                - artist (str|None): Track artist. //for now, nothing with this
                 - duration (float|None): Track duration in seconds.
 
         Emits:
@@ -32,14 +32,13 @@ class RegisterMixin:
         async with self._lock:
             await self._execute('''
                 INSERT INTO titles (id, title, duration)
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     title = excluded.title,
                     duration = excluded.duration;
             ''', (
                 track.id, 
                 track.title, 
-                track.artist,
                 track.duration
             ))
 

@@ -411,7 +411,7 @@ class YouTubeClient:
             await self._emit_event(action=YTCA.FINISH, payload={})
                 
 
-    async def download_by_query(
+    async def id_by_query(
         self,
         q: str,
         timeout: int = 60,
@@ -424,8 +424,10 @@ class YouTubeClient:
             print(f"[WARN]: No results found for query: {q}")
             return False
         
-        id = result[0].id
-        print(f"[DEBUG] Result: {result}, ID: {id}")
+        true_id = result[0].id
+        print(f"[DEBUG] Result: {result}, ID: {true_id}")
+
+        return true_id
 
         track = await self.download_by_id(id, timeout=timeout, custom_metadata=custom_metadata)
         print(f"[DEBUG] Track: {track}")
