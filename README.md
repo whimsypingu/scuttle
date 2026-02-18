@@ -8,7 +8,7 @@ Scuttle is a responsive web-based audio archival tool for managing and playing y
 - Self-host your audio library and stream to any device with a browser
 - Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
 
-This requires Python 3.8+ to install. Setting up will install binaries for ffmpeg (which includes ffprobe), cloudflared, and deno. You can run Scuttle by downloading this as a zip, and running ```scuttle.exe``` on Windows (No support for one-click setup on Linux or Mac yet, but you can compile the rust binary to make the executable). For manual setup see [installation](#installation) and [usage](#usage) for more details. No support for automatic updates yet.
+This requires Python 3.8+ to install. Setting up will install binaries for ffmpeg, ffprobe, cloudflared, and deno. You can run Scuttle by downloading this as a zip, and running ```scuttle.exe``` on Windows (No support for one-click setup on Linux or Mac yet, but you can compile the rust binary to make the executable). For manual setup see [installation](#installation) and [usage](#usage) for more details. No support for automatic updates yet.
 
 ### Table of Contents
 - [Installation](#installation)
@@ -154,7 +154,7 @@ scuttle/
 There are some known bugs that haven't been bothered to be fixed yet.
 * Cleaning out unused downloads (Done, but only on restart)
 * Mobile UI occasionally shows the queue tab kind of lifted.
-* yt-dlp updating in case of failure (this might work now).
+* Frontend often does not correctly show waiting status on re-opening the app.
 * yt-dlp download options and timeout failure cleanup/notification on frontend.
 * Clearing DNS cache (Occasionally breaks cloudflared. If tunnel can't be resolved, clear the cache in command line and retry)
 * Potential breakage of floating point indexing of database after many re-orders - just re-normalize indices per playlist every now and then. Have to find an optimal time to do this though, and the willpower to write the code.
@@ -165,7 +165,7 @@ Scuttle is still in active development. Here are some planned features and impro
 
 **User Experience:**
 - [ ] Tracking user audio actions and usage, to provide a recap by month or even suggest artists or creators to donate to or support based on percentage listened
-- [ ] Mobile UI improvements (swipe on queue to play next)
+- [ ] Mobile UI improvements (swipe left on queue tab to skip to next)
 - [x] Auto queue songs in a playlist on download
 - [ ] Improved search functionality
 - [ ] Pagination for faster loading with larger libraries
@@ -182,10 +182,11 @@ Scuttle is still in active development. Here are some planned features and impro
 **Tools:**
 - [x] Audio editing (silence removal, enhanced quality) [11/14/25, trim + .opus]
 - [ ] Backend management from the web interface (download queue, server restart)
+- [x] yt-dlp automatically updating to most recent nightly version in case of failure and attempting a retry [2/18/26, confident this is working as intended now]
 
 These are not guaranteed but they reflect the current development priorities and ideas for future releases.
 
-Current work (February 2026) on improved search functionality is being done at [this Google Colab notebook for Discogs-based seeding](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing) and at [this Google Colab notebook for Anna's Archive top 10000 Spotify songs from July 2025 seeding](https://colab.research.google.com/drive/14DFgnXGVu2MIdiBNPluC8kf8e_F70lv9?usp=sharing). 
+Current work (February 2026) on improved search functionality is being done at [this Google Colab notebook for deprecated idea of Discogs-based seeding](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing) and at [this Google Colab notebook for Anna's Archive top 10000 Spotify songs from July 2025 seeding](https://colab.research.google.com/drive/14DFgnXGVu2MIdiBNPluC8kf8e_F70lv9?usp=sharing). 
 
 
 ## License
