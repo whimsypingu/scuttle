@@ -98,6 +98,7 @@ class DownloadWorker:
                     else:
                         print(f"[DEBUG] DownloadWorker NON-seed_id register_track")
                         await self.audio_database.register_track(track)
+                        await self.audio_database.rebuild_search_index()
                     
                     await self.audio_database.register_download(track.id)
 

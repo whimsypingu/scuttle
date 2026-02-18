@@ -4,6 +4,7 @@ import csv
 from pathlib import Path
 import sqlite3
 import math
+import time
 from typing import List, Optional
 
 from backend.core.events.event_bus import EventBus
@@ -126,6 +127,8 @@ class BaseDatabase:
         if not csv_path.exists():
             print(f"[{self.name}] Couldn't find seed csv path")
             return
+        
+        seed_start_time = time.perf_counter()
 
         with open(csv_path, mode='r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -196,23 +199,34 @@ class BaseDatabase:
                 WHERE EXISTS (SELECT 1 FROM title_artists WHERE artist_rowid = artists.rowid);
             """)
 
-        print("[Seed] Success.")
+        seed_end_time = time.perf_counter()
+        seed_duration = seed_end_time - seed_start_time
+        print(f"[Seed] Success. Took {seed_duration:.2f} seconds ({len(data) / seed_duration:.1f} tracks/sec).")
 
     async def rebuild_search_index(self):
         """
         Manually synchronizes the FTS5 index with the current state of the
         titles and artists tables. Only necessary when names are changed for titles or artists.
+        
+        This should only be used for batch changes, but for now keep it. 
+        Refactoring into faster updates will be important for future performance (currently 0.04s-0.06s)
         """
         print("Synchronizing search index with database...")
+        search_rebuild_start_time = time.perf_counter()
 
         try:
             with self.cursor() as cursor:
+                #performance tuning for bulk writes
+                cursor.execute("PRAGMA synchronous = OFF;")
+                cursor.execute("PRAGMA journal_mode = MEMORY;")
+                
                 # 1. Clear the current index
                 cursor.execute("INSERT INTO catalog_fts(catalog_fts) VALUES('delete-all')")
 
                 # 2. Re-populate from the view
                 cursor.execute("INSERT INTO catalog_fts(catalog_fts) VALUES('rebuild')")
-
-            print(f"[{self.name}] Success: FTS5 index is up to date.")
+            
+            search_rebuild_end_time = time.perf_counter()
+            print(f"[{self.name}] Success: FTS5 index is up to date. ({search_rebuild_end_time - search_rebuild_start_time:.3f}s)")
         except sqlite3.OperationalError as e:
             print(f"[{self.name}] Error rebuilding index: {e}")
