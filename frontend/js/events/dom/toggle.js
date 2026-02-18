@@ -26,7 +26,6 @@ function setToast() {
 //set the height of the playbar to collapse or exapnded values
 function setHeight() {
     if (isCollapsed) {
-        console.log("collapsedHeight: ", collapsedHeight);
         container.style.height = `${collapsedHeight}px`;
         container.classList.remove("expanded");
     } else {
