@@ -42,9 +42,10 @@ class RegisterMixin:
                 track.duration
             ))
 
+            #null artist id for now
             await self._execute('''
-                INSERT INTO artists (artist) VALUES (?)
-                ON CONFLICT(artist) DO NOTHING;
+                INSERT INTO artists (id, artist) VALUES (NULL, ?)
+                ON CONFLICT(id) DO NOTHING;
             ''', (track.artist,))
 
             await self._execute('''
