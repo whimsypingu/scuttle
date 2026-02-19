@@ -20,7 +20,7 @@ class RegisterMixin:
             track (Track): A Track object containing at least:
                 - id (str): Unique track ID (primary key).
                 - title (str): Track title.
-                - artist (str|None): Track artist. //for now, nothing with this
+                - artist (str|None): Track artist. Creates a new artist entry with blank id.
                 - duration (float|None): Track duration in seconds.
 
         Emits:
@@ -34,28 +34,29 @@ class RegisterMixin:
             if exists:
                 return
 
-            await self._execute('''
+            title_entry = await self._fetchone('''
                 INSERT INTO titles (id, title, duration)
                 VALUES (?, ?, ?)
+                RETURNING rowid;
             ''', (
                 track.id, 
                 track.title, 
                 track.duration
             ))
+            title_rowid = title_entry[0]
 
-            #null artist id for now
-            await self._execute('''
-                INSERT INTO artists (id, artist) VALUES (NULL, ?)
-                ON CONFLICT(id) DO NOTHING;
+            #blank internal artist id
+            artist_entry = await self._fetchone('''
+                INSERT INTO artists (artist) 
+                VALUES (?) 
+                RETURNING rowid;
             ''', (track.artist,))
+            artist_rowid = artist_entry[0]
 
             await self._execute('''
                 INSERT INTO title_artists (title_rowid, artist_rowid)
-                SELECT t.rowid, a.rowid
-                FROM titles t, artists a
-                WHERE t.id = ? AND a.artist = ?
-                ON CONFLICT DO NOTHING;
-            ''', (track.id, track.artist))
+                VALUES (?, ?);
+            ''', (title_rowid, artist_rowid))
 
             content = {
                 "id": track.id,

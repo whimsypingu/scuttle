@@ -151,9 +151,6 @@ class BaseDatabase:
         print(f"[Seed] Starting seed of {len(data)} tracks...")
 
         with self.cursor() as cursor:
-            cursor.execute("PRAGMA synchronous = OFF;")
-            cursor.execute("PRAGMA journal_mode = MEMORY;")
-
             for row in data:
                 title = str(row.get("track_name", "UNKNOWN_TITLE"))
                 title_id = f'SEED___{str(row.get("track_id", "UNKNOWN_TITLE"))}'
@@ -216,10 +213,6 @@ class BaseDatabase:
 
         try:
             with self.cursor() as cursor:
-                #performance tuning for bulk writes
-                cursor.execute("PRAGMA synchronous = OFF;")
-                cursor.execute("PRAGMA journal_mode = MEMORY;")
-                
                 # 1. Clear the current index
                 cursor.execute("INSERT INTO catalog_fts(catalog_fts) VALUES('delete-all')")
 
