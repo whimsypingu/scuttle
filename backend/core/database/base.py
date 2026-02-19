@@ -151,6 +151,9 @@ class BaseDatabase:
         print(f"[Seed] Starting seed of {len(data)} tracks...")
 
         with self.cursor() as cursor:
+            cursor.execute("PRAGMA journal_mode = MEMORY;")
+            cursor.execute("PRAGMA synchronous = OFF;")
+            
             for row in data:
                 title = str(row.get("track_name", "UNKNOWN_TITLE"))
                 title_id = f'SEED___{str(row.get("track_id", "UNKNOWN_TITLE"))}'
@@ -195,7 +198,7 @@ class BaseDatabase:
                 )
                 WHERE EXISTS (SELECT 1 FROM title_artists WHERE artist_rowid = artists.rowid);
             """)
-
+    
         seed_end_time = time.perf_counter()
         seed_duration = seed_end_time - seed_start_time
         print(f"[Seed] Success. Took {seed_duration:.2f} seconds ({len(data) / seed_duration:.1f} tracks/sec).")
@@ -213,12 +216,15 @@ class BaseDatabase:
 
         try:
             with self.cursor() as cursor:
+                cursor.execute("PRAGMA journal_mode = WAL;")
+                cursor.execute("PRAGMA synchronous = NORMAL;")
+
                 # 1. Clear the current index
                 cursor.execute("INSERT INTO catalog_fts(catalog_fts) VALUES('delete-all')")
 
                 # 2. Re-populate from the view
                 cursor.execute("INSERT INTO catalog_fts(catalog_fts) VALUES('rebuild')")
-            
+
             search_rebuild_end_time = time.perf_counter()
             print(f"[{self.name}] Success: FTS5 index is up to date. ({search_rebuild_end_time - search_rebuild_start_time:.3f}s)")
         except sqlite3.OperationalError as e:
