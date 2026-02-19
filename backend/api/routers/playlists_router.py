@@ -266,7 +266,6 @@ async def edit_track(body: EditTrackRequest, req: Request) -> Response:
         "title_display": title
     }
     await db.set_metadata(id=track_id, metadata=metadata)
-    #await db.set_custom_metadata(track_id, title, artist)
 
     return JSONResponse(content={"status": "updated"}, status_code=200)
 

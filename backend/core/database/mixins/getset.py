@@ -209,36 +209,3 @@ class GetsetMixin:
             await self._emit_event(action=ADA.SET_METADATA, payload={"content": content})
 
             return content
-
-
-    async def set_custom_metadata(self, id: str, custom_title: Optional[str] = None, custom_artist: Optional[str] = None):
-        async with self._lock:
-            #some robustness for handling None or "" values
-            custom_title_val = custom_title if custom_title not in (None, "") else None
-            custom_artist_val = custom_artist if custom_artist not in (None, "") else None
-
-            await self._execute(f'''
-                UPDATE titles
-                SET title_display = ?,
-                    source = ?
-                WHERE id = ?;
-            ''', (custom_title_val, custom_artist_val, id))
-
-            #compute effective title/artist (unfortunately uses another query but it works)
-            row = await self._fetchone(f'''
-                SELECT 
-                    COALESCE(t.title_display, t.title) AS title,
-                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
-                FROM titles t
-                WHERE id = ?;
-            ''', (id,))
-
-            content = {
-                "id": id,
-                "title": row["title"],
-                "artist": row["artist"]
-            }
-
-            await self._emit_event(action=ADA.SET_METADATA, payload={"content": content})
-
-            return content
