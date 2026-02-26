@@ -2,21 +2,21 @@ from backend.core.models.enums import AudioDatabaseAction as ADA
 
 class PlaylistsMixin:
     async def create_playlist(self, name: str, temp_id: str):
-        async with self._lock:
-            row = await self._fetchone(f'''
-                INSERT INTO playlists (name) 
-                VALUES (?)
-                RETURNING id;
-            ''', (name,))
-
-            content = {
-                "temp_id": temp_id, 
-                "id": row["id"], 
-                "name": name
-            }
-            await self._emit_event(action=ADA.CREATE_PLAYLIST, payload={"content": content})
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('INSERT INTO playlists (name) VALUES (?) RETURNING id;', (name,))
+                row = cur.fetchone()
+                return row["id"]
             
-            return content
+        new_id = await self._atomic_db_op(_logic)
+        content = {
+            "temp_id": temp_id, 
+            "id": new_id, 
+            "name": name
+        }
+        await self._emit_event(action=ADA.CREATE_PLAYLIST, payload={"content": content})
+        
+        return content
         
 
     #modifications to data
@@ -37,42 +37,38 @@ class PlaylistsMixin:
                   - "id" (str): Playlist ID
                   - "checked" (bool | None): Desired membership state
         """
-        async with self._lock:
-            for playlist in playlist_updates:
-                playlist_id, checked = playlist["id"], playlist["checked"]
+        def _logic():
+            with self.cursor() as cur:
+                for playlist in playlist_updates:
+                    playlist_id, checked = playlist["id"], playlist["checked"]
 
-                if checked is True:
-                    #insert new track at bottom of playlist (max+1) or keep existing
-                    result = await self._fetchone(f'''
-                        SELECT MAX(position) AS max_pos
-                        FROM playlist_titles
-                        WHERE playlist_id = ?;
-                    ''', (playlist_id,))
+                    if checked is True:
+                        #insert new track at bottom of playlist (max+1) or keep existing
+                        cur.execute('''
+                            SELECT MAX(position) AS max_pos
+                            FROM playlist_titles
+                            WHERE playlist_id = ?;
+                        ''', (playlist_id,))
+                        result = cur.fetchone()["max_pos"]
+                        new_position = (result or 0.0) + 1.0
 
-                    new_position = (result["max_pos"] or 0.0) + 1.0
-
-                    await self._execute(f'''
-                        INSERT INTO playlist_titles (playlist_id, title_id, position)
-                        VALUES (?, ?, ?)
-                        ON CONFLICT(playlist_id, title_id) DO NOTHING;
-                    ''', (playlist_id, track_id, new_position))
-
-                elif checked is False:
-                    #remove if exists
-                    await self._execute(f'''
-                        DELETE FROM playlist_titles
-                        WHERE playlist_id = ? AND title_id = ?;
-                    ''', (playlist_id, track_id))
-                
-                else:
-                    #none or undefined do nothing
-                    continue
-
-            content = {
-                "id": track_id,
-                "updates": playlist_updates
-            }
-            await self._emit_event(ADA.UPDATE_PLAYLISTS, payload={"content": content})
+                        #insert with position
+                        cur.execute('''
+                            INSERT INTO playlist_titles (playlist_id, title_id, position)
+                            VALUES (?, ?, ?)
+                            ON CONFLICT(playlist_id, title_id) DO NOTHING;
+                        ''', (playlist_id, track_id, new_position))
+                    
+                    else:
+                        cur.execute('DELETE FROM playlist_titles WHERE playlist_id = ? AND title_id = ?;', (playlist_id, track_id))
+            return True
+        
+        await self._atomic_db_op(_logic)
+        content = {
+            "id": track_id,
+            "updates": playlist_updates
+        }
+        await self._emit_event(ADA.UPDATE_PLAYLISTS, payload={"content": content})
 
 
     async def reorder_playlist_track(self, playlist_id: int, from_index: int, to_index: int):
@@ -91,45 +87,43 @@ class PlaylistsMixin:
         Returns:
             
         """
-        async with self._lock:
-            # Fetch playlist tracks ordered by position
-            rows = await self._fetchall(f'''
-                SELECT title_id, position
-                FROM playlist_titles
-                WHERE playlist_id = ?
-                ORDER BY position ASC;
-            ''', (playlist_id,))
-            
-            n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
-            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
-                return False #invalid
-            
-            #remove the moved track so indices reflect post-removal state
-            moved_row = rows.pop(from_index)
-            track_id = moved_row["title_id"]
+        def _logic():
+            with self.cursor() as cur:
+                #fetch playlist tracks ordered by position
+                cur.execute('''
+                    SELECT title_id, position
+                    FROM playlist_titles
+                    WHERE playlist_id = ?
+                    ORDER BY position ASC;
+                ''', (playlist_id,))
+                rows = [dict(row) for row in cur.fetchall()]
 
-            print("from_index:", from_index, "to_index:", to_index)
+                n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
+                if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
+                    return False #invalid
 
-            if to_index == 0:
-                new_position = rows[0]["position"] - 1.0
-            elif to_index == n:                               #this is the last element
-                new_position = rows[-1]["position"] + 1.0
-            else:
-                new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
+                #remove the moved track so indices reflect post-removal state
+                moved_row = rows.pop(from_index)
+                track_id = moved_row["title_id"]
 
-            #update
-            await self._execute(f'''
-                UPDATE playlist_titles
-                SET position = ?
-                WHERE playlist_id = ? AND title_id = ?;                    
-            ''', (new_position, playlist_id, track_id))
+                if to_index == 0:
+                    new_position = rows[0]["position"] - 1.0
+                elif to_index == n:                               #this is the last element
+                    new_position = rows[-1]["position"] + 1.0
+                else:
+                    new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
 
-            print("[reorder_playlist_track]: SUCCESS")
-            return True
+                #update
+                cur.execute('''
+                    UPDATE playlist_titles
+                    SET position = ?
+                    WHERE playlist_id = ? AND title_id = ?;                    
+                ''', (new_position, playlist_id, track_id))
+                return True
+        
+        return await self._atomic_db_op(_logic)
 
 
-
-    # Edit a playlist's name
     async def edit_playlist(self, playlist_id: int, name: str):
         """
         Update the name of an existing playlist.
@@ -141,23 +135,20 @@ class PlaylistsMixin:
         Returns:
             dict: The updated playlist info.
         """
-        async with self._lock:
-            await self._execute(f'''
-                UPDATE playlists
-                SET name = ?
-                WHERE id = ?;
-            ''', (name, playlist_id))
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('UPDATE playlists SET name = ? WHERE id = ?;', (name, playlist_id))
 
-            content = {
-                "id": playlist_id,
-                "name": name
-            }
-            await self._emit_event(action=ADA.EDIT_PLAYLIST, payload={"content": content})
+        await self._atomic_db_op(_logic)
+        content = {
+            "id": playlist_id,
+            "name": name
+        }
+        await self._emit_event(action=ADA.EDIT_PLAYLIST, payload={"content": content})
 
-            return content
+        return content
 
 
-    # Delete a playlist and optionally remove its tracks
     async def delete_playlist(self, playlist_id: int):
         """
         Delete a playlist and remove its track associations.
@@ -168,16 +159,14 @@ class PlaylistsMixin:
         Returns:
             dict: Info about the deleted playlist.
         """
-        async with self._lock:
-            #delete the playlist itself, cascades to delete from playlist_titles
-            await self._execute(f'''
-                DELETE FROM playlists
-                WHERE id = ?;
-            ''', (playlist_id,))
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('DELETE FROM playlists WHERE id = ?;', (playlist_id,))
 
-            content = {
-                "id": playlist_id
-            }
-            await self._emit_event(action=ADA.DELETE_PLAYLIST, payload={"content": content})
+        await self._atomic_db_op(_logic)
+        content = {
+            "id": playlist_id
+        }
+        await self._emit_event(action=ADA.DELETE_PLAYLIST, payload={"content": content})
 
-            return content
+        return content

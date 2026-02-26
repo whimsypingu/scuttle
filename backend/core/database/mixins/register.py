@@ -29,35 +29,40 @@ class RegisterMixin:
         Example:
             >>> await db.register_track(Track(id="abc123", title="Song", artist="Artist", duration=200))
         """
-        async with self._lock:
-            exists = await self._fetchone('SELECT 1 FROM titles WHERE id = ?', (track.id,))
-            if exists:
-                return
 
-            title_entry = await self._fetchone('''
-                INSERT INTO titles (id, title, duration)
-                VALUES (?, ?, ?)
-                RETURNING rowid;
-            ''', (
-                track.id, 
-                track.title, 
-                track.duration
-            ))
-            title_rowid = title_entry[0]
+        def _logic():
+            with self.cursor() as cur:
+                #exist check
+                cur.execute('SELECT 1 FROM titles WHERE id = ?', (track.id,))
+                if cur.fetchone():
+                    return False
+                
+                #insert
+                cur.execute('''
+                    INSERT INTO titles (id, title, duration)
+                    VALUES (?, ?, ?)
+                    RETURNING rowid;
+                ''', (track.id, track.title, track.duration))
+                title_rowid = cur.fetchone()[0]
 
-            #blank internal artist id
-            artist_entry = await self._fetchone('''
-                INSERT INTO artists (artist) 
-                VALUES (?) 
-                RETURNING rowid;
-            ''', (track.artist,))
-            artist_rowid = artist_entry[0]
+                #insert artist
+                cur.execute('''
+                    INSERT INTO artists (artist) 
+                    VALUES (?) 
+                    RETURNING rowid;
+                ''', (track.artist,))
+                artist_rowid = cur.fetchone()[0]
 
-            await self._execute('''
-                INSERT INTO title_artists (title_rowid, artist_rowid)
-                VALUES (?, ?);
-            ''', (title_rowid, artist_rowid))
-
+                #link
+                cur.execute('''
+                    INSERT INTO title_artists (title_rowid, artist_rowid)
+                    VALUES (?, ?);
+                ''', (title_rowid, artist_rowid))
+                return True
+        
+        registered = await self._atomic_db_op(_logic)
+        
+        if registered:
             content = {
                 "id": track.id,
                 "title": track.title,
@@ -94,16 +99,16 @@ class RegisterMixin:
             # Removes the track metadata and all related entries
         """
         #deletes via ON DELETE CASCADE foreign keys automatically cleaning up tables
-        async with self._lock:
-            await self._execute(f'''
-                DELETE FROM titles
-                WHERE id = ?;
-            ''', (id,))
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('DELETE FROM titles WHERE id = ?;', (id,))
 
-            content = {
-                "id": id
-            }
-            await self._emit_event(action=ADA.UNREGISTER_TRACK, payload={"content": content})
+        await self._atomic_db_op(_logic)
+
+        content = {
+            "id": id
+        }
+        await self._emit_event(action=ADA.UNREGISTER_TRACK, payload={"content": content})
 
 
     async def is_registered(self, track_id: str) -> bool:
@@ -116,11 +121,12 @@ class RegisterMixin:
         Returns:
             bool: True if the track exists in TITLES, False otherwise.
         """
-        async with self._lock:
-            row = await self._fetchone(f'''
-                SELECT 1 FROM titles WHERE id = ? LIMIT 1;
-            ''', (track_id,))
-            return row is not None
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('SELECT 1 FROM titles WHERE id = ? LIMIT 1;', (track_id,))
+                return cur.fetchone() is not None
+        
+        return await self._atomic_db_op(_logic)
 
 
     async def register_download(self, id: str) -> dict:
@@ -156,36 +162,41 @@ class RegisterMixin:
             >>> track = await db.register_download("abc123")
             {"id": "abc123", "title": "Song A", "artist": "Artist X", "duration": 210}
         """
-        async with self._lock:
-            #insert into downloads table
-            await self._execute(f'''
-                INSERT OR IGNORE INTO downloads (id, downloaded_at)
-                VALUES (?, CURRENT_TIMESTAMP);
-            ''', (id,))
+        def _logic():
+            with self.cursor() as cur:
+                #log
+                cur.execute('''
+                    INSERT OR IGNORE INTO downloads (id, downloaded_at)
+                    VALUES (?, CURRENT_TIMESTAMP);
+                ''', (id,))
 
-            #fetch full track metadata from tracks table
-            row = await self._fetchone(f'''
-                SELECT 
-                    t.id,
-                    COALESCE(t.title_display, t.title) AS title,
-                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
-                    t.duration
-                FROM titles t
-                LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
-                LEFT JOIN artists a ON ta.artist_rowid = a.rowid
-                WHERE t.id = ?
-                GROUP BY t.id;
-            ''', (id,))
+                #metadata
+                cur.execute('''
+                    SELECT 
+                        t.id,
+                        COALESCE(t.title_display, t.title) AS title,
+                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
+                        t.duration
+                    FROM titles t
+                    LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
+                    LEFT JOIN artists a ON ta.artist_rowid = a.rowid
+                    WHERE t.id = ?
+                    GROUP BY t.id;
+                ''', (id,))
 
-            if row is None:
-                raise ValueError(f"Track with id {id} does not exist in TITLES")
+                row = cur.fetchone()
+                if not row:
+                    return None
+                return dict(row)
+        
+        track = await self._atomic_db_op(_logic)
+        if track is None:
+            raise ValueError(f"Track with id {id} does not exist in TITLES")
 
-            track = dict(row)
+        #emit event with full track object
+        await self._emit_event(action=ADA.REGISTER_DOWNLOAD, payload={"content": track})
 
-            #emit event with full track object
-            await self._emit_event(action=ADA.REGISTER_DOWNLOAD, payload={"content": track})
-
-            return track
+        return track
 
 
     async def unregister_download(self, id: str):
@@ -215,16 +226,15 @@ class RegisterMixin:
             >>> await db.unregister_download("abc123")
             # Removes the download entry but preserves the track metadata
         """
-        async with self._lock:
-            await self._execute(f'''
-                DELETE FROM downloads
-                WHERE id = ?;
-            ''', (id,))
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('DELETE FROM downloads WHERE id = ?;', (id,))
 
-            content = {
-                "id": id
-            }
-            await self._emit_event(action=ADA.UNREGISTER_DOWNLOAD, payload={"content": content})
+        await self._atomic_db_op(_logic)
+        content = {
+            "id": id
+        }
+        await self._emit_event(action=ADA.UNREGISTER_DOWNLOAD, payload={"content": content})
             
 
     async def is_downloaded(self, track_id: str) -> bool:
@@ -237,8 +247,9 @@ class RegisterMixin:
         Returns:
             bool: True if the track is downloaded, False otherwise.
         """
-        async with self._lock:
-            row = await self._fetchone(f'''
-                SELECT 1 FROM downloads WHERE id = ? LIMIT 1;
-            ''', (track_id,))
-            return row is not None
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('SELECT 1 FROM downloads WHERE id = ? LIMIT 1;', (track_id,))
+                return cur.fetchone() is not None
+            
+        return await self._atomic_db_op(_logic)

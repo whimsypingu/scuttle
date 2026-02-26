@@ -35,89 +35,78 @@ class GetsetMixin:
                 {"id": "xyz456", "title": "Song B", "artist": "Artist Y", "duration": 185},
             ]
         """
-        async with self._lock:
-            query = '''
-                SELECT
-                    t.id,
-                    COALESCE(t.title_display, t.title) AS title,
-                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
-                    t.duration
-                FROM titles t
-                INNER JOIN downloads d ON t.id = d.id
-                LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
-                LEFT JOIN artists a ON ta.artist_rowid = a.rowid
-                GROUP BY t.id
-                ORDER BY d.downloaded_at DESC;
-            '''
-            rows = await self._fetchall(query)
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('''
+                    SELECT
+                        t.id,
+                        COALESCE(t.title_display, t.title) AS title,
+                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
+                        t.duration
+                    FROM titles t
+                    INNER JOIN downloads d ON t.id = d.id
+                    LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
+                    LEFT JOIN artists a ON ta.artist_rowid = a.rowid
+                    GROUP BY t.id
+                    ORDER BY d.downloaded_at DESC;
+                ''')
+                return [dict(row) for row in cur.fetchall()]
+            
+        content = await self._atomic_db_op(_logic)
+        await self._emit_event(action=ADA.GET_DOWNLOADS_CONTENT, payload={"content": content})
 
-            content = [
-                {
-                    "id": row["id"],
-                    "title": row["title"],
-                    "artist": row["artist"],
-                    "duration": row["duration"]
-                }
-                for row in rows
-            ]
-
-            await self._emit_event(
-                action=ADA.GET_DOWNLOADS_CONTENT,
-                payload={"content": content}
-            )
-
-            return content
+        return content
 
 
     async def get_all_playlists(self):
-        async with self._lock:
-            rows = await self._fetchall(f'''
-                SELECT id, name
-                FROM playlists
-                ORDER BY id;
-            ''')
-            playlists = [{"id": row["id"], "name": row["name"]} for row in rows]
-
-            await self._emit_event(action=ADA.GET_ALL_PLAYLISTS, payload={"content": playlists})
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('SELECT id, name FROM playlists ORDER BY id;')
+                return [dict(row) for row in cur.fetchall()]
             
-            return playlists
+        playlists = await self._atomic_db_op(_logic)
+        await self._emit_event(action=ADA.GET_ALL_PLAYLISTS, payload={"content": playlists})
+        
+        return playlists
 
 
     async def get_playlist_content(self, playlist_id: int):
-        async with self._lock:
-            # Get playlist info
-            playlist_row = await self._fetchone(f'''
-                SELECT id, name
-                FROM playlists
-                WHERE id = ?
-            ''', (playlist_id,))
-            if not playlist_row:
+        def _logic():
+            with self.cursor() as cur:
+                #get playlist
+                cur.execute('''
+                    SELECT id, name
+                    FROM playlists
+                    WHERE id = ?
+                ''', (playlist_id,))
+                playlist_row = cur.fetchone()
+
+                if not playlist_row:
+                    return {
+                        "id": playlist_id,
+                        "name": None,
+                        "trackIds": []
+                    } 
+                
+                #get track ids in one go
+                cur.execute('''
+                    SELECT track_id
+                    FROM playlist_titles 
+                    WHERE playlist_id = ?
+                    ORDER BY position ASC;
+                ''', (playlist_id,))
+
                 return {
-                    "id": playlist_id,
-                    "name": None,
-                    "trackIds": []
-                } 
-    
-            rows = await self._fetchall(f'''
-                SELECT track_id
-                FROM playlist_titles 
-                WHERE playlist_id = ?
-                ORDER BY position ASC;
-            ''', (playlist_id,))
-            track_ids = [row["track_id"] for row in rows]
+                    "id": playlist_row["id"],
+                    "name": playlist_row["name"],
+                    "trackIds": [r["track_id"] for r in cur.fetchall()]
+                }
+            
+        content = await self._atomic_db_op(_logic)
+        await self._emit_event(action=ADA.GET_PLAYLIST_CONTENT, payload={"content": content})
 
-            content = {
-                "id": playlist_row["id"],
-                "name": playlist_row["name"],
-                "trackIds": track_ids
-            }
-
-            await self._emit_event(action=ADA.GET_PLAYLIST_CONTENT, payload={"content": content})
-    
-            return content
-            #PLEASE CHANGE THIS THIS IS SO UGLY
+        return content
         
-
 
     async def get_metadata(self, id: str):
         """
@@ -128,27 +117,22 @@ class GetsetMixin:
                 - title
                 - artist
         """
-        async with self._lock:
-            query = '''
-                SELECT
-                    COALESCE(t.title_display, t.title) AS title,
-                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist
-                FROM titles t
-                LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
-                LEFT JOIN artists a ON ta.artist_rowid = a.rowid
-                WHERE t.id = ?
-                GROUP BY t.id;
-            '''
-            row = await self._fetchone(query, (id,))
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('''
+                    SELECT
+                        COALESCE(t.title_display, t.title) AS title,
+                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist
+                    FROM titles t
+                    LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
+                    LEFT JOIN artists a ON ta.artist_rowid = a.rowid
+                    WHERE t.id = ?
+                    GROUP BY t.id;
+                ''', (id,))
+                row = cur.fetchone()
+                return dict(row) if row else None
             
-            if not row:
-                print(f"[WARN] No metadata found in database for ID: {id}")
-                return None
-
-            return {
-                "title": row["title"],
-                "artist": row["artist"]
-            }
+        return await self._atomic_db_op(_logic)
 
 
     async def set_metadata(self, id: str, metadata: dict):
@@ -161,8 +145,7 @@ class GetsetMixin:
         - 'title_display': Updates the user-facing title
         - 'duration': Updates track length
         """
-        async with self._lock:
-            #db field translations
+        def _logic():
             field_map = {
                 "new_id": "id",
                 "title": "title",
@@ -178,34 +161,35 @@ class GetsetMixin:
                     updates.append(f"{col} = ?")
                     params.append(metadata[key])
 
-            #execute the update
-            if updates:
-                params.append(id) #for the WHERE clause
-                query = f"UPDATE titles SET {', '.join(updates)} WHERE id = ?;"
-                print(f"[DEBUG] GetsetMixin set_metadata running query: {query} with params: {tuple(params)}")
-                await self._execute(query, tuple(params))
+            with self.cursor() as cur:
+                #update
+                if updates:
+                    params.append(id) #for the WHERE clause
+                    cur.execute(f"UPDATE titles SET {', '.join(updates)} WHERE id = ?;", tuple(params))
 
-            query = '''
-                SELECT
-                    t.id AS updated_id,
-                    COALESCE(t.title_display, t.title) AS updated_title,
-                    GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS updated_artist
-                FROM titles t
-                LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
-                LEFT JOIN artists a ON ta.artist_rowid = a.rowid
-                WHERE t.id = ?
-                GROUP BY t.id;
-            '''
-            print(f"[DEBUG] GetsetMixin set_metadata running query: {query} with params: ({metadata.get('new_id', id)},)")
-            row = await self._fetchone(query, (metadata.get("new_id", id),))
-            
-            content = {
-                "id": id,
-                "newId": row["updated_id"],
-                "title": row["updated_title"],
-                "artist": row["updated_artist"]
-            }
+                #fetch fresh state using new_id if it changed, otherwise the old id
+                search_id = metadata.get("new_id", id)
+                cur.execute('''
+                    SELECT
+                        t.id AS updated_id,
+                        COALESCE(t.title_display, t.title) AS updated_title,
+                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS updated_artist
+                    FROM titles t
+                    LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
+                    LEFT JOIN artists a ON ta.artist_rowid = a.rowid
+                    WHERE t.id = ?
+                    GROUP BY t.id;
+                ''', (search_id,))
 
-            await self._emit_event(action=ADA.SET_METADATA, payload={"content": content})
+                row = cur.fetchone()
+                return {
+                    "id": id,
+                    "newId": row["updated_id"],
+                    "title": row["updated_title"],
+                    "artist": row["updated_artist"]
+                }
 
-            return content
+        content = await self._atomic_db_op(_logic)
+        await self._emit_event(action=ADA.SET_METADATA, payload={"content": content})
+
+        return content

@@ -1,3 +1,6 @@
+import time
+import sqlite3
+
 from typing import List
 
 from backend.core.models.track import Track
@@ -14,12 +17,15 @@ class SearchMixin:
         Returns:
             list[dict]: List of track objects with id, title, artist, duration.
         """
-        async with self._lock:
-            if not q:
-                content = []
+        if not q:
+            content = []
+        else:
+            tokens = q.split()
+            fts_query = " ".join(f"{t}*" for t in tokens)
+            limit = 30            
+            params = (fts_query, limit)
 
-            else:
-                limit = 30
+            def _execute_search():
                 query = '''
                     SELECT
                         t.id,
@@ -42,21 +48,48 @@ class SearchMixin:
                     GROUP BY sub.rowid
                     ORDER BY final_rank ASC;
                 '''
-                tokens = q.split()
-                fts_query = " ".join(f"{t}*" for t in tokens)
-                params = (fts_query, limit)
+                with self.cursor() as cur:
+                    cur.execute(query, params)
+                    return cur.fetchall()
+                
+            rows = await self._atomic_db_op(_execute_search)
+            content = [
+                Track(
+                    id=row["id"], 
+                    title=row["title"],
+                    artist=row["artist"],
+                    duration=row["duration"]
+                )
+                for row in rows
+            ]
 
-                rows = await self._fetchall(query, params)
-                content = [
-                    Track(
-                        id=row["id"], 
-                        title=row["title"],
-                        artist=row["artist"],
-                        duration=row["duration"]
-                    )
-                    for row in rows
-                ]
+        await self._emit_event(action=ADA.SEARCH, payload={"content": content})    
+        return [track.to_json() for track in content]
 
-            await self._emit_event(action=ADA.SEARCH, payload={"content": content})
-    
-            return [track.to_json() for track in content]
+
+    async def rebuild_search_index(self):
+        """
+        Manually synchronizes the FTS5 index with the current state of the
+        titles and artists tables. Only necessary when names are changed for titles or artists.
+        
+        This should only be used for batch changes, but for now keep it. 
+        Refactoring into faster updates will be important for future performance (currently 0.04s-0.06s)
+        """
+        print("Synchronizing search index with database...")
+
+        def _rebuild():
+            search_rebuild_start_time = time.perf_counter()
+
+            with self.cursor() as cursor:
+                # 1. Clear the current index
+                cursor.execute("INSERT INTO catalog_fts(catalog_fts) VALUES('delete-all')")
+
+                # 2. Re-populate from the view
+                cursor.execute("INSERT INTO catalog_fts(catalog_fts) VALUES('rebuild')")
+
+            search_rebuild_duration = time.perf_counter() - search_rebuild_start_time
+            print(f"[{self.name}] Success: FTS5 index is up to date. ({search_rebuild_duration:.3f}s)")
+
+        await self._atomic_db_op(_rebuild)
+
+

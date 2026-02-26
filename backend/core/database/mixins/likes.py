@@ -16,30 +16,27 @@ class LikesMixin:
             The new position calculation ensures that the most recently liked 
             track appears first when ordered by position ASC.
         """
-        async with self._lock:
-            #check if already in db
-            row = await self._fetchone(f'''
-                SELECT 1 FROM likes
-                WHERE id = ?;
-            ''', (id,))
+        def _logic():
+            with self.cursor() as cur:
+                #check
+                cur.execute('SELECT 1 FROM likes WHERE id = ?;', (id,))
+                
+                #remove
+                if cur.fetchone():
+                    cur.execute('DELETE FROM likes WHERE id = ?;', (id,))
+                    return "unliked"
 
-            if row:
-                #exists already, so remove
-                await self._execute(f'''
-                    DELETE FROM likes
-                    WHERE id = ?;
-                ''', (id,))
-            else:
-                #doesn't exist yet, so we add it to the front/top of the list by inserting with a float that has min_pos-1
-                result = await self._fetchone(f'''
-                    SELECT MIN(position) AS min_pos FROM likes;
-                ''')
-
-                new_position = (result["min_pos"] or 0.0) - 1.0
-
-                await self._execute(f'''
-                    INSERT INTO likes (id, position) VALUES (?, ?);
-                ''', (id, new_position))
+                #calculate new position at top of list
+                else:
+                    cur.execute('SELECT MIN(position) AS min_pos FROM likes;')
+                    result = cur.fetchone()["min_pos"]
+                    new_position = (result or 0.0) - 1.0
+                    
+                    cur.execute('INSERT INTO likes (id, position) VALUES (?, ?);', (id, new_position))
+                    return "liked"
+                
+        status = await self._atomic_db_op(_logic)
+        return status
 
 
     async def fetch_liked_tracks(self):
@@ -57,16 +54,19 @@ class LikesMixin:
             to return full track metadata (objects) instead of just IDs, 
             reducing the need for secondary lookups in the frontend.
         """
-        async with self._lock:
-            rows = await self._fetchall(f'''
-                SELECT id
-                FROM likes
-                ORDER BY position ASC;
-            ''')
-            track_ids = [row["id"] for row in rows]
-            await self._emit_event(action=ADA.FETCH_LIKES, payload={"content": track_ids})
-    
-            return track_ids
+        def _logic():
+            with self.cursor() as cur:
+                cur.execute('''
+                    SELECT id
+                    FROM likes
+                    ORDER BY position ASC;
+                ''')
+                return [row["id"] for row in cur.fetchall()]
+            
+        track_ids = await self._atomic_db_op(_logic)
+        await self._emit_event(action=ADA.FETCH_LIKES, payload={"content": track_ids})
+
+        return track_ids
 
 
     async def reorder_likes_track(self, from_index: int, to_index: int):
@@ -84,55 +84,29 @@ class LikesMixin:
         Returns:
             bool: Success or failure
         """
-        async with self._lock:
-            #fetch playlist tracks ordered by position
-            rows = await self._fetchall(f'''
-                SELECT id, position
-                FROM likes
-                ORDER BY position ASC;
-            ''')
+        def _logic():
+            with self.cursor() as cur:
+                #fetch tracks ordered by position
+                cur.execute('SELECT id, position FROM likes ORDER BY position ASC;')
+                rows = [dict(row) for row in cur.fetchall()]
 
-            print("[reorder_likes] BEFORE reorder:")
-            for r in rows:
-                print(f"  id={r['id']}, position={r['position']}")
+                n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
+                if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
+                    return False
+                
+                #remove the moved track so indices reflect post-removal state
+                moved_row = rows.pop(from_index)
+                track_id = moved_row["id"]
 
+                if to_index == 0:
+                    new_position = rows[0]["position"] - 1.0
+                elif to_index == n:                               #this is the last element
+                    new_position = rows[-1]["position"] + 1.0
+                else:
+                    new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
 
-            n = len(rows) - 1 #have to account for removal of the element being reordered. to_index cannot be >= len(rows) - 1
-            if n == 0 or from_index < 0 or from_index > n or to_index < 0 or to_index > n:
-                print("FAILURE")
-                return False #invalid
-            
-            #remove the moved track so indices reflect post-removal state
-            moved_row = rows.pop(from_index)
-            track_id = moved_row["id"]
-            
-            print("from_index:", from_index, "to_index:", to_index)
-
-            if to_index == 0:
-                new_position = rows[0]["position"] - 1.0
-            elif to_index == n:                               #this is the last element
-                new_position = rows[-1]["position"] + 1.0
-            else:
-                new_position = (rows[to_index - 1]["position"] + rows[to_index]["position"]) / 2.0
-
-            #update
-            await self._execute(f'''
-                UPDATE likes
-                SET position = ?
-                WHERE id = ?;                    
-            ''', (new_position, track_id))
-
-            print("[reorder_likes]: SUCCESS")
-
-            #fetch playlist tracks ordered by position
-            rows = await self._fetchall(f'''
-                SELECT id, position
-                FROM likes
-                ORDER BY position ASC;
-            ''')
-
-            print("[reorder_likes] AFTER reorder:")
-            for r in rows:
-                print(f"  id={r['id']}, position={r['position']}")
-
-            return True
+                cur.execute('UPDATE likes SET position = ? WHERE id = ?;', (new_position, track_id))
+                return True
+        
+        return await self._atomic_db_op(_logic)
+    
