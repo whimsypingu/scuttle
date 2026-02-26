@@ -1,18 +1,12 @@
 import asyncio
 from contextlib import contextmanager
-import csv
 from pathlib import Path
 import sqlite3
 import math
-import time
 from typing import List, Optional
 
 from backend.core.events.event_bus import EventBus
-from backend.core.lib.utils import run_in_executor, normalize_for_search
 from backend.core.models.event import Event
-from backend.core.models.track import Track
-
-from backend.core.models.enums import AudioDatabaseAction as ADA
 
 from backend.core.database.mixins.seed import SeedMixin
 from backend.core.database.mixins.getset import GetsetMixin

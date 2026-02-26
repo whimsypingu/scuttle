@@ -70,7 +70,6 @@ class YouTubeClient:
             print("[DEBUG]: Set event loop policy")
 
 
-
     async def _run_subprocess(self, cmd: List[str], timeout: int = 60):
         """
         Run a subprocess asynchronously and capture its output.
@@ -94,7 +93,7 @@ class YouTubeClient:
         Example:
             code, out, err = await self._run_subprocess(["yt-dlp", "--version"], timeout=10)
         """ 
-
+        proc = None
         #NOTE: using --reload on fastapi server boot cucks asyncio create_subprocess
         try:
             proc = await asyncio.create_subprocess_exec(
@@ -102,18 +101,26 @@ class YouTubeClient:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-        except Exception as e:
-            print(f"[ERROR]: Failed to start subprocess: {type(e).__name__}: {e}")
 
-        try:
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            return proc.returncode, stdout.decode(errors="replace"), stderr.decode(errors="replace")
+        
         except asyncio.TimeoutError:
-            print("[DEBUG]: TimeoutError")
-            proc.kill()
-            await proc.wait()
+            if proc:
+                print(f"[ERROR]: Subprocess timed out. Attempting to kill subprocess.")
+                try:
+                    proc.kill()
+                    await proc.wait() #clean up zombie process
+                except ProcessLookupError:
+                    pass
             raise RuntimeError(f"Subprocess timed out after {timeout} seconds.")
         
-        return proc.returncode, stdout.decode(), stderr.decode()
+        except Exception as e:
+            print(f"[ERROR]: Failed to start subprocess: {type(e).__name__}: {e}")
+            if proc:
+                proc.kill()
+                await proc.wait()
+            raise
      
 
     async def _retry_async(self, func: Callable, max_attempts=3, base_delay=1, factor=2, max_delay=20, *args, **kwargs):
@@ -378,13 +385,13 @@ class YouTubeClient:
 
             if self.post_processor:
                 #postprocess audio file
-                self.post_processor.trim_silence(output_path)
-                self.post_processor.apply_loudnorm(output_path)
+                await self.post_processor.trim_silence(output_path)
+                await self.post_processor.apply_loudnorm(output_path)
 
-                done_path = self.post_processor.compress(output_path, "webm")
+                done_path = await self.post_processor.compress(output_path, "webm")
 
                 #override raw duration with trimmed duration
-                trimmed_duration = self.post_processor.get_duration(done_path)
+                trimmed_duration = await self.post_processor.get_duration(done_path)
                 setattr(track, "duration", trimmed_duration)
 
             await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})

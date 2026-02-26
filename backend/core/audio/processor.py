@@ -2,9 +2,10 @@
 import re
 import json
 import os
+import asyncio
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 
 class AudioProcessor:
@@ -16,6 +17,39 @@ class AudioProcessor:
         #handle binaries from tools/ to use yt-dlp
         self.ffmpeg_bin = ffmpeg_bin or os.getenv("FFMPEG_BIN_PATH")
         self.ffprobe_bin = ffprobe_bin or os.getenv("FFPROBE_BIN_PATH")
+
+
+    async def _run_subprocess(self, cmd: List[str], timeout: int = 60):
+        """Copied straight from yt-dlp client _run_subprocess code"""
+        proc = None
+        #NOTE: using --reload on fastapi server boot cucks asyncio create_subprocess
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            return proc.returncode, stdout.decode(errors="replace"), stderr.decode(errors="replace")
+        
+        except asyncio.TimeoutError:
+            if proc:
+                print(f"[ERROR]: Subprocess timed out. Attempting to kill subprocess.")
+                try:
+                    proc.kill()
+                    await proc.wait() #clean up zombie process
+                except ProcessLookupError:
+                    pass
+            raise RuntimeError(f"Subprocess timed out after {timeout} seconds.")
+        
+        except Exception as e:
+            print(f"[ERROR]: Failed to start subprocess: {type(e).__name__}: {e}")
+            if proc:
+                proc.kill()
+                await proc.wait()
+            raise
+             
 
     #private utilities
     def _execute(self, cmd: list, capture: bool = False):
@@ -59,11 +93,12 @@ class AudioProcessor:
             - Deletes the original file.
             - Renames the temp file to the original path.
         """
-        if original.exists(): original.unlink()
+        if original.exists(): 
+            original.unlink()
         temp.rename(original)
 
 
-    def get_duration(self, file_path: Path) -> float:
+    async def get_duration(self, file_path: Path) -> float:
         """
         Get the duration of an audio file in seconds using ffprobe.
 
@@ -84,11 +119,11 @@ class AudioProcessor:
             "-of", "default=noprint_wrappers=1:nokey=1",
             str(file_path)
         ]
-        result = self._execute(cmd, capture=True)
-        return float(result.stdout.strip())
+        _, stdout, _ = await self._run_subprocess(cmd)
+        return float(stdout.strip())
 
 
-    def trim_silence(self, input_path: Path):
+    async def trim_silence(self, input_path: Path):
         """
         Remove silence from the beginning and end of an audio file using FFmpeg.
 
@@ -115,12 +150,12 @@ class AudioProcessor:
             ),
             str(temp_path)
         ]
-        self._execute(cmd)
+        await self._run_subprocess(cmd)
         self._replace_file(input_path, temp_path)
         return input_path
 
 
-    def apply_loudnorm(self, input_path: Path, target_i=-16):
+    async def apply_loudnorm(self, input_path: Path, target_i=-16):
         """
         Apply two-pass loudness normalization to an audio file using FFmpeg's loudnorm filter.
 
@@ -147,11 +182,11 @@ class AudioProcessor:
             f"loudnorm=I={target_i}:TP=-1.5:LRA=11:print_format=json",
             "-f", "null", "-"
         ]
-        result = self._execute(cmd_analyze, capture=True)
+        _, _, stderr = await self._run_subprocess(cmd_analyze)
         
         #https://stackoverflow.com/questions/71791529/ffmpeg-loudnorm-reading-json-data
         #bruh you have to extract from stderr
-        match = re.search(r"\{[\s\S]*\}", result.stderr)
+        match = re.search(r"\{[\s\S]*\}", stderr)
         if not match: 
             raise RuntimeError("Loudnorm analysis failed")
         
@@ -173,12 +208,12 @@ class AudioProcessor:
             loudnorm_filter, 
             str(temp_path)
         ]
-        self._execute(cmd_apply)
+        await self._run_subprocess(cmd_apply)
         self._replace_file(input_path, temp_path)
         return input_path
 
 
-    def compress(self, input_path: Path, format="opus", bitrate="192k"):
+    async def compress(self, input_path: Path, format="opus", bitrate="192k"):
         """
         Convert a WAV (or other uncompressed) file into a compressed target format (MP3, Opus, etc.)
         Uses a temporary file for safety and replaces the original if needed.
@@ -213,6 +248,6 @@ class AudioProcessor:
             "-b:a", bitrate, 
             str(target_path)
         ]
-        self._execute(cmd)
+        await self._run_subprocess(cmd)
         input_path.unlink()
         return target_path
