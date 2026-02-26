@@ -1,4 +1,4 @@
-from backend.core.models.download_job import DownloadJob
+from scuttle.backend.core.models.jobs import DownloadJob
 from backend.core.queue.base.observable_dll import ObservableQueue
 import asyncio
 
