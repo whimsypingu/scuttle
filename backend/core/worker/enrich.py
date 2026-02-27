@@ -3,14 +3,14 @@ import traceback
 from backend.core.database.audio_database import AudioDatabase
 from backend.core.models.jobs import EnrichJob
 from backend.core.queue.implementations.enrich_queue import EnrichQueue
-from backend.core.musicbrainz.client import MusicbrainzClient
+from backend.core.musicbrainz.client import MusicBrainzClient
 
 
-class DownloadWorker:
+class EnrichWorker:
     def __init__(
         self, 
         enrich_queue: EnrichQueue, 
-        musicbrainz_client: MusicbrainzClient,
+        musicbrainz_client: MusicBrainzClient,
         audio_database: AudioDatabase
     ):
         self.enrich_queue = enrich_queue
