@@ -7,7 +7,7 @@ from backend.api.schemas.audio_schemas import ToggleLikeRequest
 from backend.core.audio.stream import stream_audio
 from backend.core.lib.utils import is_downloaded
 
-from backend.core.models.jobs import DownloadJob
+from backend.core.models.jobs import DownloadJob, EnrichJob
 import backend.globals as G
 
 from backend.core.database.audio_database import AudioDatabase
@@ -21,18 +21,23 @@ async def get_audio_stream(id: str, req: Request, full: bool = False):
     """
     Streams the requested track.
     """
-    job = DownloadJob(id=id, queue_last=True) #add an ensure_fetched field so it fetches if it required a download
+    download_job = DownloadJob(id=id, queue_last=True) #add an ensure_fetched field so it fetches if it required a download
 
     queue_manager = req.app.state.queue_manager
     db: AudioDatabase = req.app.state.db
 
     download_queue = queue_manager.get(G.DOWNLOAD_QUEUE_NAME)
+    enrich_queue = queue_manager.get(G.ENRICH_QUEUE_NAME)
 
     if not await db.is_downloaded(id):
-        if not download_queue.contains(job):
-            await download_queue.push(job)
+        if not download_queue.contains(download_job):
+            await download_queue.push(download_job)
         
         raise HTTPException(status_code=503, detail="Track is downloading, try again shortly")
+    
+    enrich_job = EnrichJob(id=id)
+    await enrich_queue.push(enrich_job)
+
     return stream_audio(req=req, id=id)
     #return stream_audio(req=req, id=id, full=full)
 

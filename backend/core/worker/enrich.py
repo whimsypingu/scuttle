@@ -23,20 +23,17 @@ class EnrichWorker:
             while True:
                 job: EnrichJob = await self.enrich_queue.pop() #thank you to async condition
 
+                #these can get overwritten based on the different kinds of executions that are required, consider refactoring with more variables if it gets confusing
                 job_id = job.get_id()
                 job_title = job.get_title()
-
-                #these can get overwritten based on the different kinds of executions that are required, consider refactoring with more variables if it gets confusing
-                job_query = job.get_query()
-                job_id = job.get_id()
+                job_artist = job.get_artist()
                 job_type = job.get_type()
-                job_metadata = job.get_metadata()
 
                 #resolve to downloadable id (yt_id)
                 try:
-                    print(f"[DEBUG] DownloadWorker handling {job_type} type")
+                    print(f"[DEBUG] EnrichWorker handling {job_type} type")
                 except Exception as e:
-                    print(f"[ERROR] DownloadWorker error ({e}) resolving id while handling DownloadJob: {job}\n{traceback.format_exc()}")
+                    print(f"[ERROR] EnrichWorker error ({e}) resolving while handling EnrichJob: {job}\n{traceback.format_exc()}")
 
         except asyncio.CancelledError:
             raise

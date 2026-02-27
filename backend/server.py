@@ -70,6 +70,7 @@ async def lifespan(app: FastAPI):
     queue_manager = QueueManager()
     queue_manager.add(play_queue)
     queue_manager.add(download_queue)
+    queue_manager.add(enrich_queue)
 
     playlist_ext_manager = PlaylistExtractorManager()
 
@@ -98,6 +99,7 @@ async def lifespan(app: FastAPI):
     try:
         yield #app runs
     finally:
+        #may not print to logs because of terminating pipe before this executes
         print("Shutting down...")
 
         download_task.cancel()

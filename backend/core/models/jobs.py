@@ -117,10 +117,13 @@ class EnrichJob:
         self.artist = artist
 
     def get_type(self) -> str:
+        """
+        either 'id' or 'search'
+        """
         if self.id:
             return "id"
         else:
-            return "strings"
+            return "search"
     
     def get_id(self) -> str | None:
         return self.id
