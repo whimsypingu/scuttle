@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, DeletePlaylistRequest, DeleteTrackRequest, EditPlaylistRequest, EditTrackRequest, ReorderPlaylistRequest
 from backend.core.database.audio_database import AudioDatabase
-from scuttle.backend.core.models.jobs import DownloadJob
+from backend.core.models.jobs import DownloadJob
 from backend.core.playlists.manager import PlaylistExtractorManager
 
 import backend.globals as G

@@ -1,7 +1,7 @@
 
 import traceback
 from backend.core.database.audio_database import AudioDatabase
-from scuttle.backend.core.models.jobs import DownloadJob
+from backend.core.models.jobs import DownloadJob
 from backend.core.queue.implementations.play_queue import PlayQueue
 from backend.core.queue.implementations.download_queue import DownloadQueue
 from backend.core.youtube.client import YouTubeClient

@@ -7,7 +7,7 @@ from backend.api.schemas.audio_schemas import ToggleLikeRequest
 from backend.core.audio.stream import stream_audio
 from backend.core.lib.utils import is_downloaded
 
-from scuttle.backend.core.models.jobs import DownloadJob
+from backend.core.models.jobs import DownloadJob
 import backend.globals as G
 
 from backend.core.database.audio_database import AudioDatabase

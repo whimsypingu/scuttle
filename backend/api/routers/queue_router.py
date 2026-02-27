@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from backend.core.lib.utils import is_downloaded
 from backend.api.schemas.queue_schemas import *
-from scuttle.backend.core.models.jobs import DownloadJob
+from backend.core.models.jobs import DownloadJob
 import backend.globals as G
 
 router = APIRouter(prefix="/queue")

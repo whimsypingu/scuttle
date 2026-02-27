@@ -6,7 +6,7 @@ from typing import Optional
 
 from backend.api.schemas.search_schemas import *
 from backend.core.lib.utils import is_downloaded
-from scuttle.backend.core.models.jobs import DownloadJob
+from backend.core.models.jobs import DownloadJob
 import backend.globals as G
 
 from backend.core.database.audio_database import AudioDatabase
