@@ -1,5 +1,6 @@
 from typing import Optional
 from backend.core.models.enums import AudioDatabaseAction as ADA
+import backend.globals as G
 
 class GetsetMixin:
     async def get_downloads_content(self):
@@ -108,9 +109,11 @@ class GetsetMixin:
         return content
         
 
-    async def get_metadata(self, id: str):
+    async def get_metadata(self, id: str, artist_delim: str = G.UNIT_SEP):
         """
         Retrieves a track's metadata given their id.
+
+        artist_delim: What separates artists, if multiple. Defaults to UNIT_SEP
 
         Returns:
             dict:
@@ -119,10 +122,10 @@ class GetsetMixin:
         """
         def _logic():
             with self.cursor() as cur:
-                cur.execute('''
+                cur.execute(f'''
                     SELECT
                         COALESCE(t.title_display, t.title) AS title,
-                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist
+                        GROUP_CONCAT(COALESCE(a.artist_display, a.artist), '{artist_delim} ') AS artist
                     FROM titles t
                     LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
                     LEFT JOIN artists a ON ta.artist_rowid = a.rowid

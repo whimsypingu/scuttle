@@ -46,7 +46,7 @@ class DownloadWorker:
                         case "yt_id":
                             pass
                         case "seed_id":
-                            job_metadata = await self.audio_database.get_metadata(job_id)
+                            job_metadata = await self.audio_database.get_metadata(job_id, artist_delim=",") #need searchable display for metadata so use , as delimiter
 
                             #re-queued under old seed_id, and now it is a completed yt_id. without this, duplicate queueing is possible which causes errors
                             if not job_metadata:

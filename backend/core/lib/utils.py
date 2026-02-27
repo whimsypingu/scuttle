@@ -89,3 +89,20 @@ def normalize_for_search(text: str) -> str:
     text = _punct_pattern.sub(" ", text) # Replace punct with space to avoid merging words
     text = _whitespace_pattern.sub(" ", text)
     return text.strip()
+
+
+
+#bigrammed sorensen-dice set comparison
+def get_bigrams(text):
+    return set(text[i:i+2] for i in range(len(text)-1))
+
+def dice_coefficient(a, b):
+    set_a = get_bigrams(a)
+    set_b = get_bigrams(b)
+    
+    intersection = len(set_a & set_b)
+    union = len(set_a) + len(set_b)
+    
+    if union == 0: return 0
+    return (2.0 * intersection) / union
+
