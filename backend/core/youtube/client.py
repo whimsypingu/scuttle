@@ -16,6 +16,8 @@ from backend.core.models.track import Track
 
 from backend.core.models.enums import YouTubeClientAction as YTCA
 
+import backend.globals as G
+
 
 #if this fucker breaks just run: python -m pip install -U yt-dlp (goated software btw up with ffmpeg)
 class YouTubeClient:
@@ -200,7 +202,6 @@ class YouTubeClient:
         await self._emit_event(action=YTCA.START, payload={})
 
         #cmd line search
-        delim = "\x1f"
         cmd = [
             self.python_bin,
             "-m",
@@ -210,7 +211,7 @@ class YouTubeClient:
             "--user-agent", self.dl_user_agent,
             "--no-download",
             "--no-cache-dir", #prevents using stale cached DASH fragments
-            "--print", f"%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s"
+            "--print", f"%(id)s{G.UNIT_SEP}%(title)s{G.UNIT_SEP}%(uploader)s{G.UNIT_SEP}%(duration)s"
         ]
         print(f"Running command: {' '.join(cmd)}")
 
@@ -232,7 +233,7 @@ class YouTubeClient:
                 print(f"No output received from yt-dlp for query: '{q}'")
 
             for line in raw_lines:
-                parts = line.split(delim)
+                parts = line.split(G.UNIT_SEP)
                 if len(parts) != 4:
                     print(f"[WARN]: Unexpected line format: {line}")
                     continue
@@ -325,7 +326,6 @@ class YouTubeClient:
         url = f"https://www.youtube.com/watch?v={id}"
 
         #cmd line download
-        delim = "\x1f"
         cmd = [
             self.python_bin,
             "-m",
@@ -345,7 +345,7 @@ class YouTubeClient:
             "--extractor-args", "youtube:player_client=default,-android_sdkless",
             "--js-runtimes", f"deno:{self.js_runtime_bin}", #jsruntime
             "--ffmpeg-location", self.ffmpeg_location, #explicitly provide ffmpeg location
-            "--print", f"after_move:%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s", #complete print after download
+            "--print", f"after_move:%(id)s{G.UNIT_SEP}%(title)s{G.UNIT_SEP}%(uploader)s{G.UNIT_SEP}%(duration)s", #complete print after download
             url
         ]
         print(f"Running command: {' '.join(cmd)}")
@@ -364,7 +364,7 @@ class YouTubeClient:
             # Parse metadata from stdout
             try:
                 line = out.strip().splitlines()[0]  # first line
-                id, title, artist, duration = line.split(delim)
+                id, title, artist, duration = line.split(G.UNIT_SEP)
             except Exception as e:
                 raise ValueError(f"[download_by_id] Failed to parse metadata: {e}, Output was: {out}")
 
