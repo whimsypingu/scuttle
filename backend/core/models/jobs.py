@@ -101,7 +101,7 @@ class EnrichJob:
     Args:
         id: Optional unique ID for the track, which may be extracted from a query
         title: Optional string
-        artist: Optional string for all artists, delimited by \x1f
+        artist: Optional string for all artists, delimited by \x1f (backend.globals.UNIT_SEP)
     """
     def __init__(
         self,

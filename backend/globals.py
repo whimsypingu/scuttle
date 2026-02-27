@@ -6,9 +6,12 @@ SERVER_NAME = "server"
 SEARCH_QUEUE_NAME = "search_queue"
 DOWNLOAD_QUEUE_NAME = "download_queue"
 PLAY_QUEUE_NAME = "play_queue"
+ENRICH_QUEUE_NAME = "enrich_queue"
 
 AUDIO_DATABASE_NAME = "audio_database"
 YOUTUBE_CLIENT_NAME = "youtube_client"
+
+MUSICBRAINZ_CLIENT_NAME = "musicbrainz_client"
 
 #
 ROOT_DIR = Path(__file__).resolve().parent.parent

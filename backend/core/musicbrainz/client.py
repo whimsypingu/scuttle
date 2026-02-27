@@ -32,7 +32,7 @@ class MusicBrainzClient:
             headers={
                 "User-Agent": self.user_agent,
                 "Accept": "application/json"
-            }
+            },
             timeout=10.0,
             follow_redirects=True
         )
