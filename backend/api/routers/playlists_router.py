@@ -270,7 +270,7 @@ async def edit_track(body: EditTrackRequest, req: Request) -> Response:
     }
     await db.set_metadata(id=track_id, metadata=metadata)
 
-    job = EnrichJob(title=title, artist=artist)
+    job = EnrichJob(id=id) #title=title, artist=artist)
     await enrich_queue.push(job)
 
     return JSONResponse(content={"status": "updated"}, status_code=200)

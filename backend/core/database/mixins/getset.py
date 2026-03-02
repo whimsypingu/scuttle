@@ -109,7 +109,7 @@ class GetsetMixin:
         return content
         
 
-    async def get_metadata(self, id: str, artist_delim: str = G.UNIT_SEP):
+    async def get_metadata(self, id: str, artist_delim: str = G.UNIT_SEP):#, include_artist_credits):
         """
         Retrieves a track's metadata given their id.
 
@@ -130,7 +130,7 @@ class GetsetMixin:
                     LEFT JOIN title_artists ta ON t.rowid = ta.title_rowid
                     LEFT JOIN artists a ON ta.artist_rowid = a.rowid
                     WHERE t.id = ?
-                    GROUP BY t.id;
+                    GROUP BY t.rowid;
                 ''', (id,))
                 row = cur.fetchone()
                 return dict(row) if row else None

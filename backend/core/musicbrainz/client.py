@@ -3,6 +3,7 @@
 import asyncio
 import time
 import httpx
+import re
 import secrets
 from typing import Optional
 
@@ -28,6 +29,7 @@ class MusicBrainzClient:
 
         self.user_agent = f"{self.user} {self.contact} Instance/{self._instance_identifier}"
 
+        self.base_url = "https://musicbrainz.org/ws/2"
         self.client = httpx.AsyncClient(
             headers={
                 "User-Agent": self.user_agent,
@@ -36,6 +38,8 @@ class MusicBrainzClient:
             timeout=10.0,
             follow_redirects=True
         )
+
+        self.SPECIAL_CHARS_PATTERN = re.compile(r"[()\[\]/]")
 
         self._last_call = 0.0
         self._lock = asyncio.Lock()
@@ -56,6 +60,8 @@ class MusicBrainzClient:
                 for attempt in range(self.max_retries):
                     full_url = f"{self.base_url}/{endpoint}"
                     response = await self.client.get(full_url, params=params)
+
+                    print(f"[DEBUG] musicbrainzclient.py: full_url: {full_url}, params: {params}")
 
                     self._last_call = time.time()
 
@@ -119,6 +125,7 @@ class MusicBrainzClient:
         }
 
         data = await self.fetch(endpoint=endpoint, params=params)
+        print(f"[DEBUG] musicbrainzclient.py: fetch returned: {str(data)[:40]}")
         output = {}
 
         #no results
@@ -189,7 +196,7 @@ class MusicBrainzClient:
             retrieved = data.get("recordings", [])
             for i, r in enumerate(data.get("recordings", [])):
                 title = r.get("title", None)
-                if ((not title) or contains_special_chars(title)):
+                if ((not title) or self._contains_special_chars(title)):
                     continue
 
                 duration = r.get("length", 0)
@@ -242,7 +249,12 @@ class MusicBrainzClient:
             )
 
         return result_set
-        
+
+
+    def _contains_special_chars(self, s: str):
+        """Returns True if the string satisfies the special character pattern condition"""
+        return bool(self.SPECIAL_CHARS_PATTERN.search(s))
+
 
     async def close(self):
         await self.client.aclose()

@@ -14,6 +14,7 @@ from backend.core.database.mixins.likes import LikesMixin
 from backend.core.database.mixins.playlists import PlaylistsMixin
 from backend.core.database.mixins.register import RegisterMixin
 from backend.core.database.mixins.search import SearchMixin
+from backend.core.database.mixins.enrich import EnrichMixin
 
 
 
@@ -23,7 +24,8 @@ class AudioDatabase(
     LikesMixin,
     PlaylistsMixin,
     RegisterMixin,
-    SearchMixin
+    SearchMixin,
+    EnrichMixin
 ):
     def __init__(
         self, 
