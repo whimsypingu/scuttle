@@ -1,32 +1,4 @@
 class EnrichMixin:
-    async def get_artists(self, title_id: str):
-        """
-        Given a title id return a list of corresponding artists with their data
-        """
-        if not title_id:
-            return []
-        
-        def _logic():
-            with self.cursor() as cur:
-                cur.execute("""
-                    SELECT
-                        a.rowid,
-                        a.id,
-                        a.artist,
-                        COALESCE(a.artist_display, a.artist) AS artist_display
-                    FROM artists a
-                    JOIN title_artists ta ON ta.artist_rowid = a.rowid
-                    WHERE ta.title_rowid = ?
-                    ORDER BY ta.rowid; --preserves order they were added in
-                """, (title_id,))
-
-                results = cur.fetchall()
-            return [dict(row) for row in results]
-
-        return await self._atomic_db_op(_logic)
-
-
-
     async def get_recordings(self, artist_id: str = None, artist_name: str = None):
         """
         Given an artist id or name return a set of all de-duplicated titles
