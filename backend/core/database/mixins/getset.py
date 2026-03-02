@@ -109,7 +109,7 @@ class GetsetMixin:
         return content
         
 
-    async def get_metadata(self, id: str, artist_delim: str = G.UNIT_SEP):#, include_artist_credits):
+    async def get_metadata(self, id: str, artist_delim: str = G.UNIT_SEP, include_artist: bool = False):
         """
         Retrieves a track's metadata given their id.
 
@@ -117,8 +117,9 @@ class GetsetMixin:
 
         Returns:
             dict:
-                - title
-                - artist
+                - title display
+                - artist display
+                - artists = artist credits {} (optional)
         """
         def _logic():
             with self.cursor() as cur:
@@ -133,8 +134,24 @@ class GetsetMixin:
                     GROUP BY t.rowid;
                 ''', (id,))
                 row = cur.fetchone()
-                return dict(row) if row else None
-            
+
+                data = dict(row)
+
+                if include_artist:
+                    cur.execute("""
+                        SELECT
+                            a.rowid,
+                            a.id,
+                            a.artist,
+                            COALESCE(a.artist_display, a.artist) AS artist_display
+                        FROM artists a
+                        JOIN title_artists ta ON ta.artist_rowid = a.rowid
+                        WHERE ta.title_rowid = ?
+                        ORDER BY ta.rowid; --preserves order they were added in
+                    """, (id,))
+                    data["artists"] = [dict(row) for row in cur.fetchall()]
+        
+                return data
         return await self._atomic_db_op(_logic)
 
 

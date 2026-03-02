@@ -27,19 +27,16 @@ class EnrichWorker:
 
                 #these can get overwritten based on the different kinds of executions that are required, consider refactoring with more variables if it gets confusing
                 job_id = job.get_id()
-                job_title = job.get_title()
-                job_artist = job.get_artist()
-                job_type = job.get_type()
 
                 #resolve the job
                 try:
-                    print(f"[DEBUG] EnrichWorker handling {job_type} type")
+                    print(f"[DEBUG] EnrichWorker handling {job_id} job_id")
 
                     #process for preparing for mb query
                     if not job_id:
                         continue
 
-                    job_metadata = await self.audio_database.get_metadata(job_id, artist_delim=G.UNIT_SEP)
+                    job_metadata = await self.audio_database.get_metadata(job_id, artist_delim=G.UNIT_SEP, include_artist=True)
                     print(f"[DEBUG] job_metadata: {job_metadata}")
 
                     job_title = job_metadata.get("title", "Never Gonna Give You Up")
@@ -51,8 +48,8 @@ class EnrichWorker:
                         
                     #
                     print(f"[DEBUG] mb_search {mb_search}")
-                    mb_artists = mb_search['artists']
-                    db_artists = await self.audio_database.get_artists(job_id)
+                    mb_artists = mb_search.get("artists", [])
+                    db_artists = job_metadata.get("artists", [])
 
                     #
                     print(f"[DEBUG] mb_artists: {mb_artists}, db_artists: {db_artists}")
