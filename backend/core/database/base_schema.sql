@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS artists (
     artist TEXT NOT NULL,
     artist_display TEXT,
     pref REAL DEFAULT 0.0 CHECK (pref >= 0.0 AND pref <= 1.0),
-    pref_weight REAL DEFAULT 1.0
+    pref_weight REAL DEFAULT 1.0,
+    enriched_at INTEGER DEFAULT (unixepoch())
 );
 
 -- artists insertion trigger
@@ -87,7 +88,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS catalog_fts USING fts5(
 -- downloads table
 CREATE TABLE IF NOT EXISTS downloads (
     id TEXT PRIMARY KEY,
-    downloaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    downloaded_at INTEGER DEFAULT (unixepoch()),
     FOREIGN KEY (id) REFERENCES titles(id) ON DELETE CASCADE
 );
 
@@ -95,7 +96,7 @@ CREATE TABLE IF NOT EXISTS downloads (
 CREATE TABLE IF NOT EXISTS likes (
     id TEXT PRIMARY KEY,
     position REAL NOT NULL,
-    liked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    liked_at INTEGER DEFAULT (unixepoch()),
     FOREIGN KEY (id) REFERENCES downloads(id) ON DELETE CASCADE
 );
 
@@ -107,7 +108,7 @@ ON likes(position);
 CREATE TABLE IF NOT EXISTS playlists (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at INTEGER DEFAULT (unixepoch())
 );
 
 -- playlist and titles junction table
@@ -115,7 +116,7 @@ CREATE TABLE IF NOT EXISTS playlist_titles (
     playlist_id INTEGER NOT NULL,
     title_id TEXT NOT NULL,
     position REAL NOT NULL,
-    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    added_at INTEGER DEFAULT (unixepoch()),
     FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE CASCADE,
     FOREIGN KEY (title_id) REFERENCES downloads(id) ON DELETE CASCADE,
     PRIMARY KEY (playlist_id, title_id)
