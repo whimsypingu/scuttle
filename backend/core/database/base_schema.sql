@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS artists (
     artist_display TEXT,
     pref REAL DEFAULT 0.0 CHECK (pref >= 0.0 AND pref <= 1.0),
     pref_weight REAL DEFAULT 1.0,
-    enriched_at INTEGER DEFAULT (unixepoch())
+    enriched_at INTEGER DEFAULT (unixepoch()) --see https://sqlite.org/lang_datefunc.html
 );
 
 -- artists insertion trigger
