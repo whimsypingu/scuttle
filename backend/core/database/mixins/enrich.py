@@ -72,15 +72,16 @@ class EnrichMixin:
                     #get the rowids, porting old preferences if necessary
                     old_id = data.get('old_id', None) #optional field
                     cur.execute("""
-                        INSERT OR IGNORE INTO artists (id, artist, artist_display, pref)
+                        INSERT INTO artists (id, artist, artist_display, pref, enriched_at)
                         VALUES (
                             ?, 
                             ?, 
                             ?,
-                            COALESCE((SELECT pref FROM artists WHERE id = ?), 0.0)
+                            COALESCE((SELECT pref FROM artists WHERE id = ?), 0.0),
+                            unixepoch()
                         )
                         ON CONFLICT(id) DO UPDATE SET
-                            enriched_at = unixepoch()
+                            enriched_at = excluded.enriched_at
                         RETURNING rowid;
                     """, (new_id, data['artist'], data['artist_display'], old_id))
                     new_rowid = cur.fetchone()[0]
