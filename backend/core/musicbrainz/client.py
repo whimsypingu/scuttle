@@ -49,8 +49,9 @@ class MusicBrainzClient:
         self.minimum_wait = minimum_wait
         self.max_retries = max_retries
 
-    async def fetch(self, endpoint: str, params: Optional[dict] = {}):
+    async def fetch(self, endpoint: str, params: Optional[dict] = None):
         #only one request handled at a time
+        params = params or {}
         async with self._lock:
             now = time.time()
             elapsed = now - self._last_call
@@ -80,11 +81,11 @@ class MusicBrainzClient:
                     response.raise_for_status()
             
             except httpx.HTTPStatusError as e:
-                print(f"[ERROR]: Musicbrainz returned {e.response.status_code}")
+                print(f"[ERROR]: Musicbrainz fetch returned {e.response.status_code}")
             except Exception as e:
-                print(f"[ERROR]: {e}")
-
-            return None
+                print(f"[ERROR]: Musicbrainz fetch exception: {type(e).__name__} - {repr(e)}")
+        
+        return None
         
 
     async def search(self, title, artists, threshold=0.95):
@@ -95,7 +96,7 @@ class MusicBrainzClient:
         artists: "Bruno Mars\x1fROSE"
         threshold: 0.95 (between 0 and 1)
 
-        Returns: {} on failure, otherwise in success in this format:
+        Returns: None on failure, otherwise in success in this format:
         {
             'score': 100,
             'title': 'apt',
@@ -128,20 +129,22 @@ class MusicBrainzClient:
 
         data = await self.fetch(endpoint=endpoint, params=params)
         print(f"[DEBUG] musicbrainzclient.py: fetch returned: {str(data)[:40]}")
-        output = {}
+        if not data:
+            return None
 
         #no results
         recordings = data.get("recordings", [])
         if len(recordings) == 0:
-            return {}
+            return None
         
         r = recordings[0]
 
         #best result score below threshold
         score = r.get("score", 0)
         if score < (threshold * 100):
-            return {}
+            return None
         
+        output = {}
         output["score"] = score
 
         title_display = r.get("title", "UNKNOWN TITLE")

@@ -37,7 +37,8 @@ async def get_audio_stream(id: str, req: Request, full: bool = False):
     
     else:
         enrich_job = EnrichJob(id=id)
-        await enrich_queue.push(enrich_job)
+        if not enrich_queue.contains(enrich_job):
+            await enrich_queue.push(enrich_job)
 
     return stream_audio(req=req, id=id)
     #return stream_audio(req=req, id=id, full=full)
