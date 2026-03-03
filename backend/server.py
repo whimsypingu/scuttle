@@ -75,7 +75,7 @@ async def lifespan(app: FastAPI):
     playlist_ext_manager = PlaylistExtractorManager()
 
     # workers
-    download_worker = DownloadWorker(play_queue=play_queue, download_queue=download_queue, youtube_client=yt, audio_database=db)
+    download_worker = DownloadWorker(play_queue=play_queue, download_queue=download_queue, enrich_queue=enrich_queue, youtube_client=yt, audio_database=db)
     download_task = asyncio.create_task(download_worker.run())
 
     enrich_worker = EnrichWorker(enrich_queue=enrich_queue, musicbrainz_client=mb, audio_database=db)
