@@ -130,6 +130,7 @@ class GetsetMixin:
         """
         def _logic():
             with self.cursor() as cur:
+                track_id = id #id is a reserved sqlite function
                 cur.execute(f'''
                     SELECT
                         t.rowid,
@@ -140,7 +141,7 @@ class GetsetMixin:
                     LEFT JOIN artists a ON ta.artist_rowid = a.rowid
                     WHERE t.id = ?
                     GROUP BY t.rowid;
-                ''', (id,))
+                ''', (track_id,))
                 row = cur.fetchone()
 
                 if not row:

@@ -96,34 +96,25 @@ class DownloadJob:
 class EnrichJob:
     """
     Represents an enrichment task for a track.
-    Will need either id or title and artists strings to be valid, but we shouldn't ever reach this error
+    Requires an id to be valid. Title and artist strings are optional.
 
     Args:
-        id: Optional unique ID for the track, which may be extracted from a query
+        id: Unique ID for the track, which may be extracted from a query
         title: Optional string
         artist: Optional string for all artists, delimited by \x1f (backend.globals.UNIT_SEP)
     """
     def __init__(
         self,
-        id: Optional[str] = None,
+        id: str,
         title: Optional[str] = None,
         artist: Optional[str] = None,
     ):
-        if not id and not (title and artist):
-            raise ValueError("Either 'id' or 'title + artist' must be provided.")
-        
         self.id = id
         self.title = title
         self.artist = artist
 
     def get_type(self) -> str:
-        """
-        either 'id' or 'search'
-        """
-        if self.id:
-            return "id"
-        else:
-            return "search"
+        return "id"
     
     def get_id(self) -> str | None:
         return self.id
@@ -137,14 +128,9 @@ class EnrichJob:
     def get_identifier(self) -> str:
         """
         Return a string uniquely identifying this job.
-        For id, returns the id.
-        For title and artist, returns the entire string.
+        Since id is required for an EnrichJob, return id.
         """
-        if self.id:
-            return self.id
-        if self.title and self.artist:
-            return f"{self.title} {self.artist}"
-        return "unknown"
+        return self.id
 
     def __repr__(self):
         return f"<EnrichJob type={self.get_type()} id={self.get_identifier()}>"

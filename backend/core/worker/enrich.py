@@ -101,7 +101,7 @@ class EnrichWorker:
 
             #collect existing songs and enrichment songs for an artist, keep only new songs
             dbset = await self.audio_database.get_recordings(dba_id)
-            mbset = await self.musicbrainz_client.recordings(mba['mbid'], limit=300)
+            mbset = await self.musicbrainz_client.recordings(mba['mbid'])
 
             new_id = f"SEED___{mba['mbid']}"
             artists.setdefault(new_id, {

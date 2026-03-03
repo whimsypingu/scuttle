@@ -15,3 +15,15 @@ class EnrichQueue(ObservableQueue[EnrichJob]):
                 await self._condition.wait() #yield control nothing to consume
             job = self._pop()
             return job
+        
+
+    def contains(self, item: EnrichJob | str):
+        """Check if a job with the same identifier or job id exists."""
+        if isinstance(item, EnrichJob):
+            identifier = item.get_identifier()
+        elif isinstance(item, str):
+            identifier = item
+        else:
+            return False
+        
+        return any(identifier == job.get_identifier() for job in self)
