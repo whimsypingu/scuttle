@@ -33,7 +33,9 @@ class SearchMixin:
                         GROUP_CONCAT(COALESCE(a.artist_display, a.artist), ', ') AS artist,
                         t.duration,
 
-                        sub.score * t.pref_weight * MAX(a.pref_weight) AS final_rank
+                        sub.score * t.pref_weight * MAX(a.pref_weight) *
+                            CASE WHEN d.id IS NOT NULL THEN 1.0 ELSE 0.1
+                            END AS final_rank
                     FROM (
                         SELECT
                             rowid,
@@ -45,6 +47,7 @@ class SearchMixin:
                     JOIN titles t ON t.rowid = sub.rowid
                     JOIN title_artists ta ON ta.title_rowid = t.rowid
                     JOIN artists a ON a.rowid = ta.artist_rowid
+                    LEFT JOIN downloads d ON d.id = t.id
                     GROUP BY sub.rowid
                     ORDER BY final_rank ASC;
                 '''
