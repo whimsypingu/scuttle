@@ -165,10 +165,13 @@ class MusicBrainzClient:
         return output
             
     
-    async def recordings(self, mbid, limit=self.limit):
+    async def recordings(self, mbid, limit=None):
         """
         Retrieves musicbrainz results from an mbid in a programmatic scrape effort
         """
+        if limit is None:
+            limit = self.limit
+            
         result_set = {}
 
         iteration = 0
