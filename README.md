@@ -176,6 +176,7 @@ Scuttle is still in active development. Here are some planned features and impro
 - [ ] Import playlist from YouTube, other sources
 - [ ] User authentication and multi-user support
 - [ ] Syncing to a central server (?) for recommendations
+- [x] Search enrichment [3/2/26, enriches based on artists listened]
 - [ ] Virtual network option (Tailscale?)
 - [ ] Recommendations (Last.fm?)
 
