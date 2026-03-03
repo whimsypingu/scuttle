@@ -35,8 +35,9 @@ async def get_audio_stream(id: str, req: Request, full: bool = False):
         
         raise HTTPException(status_code=503, detail="Track is downloading, try again shortly")
     
-    enrich_job = EnrichJob(id=id)
-    await enrich_queue.push(enrich_job)
+    else:
+        enrich_job = EnrichJob(id=id)
+        await enrich_queue.push(enrich_job)
 
     return stream_audio(req=req, id=id)
     #return stream_audio(req=req, id=id, full=full)

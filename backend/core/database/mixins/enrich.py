@@ -80,8 +80,7 @@ class EnrichMixin:
                             COALESCE((SELECT pref FROM artists WHERE id = ?), 0.0)
                         )
                         ON CONFLICT(id) DO UPDATE SET
-                            -- do nothing but must do an update to get the rowid
-                            artist = excluded.artist
+                            enriched_at = unixepoch()
                         RETURNING rowid;
                     """, (new_id, data['artist'], data['artist_display'], old_id))
                     new_rowid = cur.fetchone()[0]

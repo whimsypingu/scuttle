@@ -72,8 +72,8 @@ class SeedMixin:
 
                         #insert artists and junctions
                         cur.execute('''
-                            INSERT OR IGNORE INTO artists (id, artist, artist_display)
-                            VALUES (?, ?, ?)
+                            INSERT OR IGNORE INTO artists (id, artist, artist_display, enriched_at)
+                            VALUES (?, ?, ?, 0)
                         ''', (artist_id, normalize_for_search(artist), artist))
 
                         cur.execute('''

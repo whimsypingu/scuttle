@@ -109,22 +109,30 @@ class GetsetMixin:
         return content
         
 
-    async def get_metadata(self, id: str, artist_delim: str = G.UNIT_SEP, include_artist: bool = False):
+    async def get_metadata(self, id: str, artist_delim: str = G.UNIT_SEP, include_artists: bool = False):
         """
-        Retrieves a track's metadata given their id.
+        Retrieves a track's metadata by ID.
 
-        artist_delim: What separates artists, if multiple. Defaults to UNIT_SEP
+        Args:
+            id: The unique identifier for the track.
+            artist_delim: String separator for multiple artists. Defaults to UNIT_SEP.
+            include_artists: If True, includes the 'artists' dictionary of artist credits in the response.
 
         Returns:
-            dict:
-                - title display
-                - artist display
-                - artists = artist credits {} (optional)
+            dict: Metadata containing:
+                {
+                    "title": str,           # The track title display name
+                    "artist": str,          # The formatted artist(s) display string
+                    "artists": dict[str, Any] # (Optional) Full artist credit mapping
+                }
+
+            None: if invalid id.
         """
         def _logic():
             with self.cursor() as cur:
                 cur.execute(f'''
                     SELECT
+                        t.rowid,
                         COALESCE(t.title_display, t.title) AS title,
                         GROUP_CONCAT(COALESCE(a.artist_display, a.artist), '{artist_delim} ') AS artist
                     FROM titles t
@@ -135,23 +143,29 @@ class GetsetMixin:
                 ''', (id,))
                 row = cur.fetchone()
 
+                if not row:
+                    return None
+
                 data = dict(row)
 
-                if include_artist:
+                if include_artists:
+                    title_rowid = data.pop('rowid')
                     cur.execute("""
                         SELECT
                             a.rowid,
                             a.id,
                             a.artist,
-                            COALESCE(a.artist_display, a.artist) AS artist_display
+                            COALESCE(a.artist_display, a.artist) AS artist_display,
+                            a.enriched_at
                         FROM artists a
                         JOIN title_artists ta ON ta.artist_rowid = a.rowid
                         WHERE ta.title_rowid = ?
                         ORDER BY ta.rowid; --preserves order they were added in
-                    """, (id,))
+                    """, (title_rowid,))
+
                     data["artists"] = [dict(row) for row in cur.fetchall()]
-        
                 return data
+            
         return await self._atomic_db_op(_logic)
 
 

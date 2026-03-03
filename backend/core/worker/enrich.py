@@ -1,6 +1,7 @@
 
 import traceback
 import asyncio
+import time
 from backend.core.database.audio_database import AudioDatabase
 from backend.core.models.jobs import EnrichJob
 from backend.core.queue.implementations.enrich_queue import EnrichQueue
@@ -20,6 +21,8 @@ class EnrichWorker:
         self.musicbrainz_client = musicbrainz_client
         self.audio_database = audio_database
 
+        self.ENRICHMENT_TTL_SECONDS = 30 * 24 * 60 * 60
+
     async def run(self):
         try:
             while True:
@@ -36,20 +39,28 @@ class EnrichWorker:
                     if not job_id:
                         continue
 
-                    job_metadata = await self.audio_database.get_metadata(job_id, artist_delim=G.UNIT_SEP, include_artist=True)
+                    job_metadata = await self.audio_database.get_metadata(job_id, artist_delim=G.UNIT_SEP, include_artists=True)
                     print(f"[DEBUG] job_metadata: {job_metadata}")
 
+                    if not job_metadata:
+                        continue
+
+                    #handle db artists
+                    db_artists = job_metadata.get("artists", [])
+                    if self._artists_are_fresh(db_artists):
+                        continue
+
+                    #debugging values
                     job_title = job_metadata.get("title", "Never Gonna Give You Up")
                     job_artist = job_metadata.get("artist", "Rick Astley")
      
-                    mb_search = await self.musicbrainz_client.search(job_title, job_artist)
+                    mb_search = await self.musicbrainz_client.search(job_title, job_artist) #requires artists to be separated by UNIT_SEP
                     if not mb_search:
                         continue
                         
                     #
                     print(f"[DEBUG] mb_search {mb_search}")
                     mb_artists = mb_search.get("artists", [])
-                    db_artists = job_metadata.get("artists", [])
 
                     #
                     print(f"[DEBUG] mb_artists: {mb_artists}, db_artists: {db_artists}")
@@ -123,6 +134,21 @@ class EnrichWorker:
                     junctions.append((title_id, artist_id))
 
         return artists, titles, junctions
+
+
+    def _artists_are_fresh(self, db_artists):
+        """
+        Returns True only if all artists have been enriched_at within the last TTL.
+        """
+        if not db_artists:
+            return False #nothing yet so stale
+        
+        cutoff = int(time.time()) - self.ENRICHMENT_TTL_SECONDS
+
+        #if the oldest update is still newer than the cutoff, then everyone must be fresh
+        oldest_timestamp = min(db_a.get("enriched_at", 0) for db_a in db_artists)
+
+        return oldest_timestamp >= cutoff
 
 
     def _validate_align_artists(self, db_artists, mb_artists, threshold=0.5):
