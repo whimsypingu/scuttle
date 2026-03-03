@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from backend.api.schemas.playlist_schemas import CreatePlaylistRequest, DeletePlaylistRequest, DeleteTrackRequest, EditPlaylistRequest, EditTrackRequest, ReorderPlaylistRequest
 from backend.core.database.audio_database import AudioDatabase
-from backend.core.models.download_job import DownloadJob
+from backend.core.models.jobs import DownloadJob, EnrichJob
 from backend.core.playlists.manager import PlaylistExtractorManager
 
 import backend.globals as G
@@ -257,10 +257,21 @@ async def edit_track(body: EditTrackRequest, req: Request) -> Response:
     artist = body.artist
     playlist_updates = [pl.model_dump() for pl in body.playlists] #build the right data structure from PlaylistSelections
     
+    queue_manager = req.app.state.queue_manager
     db: AudioDatabase = req.app.state.db
 
+    enrich_queue = queue_manager.get(G.ENRICH_QUEUE_NAME)
+
     await db.update_track_playlists(track_id=track_id, playlist_updates=playlist_updates)
-    await db.set_custom_metadata(track_id, title, artist)
+
+    #TODO: fix artist display
+    metadata = {
+        "title_display": title
+    }
+    await db.set_metadata(id=track_id, metadata=metadata)
+
+    job = EnrichJob(id=id) #title=title, artist=artist)
+    await enrich_queue.push(job)
 
     return JSONResponse(content={"status": "updated"}, status_code=200)
 
@@ -282,6 +293,6 @@ async def delete_track(body: DeleteTrackRequest, req: Request) -> Response:
 
     db: AudioDatabase = req.app.state.db
 
-    await db.unlog_download(track_id)
+    await db.unregister_download(track_id)
 
     return JSONResponse(content={"status": "deleted"}, status_code=200)

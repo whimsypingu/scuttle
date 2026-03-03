@@ -1,16 +1,4 @@
-import asyncio
-from functools import wraps
 import traceback
-
-
-#turns something async
-def run_in_executor(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        loop = asyncio.get_running_loop()
-        # run func(*args, **kwargs) in default thread pool
-        return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
-    return wrapper
 
 
 from pathlib import Path
@@ -71,3 +59,50 @@ def find_key(obj, key):
             if result is not None:
                 return result
     return None
+
+
+import unicodedata
+import re
+
+_substitutions = {
+    "$": "s",
+    "&": "and",
+    "*": "vzyxv", #random unlikely string
+    "'": "",
+}
+_whitespace_pattern = re.compile(r"\s+")
+_punct_pattern = re.compile(r"[^\w\s]+")
+
+def normalize_for_search(text: str) -> str:
+    if not text:
+        return ""
+
+    #unicode cleanup
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join([c for c in text if not unicodedata.combining(c)])
+    text = text.lower()
+
+    for key, val in _substitutions.items():
+        text = text.replace(key, val)
+
+    #final cleanup
+    text = _punct_pattern.sub(" ", text) # Replace punct with space to avoid merging words
+    text = _whitespace_pattern.sub(" ", text)
+    return text.strip()
+
+
+
+#bigrammed sorensen-dice set comparison
+def get_bigrams(text):
+    return set(text[i:i+2] for i in range(len(text)-1))
+
+def dice_coefficient(a, b):
+    set_a = get_bigrams(a)
+    set_b = get_bigrams(b)
+    
+    intersection = len(set_a & set_b)
+    union = len(set_a) + len(set_b)
+    
+    if union == 0: return 0
+    return (2.0 * intersection) / union
+

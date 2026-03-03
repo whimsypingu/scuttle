@@ -118,21 +118,25 @@ export function renderPlaylist(listEl, tracks, showIndex = true, showDownloadSta
 }
 
 
-export function updateAllListTrackItems(trackId, title, artist) {
+export function updateAllListTrackItems(trackId, fields) {
     const els = document.querySelectorAll(`li[data-track-id="${trackId}"]`);
 
     //select p.title and set value to payload.content.title, select p.artist and set to payload.content.artist)
     //note: this doesn't update the playbar right away since it's not tied to the id of the audio that is currently playing
     els.forEach(el => {
+        if (fields.newId) {
+            el.setAttribute("data-track-id", fields.newId);
+        }
+
         const titleEl = el.querySelector("p.title");
         const artistEl = el.querySelector("p.artist");
 
-        if (titleEl) {
-            titleEl.textContent = title;
+        if (titleEl && fields.title) {
+            titleEl.textContent = fields.title;
         }
 
-        if (artistEl) {
-            artistEl.textContent = artist;
+        if (artistEl && fields.artist) {
+            artistEl.textContent = fields.artist;
         }
     });
 }

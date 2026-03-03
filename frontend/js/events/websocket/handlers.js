@@ -140,17 +140,14 @@ function handleADSetMetadata(payload) {
     console.log("[handleADSetMetadata]:", payload.content);
 
     const trackId = payload.content.id;
-    const customTitle = payload.content.title;
-    const customArtist = payload.content.artist;
+
+    const fields = payload.content
 
     //update the local TrackStore
-    TrackStore.update(trackId, {
-        title: customTitle,
-        artist: customArtist
-    })
+    TrackStore.update(trackId, fields)
     console.log("TRACKSTORE:", TrackStore.get(trackId));
 
-    updateAllListTrackItems(trackId, customTitle, customArtist);
+    updateAllListTrackItems(trackId, fields);
 
     //notif
     showToast("Saved");

@@ -43,12 +43,12 @@ class AudioDatabaseAction(str, Enum):
     EDIT_PLAYLIST = "edit_playlist"
     DELETE_PLAYLIST = "delete_playlist"
 
-
-    LOG_TRACK = "log_track"
-    UNLOG_TRACK = "unlog_track"
+    #dont change the frontend received versions, yet
+    REGISTER_TRACK = "log_track"
+    UNREGISTER_TRACK = "unlog_track"
     
-    LOG_DOWNLOAD = "log_download"
-    UNLOG_DOWNLOAD = "unlog_download"
+    REGISTER_DOWNLOAD = "log_download"
+    UNREGISTER_DOWNLOAD = "unlog_download"
 
 
     GET_DOWNLOADS_CONTENT = "get_downloads_content"

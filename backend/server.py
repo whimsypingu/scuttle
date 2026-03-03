@@ -7,9 +7,11 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.core.database.cleanup import cleanup_download_folder
-from backend.core.worker.download import DownloadWorker
 from backend.core.audio.processor import AudioProcessor
 from backend.core.youtube.client import YouTubeClient
+
+from backend.core.musicbrainz.client import MusicBrainzClient
+
 from backend.core.database.audio_database import AudioDatabase
 
 from backend.core.events.event_bus import EventBus
@@ -19,6 +21,10 @@ from backend.core.events.handlers import register_event_handlers
 from backend.core.queue.manager import QueueManager
 from backend.core.queue.implementations.play_queue import PlayQueue
 from backend.core.queue.implementations.download_queue import DownloadQueue
+from backend.core.queue.implementations.enrich_queue import EnrichQueue
+
+from backend.core.worker.download import DownloadWorker
+from backend.core.worker.enrich import EnrichWorker
 
 from backend.core.playlists.manager import PlaylistExtractorManager
 
@@ -44,8 +50,7 @@ async def lifespan(app: FastAPI):
 
     # link the db
     db = AudioDatabase(name=G.AUDIO_DATABASE_NAME, filepath=G.DB_FILE, event_bus=event_bus)
-    await db.build()
-    await db.view_all()
+    await db.initialize()
     await cleanup_download_folder(db, G.DOWNLOAD_DIR)
 
     print(await db.search(""))
@@ -54,19 +59,27 @@ async def lifespan(app: FastAPI):
     pp = AudioProcessor()
     yt = YouTubeClient(name=G.YOUTUBE_CLIENT_NAME, base_dir=G.DOWNLOAD_DIR, event_bus=event_bus, post_processor=pp)
 
+    # musicbrainz
+    mb = MusicBrainzClient(name=G.MUSICBRAINZ_CLIENT_NAME)
+
     # Initialize backend components early if needed for handlers
     play_queue = PlayQueue(name=G.PLAY_QUEUE_NAME, event_bus=event_bus)
     download_queue = DownloadQueue(name=G.DOWNLOAD_QUEUE_NAME, event_bus=event_bus)
+    enrich_queue = EnrichQueue(name=G.ENRICH_QUEUE_NAME)
 
     queue_manager = QueueManager()
     queue_manager.add(play_queue)
     queue_manager.add(download_queue)
+    queue_manager.add(enrich_queue)
 
     playlist_ext_manager = PlaylistExtractorManager()
 
     # workers
     download_worker = DownloadWorker(play_queue=play_queue, download_queue=download_queue, youtube_client=yt, audio_database=db)
     download_task = asyncio.create_task(download_worker.run())
+
+    enrich_worker = EnrichWorker(enrich_queue=enrich_queue, musicbrainz_client=mb, audio_database=db)
+    enrich_task = asyncio.create_task(enrich_worker.run())
 
     # Assign to app.state for global access
     app.state.websocket_manager = websocket_manager
@@ -83,9 +96,20 @@ async def lifespan(app: FastAPI):
     # triggers
     register_event_handlers(event_bus=event_bus, websocket_manager=websocket_manager)
 
-    yield #app runs
+    try:
+        yield #app runs
+    finally:
+        #may not print to logs because of terminating pipe before this executes
+        print("Shutting down...")
 
-    print("Shutting down...")
+        download_task.cancel()
+        enrich_task.cancel()
+
+        await asyncio.gather(download_task, enrich_task, return_exceptions=True)
+
+        await mb.close()
+
+        print("Cleanup complete.")
 
 
 app = FastAPI(lifespan=lifespan)

@@ -41,10 +41,13 @@ class DownloadJob:
         self.queue_last = queue_last
 
     def get_type(self) -> str:
-        if self.id:
-            return "id"
         if self.query:
             return "query"
+        elif self.id:
+            if self.id.startswith("YT___"):
+                return "yt_id"
+            elif self.id.startswith("SEED___"):
+                return "seed_id"
         return "unknown"
     
     def get_id(self) -> str | None:
@@ -64,7 +67,6 @@ class DownloadJob:
 
     def get_queue_last_status(self) -> bool | None:
         return self.queue_last
-
 
     def get_identifier(self) -> str:
         """
@@ -88,3 +90,61 @@ class DownloadJob:
 
     def __repr__(self):
         return f"<DownloadJob type={self.get_type()} id={self.get_identifier()}>"
+
+
+
+class EnrichJob:
+    """
+    Represents an enrichment task for a track.
+    Will need either id or title and artists strings to be valid, but we shouldn't ever reach this error
+
+    Args:
+        id: Optional unique ID for the track, which may be extracted from a query
+        title: Optional string
+        artist: Optional string for all artists, delimited by \x1f (backend.globals.UNIT_SEP)
+    """
+    def __init__(
+        self,
+        id: Optional[str] = None,
+        title: Optional[str] = None,
+        artist: Optional[str] = None,
+    ):
+        if not id and not (title and artist):
+            raise ValueError("Either 'id' or 'title + artist' must be provided.")
+        
+        self.id = id
+        self.title = title
+        self.artist = artist
+
+    def get_type(self) -> str:
+        """
+        either 'id' or 'search'
+        """
+        if self.id:
+            return "id"
+        else:
+            return "search"
+    
+    def get_id(self) -> str | None:
+        return self.id
+    
+    def get_title(self) -> str | None:
+        return self.title
+    
+    def get_artist(self) -> str | None:
+        return self.artist
+
+    def get_identifier(self) -> str:
+        """
+        Return a string uniquely identifying this job.
+        For id, returns the id.
+        For title and artist, returns the entire string.
+        """
+        if self.id:
+            return self.id
+        if self.title and self.artist:
+            return f"{self.title} {self.artist}"
+        return "unknown"
+
+    def __repr__(self):
+        return f"<EnrichJob type={self.get_type()} id={self.get_identifier()}>"

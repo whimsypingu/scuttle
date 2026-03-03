@@ -4,3 +4,4 @@ websockets
 pydantic
 python-dotenv
 requests
+httpx

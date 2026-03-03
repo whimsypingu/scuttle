@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from backend.core.lib.utils import is_downloaded
 from backend.api.schemas.queue_schemas import *
-from backend.core.models.download_job import DownloadJob
+from backend.core.models.jobs import DownloadJob
 import backend.globals as G
 
 router = APIRouter(prefix="/queue")

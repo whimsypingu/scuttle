@@ -32,6 +32,7 @@ export const TrackStore = {
      * Updates a track's metadata
      * Given a track ID, merges the provided fields into the existing track.
      * If the track does not exist, nothing happens.
+     * Supports setting a new id (only for changing seeded ids).
      *
      * @param {string} id - The unique ID of the track to update.
      * @param {Object} fields - An object containing the fields to update.
@@ -43,11 +44,19 @@ export const TrackStore = {
      * TrackStore.update("YT___abc123", { title: "New Title", artist: "New Artist" });
      */
     update(id, fields) {
-        if (tracksById[id]) {
-            tracksById[id] = {
-                ...tracksById[id],
-                ...fields
-            };
+        const existingTrack = tracksById[id];
+        if (!existingTrack) return;
+
+        const newId = fields.id;
+
+        if (newId && newId !== id) {
+            const updatedTrack = { ...existingTrack, ...fields, id: newId };
+
+            tracksById[newId] = updatedTrack;
+
+            delete tracksById[id];
+        } else {
+            tracksById[id] = { ...existingTrack, ...fields };
         }
     },
 

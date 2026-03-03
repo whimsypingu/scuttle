@@ -16,6 +16,8 @@ from backend.core.models.track import Track
 
 from backend.core.models.enums import YouTubeClientAction as YTCA
 
+import backend.globals as G
+
 
 #if this fucker breaks just run: python -m pip install -U yt-dlp (goated software btw up with ffmpeg)
 class YouTubeClient:
@@ -42,7 +44,7 @@ class YouTubeClient:
 
         self._event_bus = event_bus
 
-        self.id_src = "YT___" #source for id's, so that it'll be like YT___#######...
+        self.YT_PREFIX = "YT___" #source for id's, so that it'll be like YT___#######...
 
         self.dl_format_filter = dl_format_filter or "bestaudio/best"
         self.dl_format = dl_format or "wav"
@@ -70,7 +72,6 @@ class YouTubeClient:
             print("[DEBUG]: Set event loop policy")
 
 
-
     async def _run_subprocess(self, cmd: List[str], timeout: int = 60):
         """
         Run a subprocess asynchronously and capture its output.
@@ -94,7 +95,7 @@ class YouTubeClient:
         Example:
             code, out, err = await self._run_subprocess(["yt-dlp", "--version"], timeout=10)
         """ 
-
+        proc = None
         #NOTE: using --reload on fastapi server boot cucks asyncio create_subprocess
         try:
             proc = await asyncio.create_subprocess_exec(
@@ -102,18 +103,26 @@ class YouTubeClient:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-        except Exception as e:
-            print(f"[ERROR]: Failed to start subprocess: {type(e).__name__}: {e}")
 
-        try:
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            return proc.returncode, stdout.decode(errors="replace"), stderr.decode(errors="replace")
+        
         except asyncio.TimeoutError:
-            print("[DEBUG]: TimeoutError")
-            proc.kill()
-            await proc.wait()
+            if proc:
+                print(f"[ERROR]: Subprocess timed out. Attempting to kill subprocess.")
+                try:
+                    proc.kill()
+                    await proc.wait() #clean up zombie process
+                except ProcessLookupError:
+                    pass
             raise RuntimeError(f"Subprocess timed out after {timeout} seconds.")
         
-        return proc.returncode, stdout.decode(), stderr.decode()
+        except Exception as e:
+            print(f"[ERROR]: Failed to start subprocess: {type(e).__name__}: {e}")
+            if proc:
+                proc.kill()
+                await proc.wait()
+            raise
      
 
     async def _retry_async(self, func: Callable, max_attempts=3, base_delay=1, factor=2, max_delay=20, *args, **kwargs):
@@ -193,7 +202,6 @@ class YouTubeClient:
         await self._emit_event(action=YTCA.START, payload={})
 
         #cmd line search
-        delim = "\x1f"
         cmd = [
             self.python_bin,
             "-m",
@@ -203,7 +211,7 @@ class YouTubeClient:
             "--user-agent", self.dl_user_agent,
             "--no-download",
             "--no-cache-dir", #prevents using stale cached DASH fragments
-            "--print", f"%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s"
+            "--print", f"%(id)s{G.UNIT_SEP}%(title)s{G.UNIT_SEP}%(uploader)s{G.UNIT_SEP}%(duration)s"
         ]
         print(f"Running command: {' '.join(cmd)}")
 
@@ -225,13 +233,13 @@ class YouTubeClient:
                 print(f"No output received from yt-dlp for query: '{q}'")
 
             for line in raw_lines:
-                parts = line.split(delim)
+                parts = line.split(G.UNIT_SEP)
                 if len(parts) != 4:
                     print(f"[WARN]: Unexpected line format: {line}")
                     continue
 
                 id, title, artist, duration = parts
-                true_id = f"{self.id_src}{id}"
+                true_id = f"{self.YT_PREFIX}{id}"
 
                 track = Track(
                     id=true_id,
@@ -274,9 +282,36 @@ class YouTubeClient:
         _retry: bool = True
     ) -> bool:
         """
-        Downloads a track given a Youtube ID using ytdlp and returns a Track object.
-        If custom_track is provided, its fields override the downloaded metadata.
-        Internal flag _retry to attempt again if yt-dlp is updated.
+        Downloads a specific YouTube video as an audio file and returns a Track object.
+
+        This method orchestrates the full download pipeline: fetching audio via yt-dlp,
+        parsing metadata from the stream, applying post-processing (silence trimming, 
+        loudness normalization, compression), and calculating the final duration.
+
+        Args:
+            id (str): The YouTube video ID (e.g., "dQw4w9WgXcQ") or a prefixed ID.
+            timeout (int): Maximum seconds allowed for the yt-dlp subprocess to run. 
+                Defaults to 60.
+            custom_metadata (Optional[dict]): A dictionary of fields to manually 
+                override the metadata fetched from YouTube. 
+                Supported keys typically include:
+                - 'title': Manual song title.
+                - 'artist': Manual artist/uploader name.
+                - Any other attribute present on the 'Track' class.
+                Values that are None or empty strings will be ignored.
+                Duration is overwritten by the post-processing output value.
+            _retry (bool): Internal safety flag. If True and the download fails, 
+                the method will attempt to self-update yt-dlp and try exactly 
+                one more time. Defaults to True.
+
+        Returns:
+            Track: An instance of the Track class populated with metadata and 
+                the path to the processed audio.
+
+        Raises:
+            RuntimeError: If yt-dlp exits with a non-zero code or the subprocess times out.
+            ValueError: If the metadata returned by yt-dlp cannot be parsed.
+            Exception: Re-raises any error encountered if the retry attempt also fails.
         """
         #send task start notification
         await self._emit_event(action=YTCA.START, payload={})
@@ -285,13 +320,12 @@ class YouTubeClient:
         output_path = get_audio_path(id=id, base_dir=self.base_dir, audio_format=self.dl_format)
         temp_path = get_audio_path(id=id, base_dir=self.base_dir, audio_format=self.dl_temp_format)
 
-        if id.startswith(self.id_src):
-            id = id[len(self.id_src):]
+        if id.startswith(self.YT_PREFIX):
+            id = id[len(self.YT_PREFIX):]
 
         url = f"https://www.youtube.com/watch?v={id}"
 
         #cmd line download
-        delim = "\x1f"
         cmd = [
             self.python_bin,
             "-m",
@@ -311,7 +345,7 @@ class YouTubeClient:
             "--extractor-args", "youtube:player_client=default,-android_sdkless",
             "--js-runtimes", f"deno:{self.js_runtime_bin}", #jsruntime
             "--ffmpeg-location", self.ffmpeg_location, #explicitly provide ffmpeg location
-            "--print", f"after_move:%(id)s{delim}%(title)s{delim}%(uploader)s{delim}%(duration)s", #complete print after download
+            "--print", f"after_move:%(id)s{G.UNIT_SEP}%(title)s{G.UNIT_SEP}%(uploader)s{G.UNIT_SEP}%(duration)s", #complete print after download
             url
         ]
         print(f"Running command: {' '.join(cmd)}")
@@ -330,12 +364,12 @@ class YouTubeClient:
             # Parse metadata from stdout
             try:
                 line = out.strip().splitlines()[0]  # first line
-                id, title, artist, duration = line.split(delim)
+                id, title, artist, duration = line.split(G.UNIT_SEP)
             except Exception as e:
                 raise ValueError(f"[download_by_id] Failed to parse metadata: {e}, Output was: {out}")
 
             #build track object
-            true_id = f"{self.id_src}{id}"
+            true_id = f"{self.YT_PREFIX}{id}"
             track = Track(
                 id=true_id,
                 title=title or "Unknown Title",
@@ -351,17 +385,13 @@ class YouTubeClient:
 
             if self.post_processor:
                 #postprocess audio file
-                self.post_processor.trim_silence(output_path)
-                self.post_processor.apply_loudnorm(output_path)
-                # trim_silence(output_path)
-                # apply_loudnorm(output_path)
+                await self.post_processor.trim_silence(output_path)
+                await self.post_processor.apply_loudnorm(output_path)
 
-                done_path = self.post_processor.compress(output_path, "webm")
-                # done_path = compress_audio(output_path, "webm")
+                done_path = await self.post_processor.compress(output_path, "webm")
 
                 #override raw duration with trimmed duration
-                trimmed_duration = self.post_processor.get_duration(done_path)
-                # trimmed_duration = extract_duration(done_path)
+                trimmed_duration = await self.post_processor.get_duration(done_path)
                 setattr(track, "duration", trimmed_duration)
 
             await self._emit_event(action=YTCA.DOWNLOAD, payload={"content": track})
@@ -388,7 +418,7 @@ class YouTubeClient:
             await self._emit_event(action=YTCA.FINISH, payload={})
                 
 
-    async def download_by_query(
+    async def id_by_query(
         self,
         q: str,
         timeout: int = 60,
@@ -401,8 +431,10 @@ class YouTubeClient:
             print(f"[WARN]: No results found for query: {q}")
             return False
         
-        id = result[0].id
-        print(f"[DEBUG] Result: {result}, ID: {id}")
+        true_id = result[0].id
+        print(f"[DEBUG] Result: {result}, ID: {true_id}")
+
+        return true_id
 
         track = await self.download_by_id(id, timeout=timeout, custom_metadata=custom_metadata)
         print(f"[DEBUG] Track: {track}")
