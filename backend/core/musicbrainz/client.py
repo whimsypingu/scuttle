@@ -17,7 +17,8 @@ class MusicBrainzClient:
         user: Optional[str] = None,
         contact: Optional[str] = None,
         minimum_wait: float = 1.5,
-        max_retries: int = 3
+        max_retries: int = 3,
+        limit: int = 1000
     ):
         self.name = name
 
@@ -43,7 +44,8 @@ class MusicBrainzClient:
 
         self._last_call = 0.0
         self._lock = asyncio.Lock()
-
+        
+        self.limit = limit
         self.minimum_wait = minimum_wait
         self.max_retries = max_retries
 
@@ -163,7 +165,7 @@ class MusicBrainzClient:
         return output
             
     
-    async def recordings(self, mbid, limit=300):
+    async def recordings(self, mbid, limit=self.limit):
         """
         Retrieves musicbrainz results from an mbid in a programmatic scrape effort
         """
