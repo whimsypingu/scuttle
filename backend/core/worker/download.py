@@ -2,9 +2,10 @@
 import asyncio
 import traceback
 from backend.core.database.audio_database import AudioDatabase
-from backend.core.models.jobs import DownloadJob
+from backend.core.models.jobs import DownloadJob, EnrichJob
 from backend.core.queue.implementations.play_queue import PlayQueue
 from backend.core.queue.implementations.download_queue import DownloadQueue
+from backend.core.queue.implementations.enrich_queue import EnrichQueue
 from backend.core.youtube.client import YouTubeClient
 
 
@@ -12,12 +13,14 @@ class DownloadWorker:
     def __init__(
         self, 
         play_queue: PlayQueue,
-        download_queue: DownloadQueue, 
+        download_queue: DownloadQueue,
+        enrich_queue: EnrichQueue,
         youtube_client: YouTubeClient,
         audio_database: AudioDatabase
     ):
         self.play_queue = play_queue
         self.download_queue = download_queue
+        self.enrich_queue = enrich_queue
         self.youtube_client = youtube_client #supports retry handling
         self.audio_database = audio_database
 
@@ -99,8 +102,12 @@ class DownloadWorker:
                             print(f"[DEBUG] DownloadWorker NON-seed_id register_track")
                             await self.audio_database.register_track(track)
                             await self.audio_database.rebuild_search_index()
-                        
+
                         await self.audio_database.register_download(track.id)
+
+                        #automatically attempt enrichment upon a new download
+                        enrich_job = EnrichJob(id=track.id)
+                        await self.enrich_queue.push(enrich_job)
 
                         #put into a playlist right away? in the case of importing a playlist then yes
                         if job.get_updates():
