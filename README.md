@@ -1,15 +1,33 @@
 ![Scuttle banner](./frontend/assets/color_banner.png)
+
 ---
+
 Scuttle is a responsive web-based audio archival tool for managing and playing your personal audio collection.
 
 - Search and download audio
 - Play, pause, and skip tracks
 - Create and manage playlists
-- Self-host your audio library and stream to any device with a browser
+- Self-host your audio library from your laptop and stream to any device with a browser
 - Imports playlists from external services (e.g. Spotify) to mirror or organize your personal collection
 
-This requires Python 3.8+ to install. Setting up will install binaries for ffmpeg, ffprobe, cloudflared, and deno. You can run Scuttle by downloading this as a zip, and running ```scuttle.exe``` on Windows (No support for one-click setup on Linux or Mac yet, but you can compile the rust binary to make the executable). For manual setup see [installation](#installation) and [usage](#usage) for more details. No support for automatic updates yet.
+---
 
+### Quick Start
+
+1. **Download**: Get the latest release from the [Releases](https://github.com/whimsypingu/scuttle/releases/latest) page.
+2. **Extract**: Move the contents to a folder where you want to keep Scuttle (e.g., `C:\Music\Scuttle`).
+3. **Run**: Double-click `scuttle.exe`.
+
+> **Tip:**
+> [Set up a link](#link-setup)
+> to access your library from other devices.
+
+
+*Scuttle requires Python 3.8+ to be installed on your computer.*
+
+*The first run will automatically set up the required environment and binaries (ffmpeg, ffprobe, cloudflared, and deno). You can run Scuttle by downloading this as a zip, and running ```scuttle.exe``` on Windows (No support for one-click setup on Linux or Mac yet, but you can compile the rust binary to make the executable). For manual setup see [installation](#installation) and [usage](#usage) for more details. No support for automatic updates yet.*
+
+---
 ### Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
@@ -77,16 +95,21 @@ python main.py
 ```
 
 
+<a name="link-setup"></a>
 #### 1.1 (Optional) Set up Discord webhook notifications:
 Scuttle can provide the tunneled link to a Discord channel using a webhook URL, so you can access your audio on any device that has access to the channel. To set this up:
 
-1. Follow [this official guide](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) to get a Discord webhook URL (~2 min)
-2. Run the following command to save the webhook URL to your `.env` file:
-```bash
-python main.py --set-webhook [URL]
-```
+1. **Get your URL:** Follow [this official guide](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) to get a Discord webhook URL (~2 min)
+2. **Add it to Scuttle (choose one):**
 
-💡 While the server is running, your device will stay awake to maintain the connection, though the display may turn off to conserve battery.
+    * **Via the GUI:** Open **Additional Settings**, paste your link into the `Webhook` field, and click `Start Server`.
+    
+    * **Via the Terminal:** Run the following command to save it to your `.env` file:
+        ```bash
+        python main.py --set-webhook [URL]
+        ```
+
+*While the server is running, your device will stay awake to maintain the connection, though the display may turn off to conserve battery. Ensure your computer is plugged in for better reliability.*
 
 
 ### 2. Shut down the server
@@ -127,6 +150,7 @@ This project requires Python 3.8+ and the following Python packages:
 - **pydantic** – Data validation and parsing.  
 - **python-dotenv** – Load environment variables from `.env` files.  
 - **requests** – Make HTTP requests to external APIs.
+- **httpx** - Make async HTTP requests to external APIs.
 
 These are installed during [setup of the virtual environment](#2-setup-the-environment). You can install all dependencies manually with:
 ```bash
@@ -152,25 +176,35 @@ scuttle/
 
 ## Known Issues
 There are some known bugs that haven't been bothered to be fixed yet.
-* Cleaning out unused downloads (Done, but only on restart)
-* Mobile UI occasionally shows the queue tab kind of lifted.
+* Cleaning out unused downloads. (Done, but only on restart)
+* Mobile UI occasionally shows the queue tab kind of lifted. (Mostly fixed, but now it sometimes appears below the bottom of the screen. Reloading the page fixes this, but a better fix would be nice).
 * Frontend often does not correctly show waiting status on re-opening the app.
 * yt-dlp download options and timeout failure cleanup/notification on frontend.
-* Clearing DNS cache (Occasionally breaks cloudflared. If tunnel can't be resolved, clear the cache in command line and retry)
-* Potential breakage of floating point indexing of database after many re-orders - just re-normalize indices per playlist every now and then. Have to find an optimal time to do this though, and the willpower to write the code.
+* Clearing local DNS cache (Occasionally breaks cloudflared. If tunnel can't be resolved, clear the cache in command line and retry)
+* Potential breakage of floating point indexing of database after many re-orders - just re-normalize indices per playlist every now and then. Have to find an optimal time to do this though, and the willpower to write the code. (Realistically not urgent).
+
+
+## Potential Issues
+These are bugs that probably exist but I haven't written enough tests for.
+* Cleaning out unused artists
+* MusicBrainz metadata merge leaks
+* Spotify playlist imports
 
 
 ## Future Features
-Scuttle is still in active development. Here are some planned features and improvements grouped by category:
+Scuttle is still in active development. Here are some planned features and improvements grouped roughly by category:
 
 **User Experience:**
 - [ ] Tracking user audio actions and usage, to provide a recap by month or even suggest artists or creators to donate to or support based on percentage listened
 - [ ] Mobile UI improvements (swipe left on queue tab to skip to next)
 - [x] Auto queue songs in a playlist on download
-- [ ] Improved search functionality
+- [x] Improved search functionality [3/3/26, FTS5 search and download priority]
+- [ ] Tracking user preferences to make slightly better recommendations and sink worse recommendations
 - [ ] Pagination for faster loading with larger libraries
 - [x] Optimized rendering for faster UI performance
 - [x] Audio volume normalization across tracks [11/14/25, loudnorm EBU-R128 standard]
+- [ ] Autoplay downloads and recommendations
+- [ ] Options to set lyric-based downloads as default
 
 **Integrations:**
 - [ ] Import playlist from YouTube, other sources
@@ -187,7 +221,9 @@ Scuttle is still in active development. Here are some planned features and impro
 
 These are not guaranteed but they reflect the current development priorities and ideas for future releases.
 
-Current work (February 2026) on improved search functionality is being done at [this Google Colab notebook for deprecated idea of Discogs-based seeding](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing) and at [this Google Colab notebook for Anna's Archive top 10000 Spotify songs from July 2025 seeding](https://colab.research.google.com/drive/14DFgnXGVu2MIdiBNPluC8kf8e_F70lv9?usp=sharing). 
+**Prototyping:**
+
+(January 2026 - February 2026) Database redesign to support individual artists, merging messy metadata from multiple sources (Spotify, YouTube, MusicBrainz, Discogs), and improved search functionality is being done at [this Google Colab notebook for deprecated idea of Discogs-based seeding](https://colab.research.google.com/drive/1HxKu_tEEJH7ogdjZbwvDclMa_zlTcASP?usp=sharing) and at [this Google Colab notebook for Anna's Archive top 10000 Spotify songs from July 2025 seeding](https://colab.research.google.com/drive/14DFgnXGVu2MIdiBNPluC8kf8e_F70lv9?usp=sharing).
 
 
 ## License
